@@ -1,0 +1,28 @@
+{
+  "name": "@pglejzer/datepicker-ui",
+  "version": "0.0.1",
+  "description": "datepicker-ui is a customizable date selection library built with TypeScript, designed to work seamlessly alongside timepicker-ui. Based on Google's Material Design, lightweight, themeable, and framework agnostic.",
+  "license": "MIT",
+  "author": "Piotr Glejzer (@pglejzer)",
+  "keywords": [
+    "angular",
+    "calendar",
+    "css",
+    "customizable",
+    "date-picker",
+    "date-selection",
+    "datepicker",
+    "design",
+    "javascript",
+    "lightweight",
+    "material-design",
+    "material",
+    "react",
+    "svelte",
+    "themeable",
+    "typescript",
+    "ui",
+    "vanillajs",
+    "vue"
+  ]
+}
