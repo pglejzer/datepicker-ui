@@ -104,7 +104,7 @@
     "svgo-loader": "4.0.0",
     "tailwindcss": "^4.1.11",
     "ts-jest": "^29.2.5",
-    "ts-loader": "9.5.2",
+    "ts-loader": "9.5.4",
     "ts-node": "^10.9.2",
     "tsup": "^8.5.0",
     "typescript": "5.8.3",
