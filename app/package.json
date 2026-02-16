@@ -68,7 +68,7 @@
     "babel-plugin-prismjs": "^2.1.0",
     "css-loader": "^7.1.2",
     "css-modules-typescript-loader": "^4.0.1",
-    "eslint": "^9.31.0",
+    "eslint": "^10.0.0",
     "eslint-config-eslint": "^11.0.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-import": "^2.32.0",
