@@ -1,0 +1,18 @@
+/**
+ * Glassmorphic Theme for DatepickerUI
+ */
+
+[data-theme='glassmorphic'] {
+  --dp-primary: rgba(255, 255, 255, 0.8);
+  --dp-on-primary: #000000;
+  --dp-surface: rgba(255, 255, 255, 0.1);
+  --dp-on-surface: #ffffff;
+  --dp-outline: rgba(255, 255, 255, 0.2);
+  --dp-focus: rgba(255, 255, 255, 0.8);
+}
+
+.dp-ui[data-theme='glassmorphic'] {
+  background-color: var(--dp-surface);
+  color: var(--dp-on-surface);
+  backdrop-filter: blur(10px);
+}

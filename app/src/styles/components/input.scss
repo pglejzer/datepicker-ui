@@ -1,0 +1,9 @@
+.dp-ui {
+  position: relative;
+  display: inline-block;
+}
+
+.dp-ui--error {
+  outline: 2px solid #b3261e;
+  outline-offset: -2px;
+}

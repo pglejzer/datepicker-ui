@@ -1,0 +1,17 @@
+/**
+ * Material 3 Green Theme for DatepickerUI
+ */
+
+[data-theme='m3-green'] {
+  --dp-primary: #6750a4;
+  --dp-on-primary: #ffffff;
+  --dp-surface: #ffffff;
+  --dp-on-surface: #000000;
+  --dp-outline: rgba(0, 0, 0, 0.12);
+  --dp-focus: #6750a4;
+}
+
+.dp-ui[data-theme='m3-green'] {
+  background-color: var(--dp-surface);
+  color: var(--dp-on-surface);
+}

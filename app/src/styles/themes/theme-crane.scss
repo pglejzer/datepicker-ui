@@ -1,0 +1,17 @@
+/**
+ * Crane Theme for DatepickerUI
+ */
+
+[data-theme='crane'] {
+  --dp-primary: #5d1049;
+  --dp-on-primary: #ffffff;
+  --dp-surface: #ffffff;
+  --dp-on-surface: #000000;
+  --dp-outline: rgba(93, 16, 73, 0.12);
+  --dp-focus: #5d1049;
+}
+
+.dp-ui[data-theme='crane'] {
+  background-color: var(--dp-surface);
+  color: var(--dp-on-surface);
+}

@@ -1,0 +1,18 @@
+/**
+ * Cyberpunk Theme for DatepickerUI
+ */
+
+[data-theme='cyberpunk'] {
+  --dp-primary: #ff00ff;
+  --dp-on-primary: #000000;
+  --dp-surface: #0a0a0a;
+  --dp-on-surface: #00ffff;
+  --dp-outline: rgba(255, 0, 255, 0.5);
+  --dp-focus: #ff00ff;
+}
+
+.dp-ui[data-theme='cyberpunk'] {
+  background-color: var(--dp-surface);
+  color: var(--dp-on-surface);
+  box-shadow: 0 0 20px rgba(255, 0, 255, 0.3);
+}

@@ -1,0 +1,17 @@
+/**
+ * Pastel Theme for DatepickerUI
+ */
+
+[data-theme='pastel'] {
+  --dp-primary: #f8b4d9;
+  --dp-on-primary: #000000;
+  --dp-surface: #fff5f8;
+  --dp-on-surface: #2d1b21;
+  --dp-outline: rgba(248, 180, 217, 0.3);
+  --dp-focus: #f8b4d9;
+}
+
+.dp-ui[data-theme='pastel'] {
+  background-color: var(--dp-surface);
+  color: var(--dp-on-surface);
+}

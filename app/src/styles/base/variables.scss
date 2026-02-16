@@ -1,0 +1,81 @@
+:root {
+  --dp-primary: #6750a4;
+  --dp-on-primary: #ffffff;
+  --dp-surface: #fef7ff;
+  --dp-surface-container-high: #ece6f0;
+  --dp-surface-variant: #e7e0ec;
+  --dp-surface-tint: #6750a4;
+  --dp-on-surface: #1d1b20;
+  --dp-on-surface-variant: #49454f;
+  --dp-on-surface-variant-rgb: 73, 69, 79;
+  --dp-outline: rgba(0, 0, 0, 0.12);
+
+  --dp-elevation-level3:
+    0 1px 3px 1px rgba(0, 0, 0, 0.15), 0 4px 8px 3px rgba(0, 0, 0, 0.1);
+
+  --dp-shape-corner-small: 4px;
+  --dp-shape-corner-medium: 8px;
+  --dp-shape-corner-large: 16px;
+  --dp-shape-corner-xl: 28px;
+  --dp-shape-corner-full: 9999px;
+
+  --dp-typescale-body-large-font:
+    "Roboto", system-ui, -apple-system, sans-serif;
+  --dp-typescale-body-large-size: 16px;
+  --dp-typescale-body-large-line-height: 24px;
+  --dp-typescale-body-large-weight: 400;
+  --dp-typescale-body-large-tracking: 0.5px;
+
+  --dp-typescale-label-large-font:
+    "Roboto", system-ui, -apple-system, sans-serif;
+  --dp-typescale-label-large-size: 14px;
+  --dp-typescale-label-large-line-height: 20px;
+  --dp-typescale-label-large-weight: 500;
+  --dp-typescale-label-large-tracking: 0.1px;
+
+  --dp-container-width: 400px;
+  --dp-container-height: 456px;
+  --dp-date-container-size: 48px;
+  --dp-date-state-layer-size: 40px;
+  --dp-menu-button-height: 40px;
+  --dp-menu-list-item-height: 48px;
+
+  --dp-weekdays-height: calc(
+    var(--dp-typescale-body-large-line-height) + var(--dp-spacing-sm) * 2 +
+      var(--dp-spacing-lg)
+  );
+  --dp-calendar-row-height: calc(
+    var(--dp-date-container-size) + var(--dp-spacing-xs)
+  );
+  --dp-calendar-height-4: calc(
+    var(--dp-weekdays-height) + var(--dp-calendar-row-height) * 4
+  );
+  --dp-calendar-height-5: calc(
+    var(--dp-weekdays-height) + var(--dp-calendar-row-height) * 5
+  );
+  --dp-calendar-height-6: calc(
+    var(--dp-weekdays-height) + var(--dp-calendar-row-height) * 6
+  );
+  --dp-input-mode-height: 72px;
+
+  --dp-state-hover-opacity: 0.08;
+  --dp-state-focus-opacity: 0.1;
+  --dp-state-pressed-opacity: 0.1;
+
+  --dp-date-today-outline-width: 1px;
+
+  --dp-duration: 150ms;
+  --dp-duration-long: 300ms;
+  --dp-easing: cubic-bezier(0.2, 0, 0, 1);
+  --dp-easing-emphasized: cubic-bezier(0.2, 0, 0, 1);
+  --dp-view-toggle-duration: 250ms;
+  --dp-view-toggle-stagger: 50ms;
+
+  --dp-spacing-xs: 4px;
+  --dp-spacing-sm: 8px;
+  --dp-spacing-md: 12px;
+  --dp-spacing-lg: 16px;
+  --dp-spacing-sxl: 20px;
+  --dp-spacing-xl: 24px;
+  --dp-spacing-2xl: 30px;
+}

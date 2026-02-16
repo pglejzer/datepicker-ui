@@ -1,0 +1,17 @@
+/**
+ * Dark Theme for DatepickerUI
+ */
+
+[data-theme='dark'] {
+  --dp-primary: #bb86fc;
+  --dp-on-primary: #000000;
+  --dp-surface: #121212;
+  --dp-on-surface: #ffffff;
+  --dp-outline: rgba(255, 255, 255, 0.12);
+  --dp-focus: #bb86fc;
+}
+
+.dp-ui[data-theme='dark'] {
+  background-color: var(--dp-surface);
+  color: var(--dp-on-surface);
+}
