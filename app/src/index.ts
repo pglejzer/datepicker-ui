@@ -1,60 +1,47 @@
 import DatepickerUI from "./datepicker";
-import type {
-  OptionTypes,
-  OpenEventData,
-  CancelEventData,
-  ConfirmEventData,
-  ShowEventData,
-  HideEventData,
-  UpdateEventData,
-  SelectDayEventData,
-  SelectMonthEventData,
-  SelectYearEventData,
-  ChangeViewEventData,
-  ErrorEventData,
-  SwipeStartEventData,
-  SwipeMoveEventData,
-  SwipeEndEventData,
-  SwipeCancelEventData,
-} from "./types/types";
-import type {
-  DatepickerOptions,
-  CalendarOptions,
-  UIOptions,
-  LabelsOptions,
-  BehaviorOptions,
-  CallbacksOptions,
-  SwipeOptions,
-} from "./types/options";
+import { DEFAULT_DATEPICKER_OPTIONS } from "./datepicker/options/defaults";
 import { EventEmitter } from "./utils/EventEmitter";
-import { DEFAULT_DATEPICKER_OPTIONS } from "./datepicker/CoreState";
 
-export {
-  DatepickerUI,
-  OptionTypes,
-  DatepickerOptions,
-  CalendarOptions,
-  UIOptions,
-  LabelsOptions,
+export type { PlainDate } from "./types/date";
+export type {
+  CalendarMode,
+  PageBy,
+  Precision,
+  RangeEnd,
+} from "./types/selection";
+export type {
   BehaviorOptions,
+  CalendarOptions,
   CallbacksOptions,
-  SwipeOptions,
-  OpenEventData,
+  DatepickerOptions,
+  DateDecoration,
+  LabelsOptions,
+  PluralLabel,
+  RangePreset,
+  RangePresetValue,
+  ThemeName,
+  UIOptions,
+} from "./types/options";
+export type {
   CancelEventData,
+  CloseEventData,
   ConfirmEventData,
-  ShowEventData,
-  HideEventData,
-  UpdateEventData,
+  DatepickerEventMap,
+  DateValue,
+  ErrorEventData,
+  NavigateEventData,
+  OpenEventData,
+  PickerValue,
+  PickerValueInput,
+  RangeEndEventData,
+  RangeStartEventData,
+  RangeValue,
   SelectDayEventData,
   SelectMonthEventData,
   SelectYearEventData,
-  ChangeViewEventData,
-  ErrorEventData,
-  SwipeStartEventData,
-  SwipeMoveEventData,
-  SwipeEndEventData,
-  SwipeCancelEventData,
-  EventEmitter,
-  DEFAULT_DATEPICKER_OPTIONS,
-};
+  UnavailableReason,
+  UpdateEventData,
+} from "./types/types";
+
+export { DatepickerUI, DEFAULT_DATEPICKER_OPTIONS, EventEmitter };
 export default DatepickerUI;

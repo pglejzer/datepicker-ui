@@ -1,23 +1,9 @@
-/**
- * DatepickerUI Constants
- */
-
-export const EVENTS = {
-  ready: "ready",
-  open: "open",
-  close: "close",
-  cancel: "cancel",
-  confirm: "confirm",
-  show: "show",
-  hide: "hide",
-  update: "update",
-  selectDay: "selectDay",
-  selectMonth: "selectMonth",
-  selectYear: "selectYear",
-  changeView: "changeView",
-  error: "error",
-} as const;
-
-export const ANIMATION_DURATION_MS = 150;
-export const MODAL_CLOSE_MS = 150;
-export const CALENDAR_SIZE = 320;
+export const COMPACT_BREAKPOINT = 600;
+export const COMPACT_HEIGHT_BREAKPOINT = 480;
+export const INSTANCE_ID_PREFIX = "dp-ui-";
+export const MONTH_COLUMN_WIDTH = 336;
+export const MONTH_COLUMN_GAP = 24;
+export const CONTAINER_SIDE_PADDING = 12;
+export const WEEK_NUMBER_WIDTH = 48;
+export const PRESETS_COLUMN_WIDTH = 168;
+export const VIEWPORT_GUTTER = 16;
