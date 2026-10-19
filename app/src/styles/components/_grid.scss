@@ -1,0 +1,304 @@
+@use "../base/utilities" as *;
+
+.dp-ui__month-grid {
+  inline-size: 100%;
+  table-layout: fixed;
+}
+
+.dp-ui__weekday,
+.dp-ui__week-number-header {
+  block-size: var(--dp-ui-date-container-size);
+  padding: 0;
+  color: var(--dp-ui-weekday-label-text-color);
+  text-align: center;
+  vertical-align: middle;
+  @include typescale(body-large);
+}
+
+.dp-ui__week-number-header,
+.dp-ui__week-number {
+  inline-size: var(--dp-ui-week-number-width);
+  color: var(--dp-ui-week-number-label-text-color);
+  @include typescale(body-small);
+}
+
+.dp-ui__week-number {
+  padding: 0;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.dp-ui__date {
+  position: relative;
+  block-size: var(--dp-ui-date-container-size);
+  padding: 0;
+  text-align: center;
+  vertical-align: middle;
+  color: var(--dp-ui-date-label-text-color);
+  cursor: pointer;
+  outline: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  @include typescale(body-large);
+}
+
+.dp-ui__date-indicator {
+  @include ripple-host;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: var(--dp-ui-date-state-layer-size);
+  block-size: var(--dp-ui-date-state-layer-size);
+  border: var(--dp-ui-date-today-outline-width) solid transparent;
+  border-radius: var(--dp-ui-sys-shape-corner-full);
+  background-color: transparent;
+  font-variant-numeric: tabular-nums;
+  transition:
+    background-color var(--dp-ui-motion-select-fill, 150ms) linear,
+    color var(--dp-ui-motion-select-fill, 150ms) linear,
+    border-color var(--dp-ui-motion-select-fill, 150ms) linear;
+}
+
+.dp-ui__date--empty {
+  visibility: hidden;
+  cursor: default;
+}
+
+.dp-ui__date--today .dp-ui__date-indicator {
+  border-color: var(--dp-ui-date-today-outline-color);
+  color: var(--dp-ui-date-today-label-text-color);
+}
+
+.dp-ui__date--outside-month .dp-ui__date-indicator {
+  opacity: var(--dp-ui-date-outside-month-opacity);
+}
+
+.dp-ui__date--disabled {
+  cursor: default;
+}
+
+.dp-ui__date--disabled .dp-ui__date-indicator {
+  opacity: var(--dp-ui-date-disabled-opacity);
+}
+
+.dp-ui__date--outside-month.dp-ui__date--disabled .dp-ui__date-indicator {
+  opacity: var(--dp-ui-date-outside-month-opacity);
+}
+
+.dp-ui__date-content {
+  display: block;
+  overflow: hidden;
+  padding-inline: 2px;
+  color: var(--dp-ui-date-content-color);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+  @include typescale(label-small);
+}
+
+.dp-ui__date--outside-month .dp-ui__date-content {
+  opacity: var(--dp-ui-date-outside-month-opacity);
+}
+
+.dp-ui__date--disabled .dp-ui__date-content {
+  opacity: var(--dp-ui-date-disabled-opacity);
+}
+
+.dp-ui__date--outside-month.dp-ui__date--disabled .dp-ui__date-content {
+  opacity: var(--dp-ui-date-outside-month-opacity);
+}
+
+.dp-ui__date--selected.dp-ui__date--outside-month .dp-ui__date-content {
+  opacity: 1;
+}
+
+.dp-ui__month-grid:has(.dp-ui__date-content) .dp-ui__date {
+  block-size: var(--dp-ui-date-content-row-height);
+  padding-block-start: calc(
+    (var(--dp-ui-date-container-size) - var(--dp-ui-date-state-layer-size)) / 2
+  );
+  vertical-align: top;
+}
+
+.dp-ui__month-grid:has(.dp-ui__date-content) .dp-ui__date-indicator {
+  display: flex;
+  margin-inline: auto;
+}
+
+.dp-ui__month-grid:has(.dp-ui__date-content) .dp-ui__date-badge {
+  inset-block-end: auto;
+  inset-block-start: calc(
+    var(--dp-ui-date-container-size) -
+      (var(--dp-ui-date-container-size) - var(--dp-ui-date-state-layer-size)) /
+      2 - 6px - var(--dp-ui-date-badge-size)
+  );
+}
+
+.dp-ui__date--selected .dp-ui__date-indicator {
+  border-color: var(--dp-ui-date-selected-container-color);
+  background-color: var(--dp-ui-date-selected-container-color);
+  color: var(--dp-ui-date-selected-label-text-color);
+}
+
+.dp-ui__date--selected.dp-ui__date--outside-month .dp-ui__date-indicator {
+  opacity: 1;
+}
+
+:where(.dp-ui__pager:not(.dp-ui__pager--dragging), .dp-ui__range)
+  .dp-ui__date:not(.dp-ui__date--disabled, .dp-ui__date--empty):hover
+  .dp-ui__date-indicator {
+  @include state-layer(
+    var(--dp-ui-date-state-layer-color),
+    --dp-ui-sys-state-layer-hover-opacity
+  );
+}
+
+.dp-ui__date:not(.dp-ui__date--disabled, .dp-ui__date--empty)#{$focus-visible}
+  .dp-ui__date-indicator {
+  @include state-layer(
+    var(--dp-ui-date-state-layer-color),
+    --dp-ui-sys-state-layer-focus-opacity
+  );
+}
+
+.dp-ui__date:not(.dp-ui__date--disabled, .dp-ui__date--empty):active
+  .dp-ui__date-indicator {
+  @include state-layer(
+    var(--dp-ui-date-state-layer-color),
+    --dp-ui-sys-state-layer-pressed-opacity
+  );
+}
+
+:where(.dp-ui__pager:not(.dp-ui__pager--dragging), .dp-ui__range)
+  .dp-ui__date--selected:not(.dp-ui__date--disabled):hover
+  .dp-ui__date-indicator {
+  @include state-layer-over(
+    var(--dp-ui-date-selected-container-color),
+    var(--dp-ui-date-selected-label-text-color),
+    --dp-ui-sys-state-layer-hover-opacity
+  );
+}
+
+.dp-ui__date--selected:not(.dp-ui__date--disabled)#{$focus-visible}
+  .dp-ui__date-indicator {
+  @include state-layer-over(
+    var(--dp-ui-date-selected-container-color),
+    var(--dp-ui-date-selected-label-text-color),
+    --dp-ui-sys-state-layer-focus-opacity
+  );
+}
+
+.dp-ui__date--selected:not(.dp-ui__date--disabled):active
+  .dp-ui__date-indicator {
+  @include state-layer-over(
+    var(--dp-ui-date-selected-container-color),
+    var(--dp-ui-date-selected-label-text-color),
+    --dp-ui-sys-state-layer-pressed-opacity
+  );
+}
+
+.dp-ui__date#{$focus-visible} .dp-ui__date-indicator {
+  @include focus-ring;
+}
+
+.dp-ui__date-badge {
+  position: absolute;
+  z-index: 1;
+  inset-block-end: 6px;
+  inset-inline: 0;
+  inline-size: var(--dp-ui-date-badge-size);
+  block-size: var(--dp-ui-date-badge-size);
+  margin-inline: auto;
+  border-radius: var(--dp-ui-sys-shape-corner-full);
+  background-color: var(--dp-ui-date-badge-color);
+  pointer-events: none;
+}
+
+.dp-ui__date--selected .dp-ui__date-badge {
+  background-color: var(--dp-ui-date-badge-selected-color);
+}
+
+.dp-ui__date--in-range::before,
+.dp-ui__date--range-start::before,
+.dp-ui__date--range-end::before {
+  content: "";
+  position: absolute;
+  inset-block: calc(
+    (var(--dp-ui-date-container-size) - var(--dp-ui-date-state-layer-size)) / 2
+  );
+  inset-inline: 0;
+  background-color: var(--dp-ui-date-in-range-container-color);
+  pointer-events: none;
+}
+
+.dp-ui__month-grid:has(.dp-ui__date-content)
+  :is(
+    .dp-ui__date--in-range,
+    .dp-ui__date--range-start,
+    .dp-ui__date--range-end
+  )::before {
+  inset-block: calc(
+      (var(--dp-ui-date-container-size) - var(--dp-ui-date-state-layer-size)) /
+        2
+    )
+    auto;
+  block-size: var(--dp-ui-date-state-layer-size);
+}
+
+.dp-ui__date--range-start::before {
+  inset-inline-start: 50%;
+}
+
+.dp-ui__date--range-end::before {
+  inset-inline-end: 50%;
+}
+
+.dp-ui__date--range-start.dp-ui__date--range-end::before {
+  content: none;
+}
+
+tr
+  > .dp-ui__date:first-child:is(
+    .dp-ui__date--in-range,
+    .dp-ui__date--range-end
+  )::before {
+  inset-inline-start: calc(-1 * var(--dp-ui-container-side-padding));
+}
+
+tr
+  > .dp-ui__date:last-child:is(
+    .dp-ui__date--in-range,
+    .dp-ui__date--range-start
+  )::before {
+  inset-inline-end: calc(-1 * var(--dp-ui-container-side-padding));
+}
+
+.dp-ui__date--in-range .dp-ui__date-indicator {
+  color: var(--dp-ui-date-in-range-label-text-color);
+}
+
+:where(.dp-ui__pager:not(.dp-ui__pager--dragging), .dp-ui__range)
+  .dp-ui__date--in-range:not(.dp-ui__date--disabled):hover
+  .dp-ui__date-indicator {
+  @include state-layer(
+    var(--dp-ui-date-in-range-state-layer-color),
+    --dp-ui-sys-state-layer-hover-opacity
+  );
+}
+
+.dp-ui__date--in-range:not(.dp-ui__date--disabled)#{$focus-visible}
+  .dp-ui__date-indicator {
+  @include state-layer(
+    var(--dp-ui-date-in-range-state-layer-color),
+    --dp-ui-sys-state-layer-focus-opacity
+  );
+}
+
+.dp-ui__date--in-range:not(.dp-ui__date--disabled):active
+  .dp-ui__date-indicator {
+  @include state-layer(
+    var(--dp-ui-date-in-range-state-layer-color),
+    --dp-ui-sys-state-layer-pressed-opacity
+  );
+}

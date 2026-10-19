@@ -1,0 +1,93 @@
+@use "../base/utilities" as *;
+
+.dp-ui__icon-button#{$focus-visible},
+.dp-ui__menu-button#{$focus-visible},
+.dp-ui__text-button#{$focus-visible} {
+  @include focus-ring;
+}
+
+.dp-ui__preset#{$focus-visible} {
+  @include focus-ring(-2px);
+}
+
+.dp-ui--pointer :focus-visible {
+  outline: none;
+}
+
+@media (prefers-contrast: more) {
+  .dp-ui__container {
+    border: 2px solid currentColor;
+  }
+
+  .dp-ui__dialog::backdrop {
+    --dp-ui-scrim-opacity: 0.6;
+  }
+
+  .dp-ui__date-indicator,
+  .dp-ui__year-selection-item,
+  .dp-ui__month-selection-item {
+    --dp-ui-focus-ring-width: 3px;
+  }
+
+  .dp-ui__icon-button#{$focus-visible},
+  .dp-ui__menu-button#{$focus-visible},
+  .dp-ui__text-button#{$focus-visible},
+  .dp-ui__preset#{$focus-visible},
+  .dp-ui__date#{$focus-visible} .dp-ui__date-indicator,
+  .dp-ui__menu-item#{$focus-visible},
+  .dp-ui__year-selection-item#{$focus-visible},
+  .dp-ui__month-selection-item#{$focus-visible} {
+    outline-width: 4px;
+  }
+
+  .dp-ui__date--outside-month .dp-ui__date-indicator,
+  .dp-ui__date--disabled .dp-ui__date-indicator {
+    opacity: 0.6;
+  }
+}
+
+@media (forced-colors: active) {
+  .dp-ui__container {
+    border: 1px solid CanvasText;
+  }
+
+  .dp-ui__icon-button#{$focus-visible},
+  .dp-ui__menu-button#{$focus-visible},
+  .dp-ui__text-button#{$focus-visible},
+  .dp-ui__preset#{$focus-visible},
+  .dp-ui__date#{$focus-visible} .dp-ui__date-indicator,
+  .dp-ui__menu-item#{$focus-visible},
+  .dp-ui__year-selection-item#{$focus-visible},
+  .dp-ui__month-selection-item#{$focus-visible} {
+    outline: 3px solid Highlight;
+  }
+
+  .dp-ui__date--selected .dp-ui__date-indicator,
+  .dp-ui__year-selection-item--selected,
+  .dp-ui__year-selection-item[aria-selected="true"],
+  .dp-ui__month-selection-item--selected,
+  .dp-ui__month-selection-item[aria-selected="true"],
+  .dp-ui__menu-item--selected,
+  .dp-ui__menu-item[aria-selected="true"],
+  .dp-ui__preset[aria-pressed="true"] {
+    forced-color-adjust: none;
+    border-color: CanvasText;
+    background-color: Highlight;
+    color: HighlightText;
+  }
+
+  .dp-ui__date--today .dp-ui__date-indicator {
+    border-color: CanvasText;
+  }
+
+  .dp-ui__date--disabled .dp-ui__date-indicator,
+  .dp-ui__year-selection-item[aria-disabled="true"],
+  .dp-ui__month-selection-item[aria-disabled="true"],
+  .dp-ui__icon-button:disabled,
+  .dp-ui__menu-button:disabled,
+  .dp-ui__text-button:disabled,
+  .dp-ui__preset:disabled {
+    color: GrayText;
+    opacity: 1;
+  }
+}

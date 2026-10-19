@@ -1,0 +1,21 @@
+@use "../base/utilities" as *;
+
+.dp-ui__navigation {
+  display: flex;
+  align-items: center;
+  padding-block: 4px;
+}
+
+.dp-ui__navigation .dp-ui__icon-button {
+  --dp-ui-icon-button-size: 48px;
+}
+
+.dp-ui__navigation--year-grid {
+  padding-block: 16px;
+  padding-inline: var(--dp-ui-container-side-padding);
+}
+
+.dp-ui__menu-button--year-grid,
+.dp-ui__navigation--month-grid > .dp-ui__menu-button {
+  margin-inline-end: auto;
+}

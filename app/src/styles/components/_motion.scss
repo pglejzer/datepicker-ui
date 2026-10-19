@@ -1,0 +1,281 @@
+@use "../base/utilities" as *;
+
+@property --dp-ui-ripple-radius {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@keyframes dp-ui-panel-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes dp-ui-ripple {
+  from {
+    --dp-ui-ripple-radius: 0px;
+  }
+
+  to {
+    --dp-ui-ripple-radius: calc(var(--dp-ui-ripple-size, 0px) / 2);
+  }
+}
+
+.dp-ui__container--docked[popover]:not(:popover-open) {
+  display: none;
+}
+
+.dp-ui__container--docked[popover],
+.dp-ui__dialog {
+  opacity: 0;
+  clip-path: inset(0 -24px 100% -24px);
+  transition:
+    opacity var(--dp-ui-motion-surface-exit, 150ms) linear,
+    clip-path var(--dp-ui-motion-surface-exit, 150ms)
+      var(--dp-ui-easing-emphasized-accelerate, cubic-bezier(0.3, 0, 0.8, 0.15)),
+    display var(--dp-ui-motion-surface-exit, 150ms) allow-discrete,
+    overlay var(--dp-ui-motion-surface-exit, 150ms) allow-discrete;
+}
+
+.dp-ui__container--docked[popover][data-placement="top"] {
+  clip-path: inset(100% -24px 0 -24px);
+}
+
+.dp-ui__container--docked[popover]:popover-open,
+.dp-ui__dialog[open] {
+  opacity: 1;
+  clip-path: inset(-24px);
+  transition:
+    opacity var(--dp-ui-motion-surface-enter-fade, 100ms) linear,
+    clip-path var(--dp-ui-motion-surface-enter, 300ms)
+      var(--dp-ui-easing-emphasized-decelerate, cubic-bezier(0.05, 0.7, 0.1, 1)),
+    overlay var(--dp-ui-motion-surface-enter, 300ms) allow-discrete;
+}
+
+.dp-ui__dialog::backdrop {
+  opacity: 0;
+  transition:
+    opacity var(--dp-ui-motion-scrim-exit, 200ms) linear,
+    display var(--dp-ui-motion-scrim-exit, 200ms) allow-discrete,
+    overlay var(--dp-ui-motion-scrim-exit, 200ms) allow-discrete;
+}
+
+.dp-ui__dialog[open]::backdrop {
+  opacity: 1;
+  transition:
+    opacity var(--dp-ui-motion-scrim-enter, 150ms) linear,
+    display var(--dp-ui-motion-scrim-enter, 150ms) allow-discrete,
+    overlay var(--dp-ui-motion-scrim-enter, 150ms) allow-discrete;
+}
+
+.dp-ui__dialog[open]:has(> .dp-ui__container--fullscreen)::backdrop {
+  opacity: 0;
+  transition-delay: var(--dp-ui-motion-view-switch, 300ms), 0s, 0s;
+}
+
+.dp-ui__container.dp-ui__ghost {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  z-index: 1;
+  margin: 0;
+  background: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  pointer-events: none;
+}
+
+.dp-ui__ghost,
+.dp-ui__ghost * {
+  animation: none !important;
+  transition: none !important;
+}
+
+.dp-ui__ghost .dp-ui__headline {
+  visibility: hidden;
+}
+
+.dp-ui__container--docked[popover]:not(:popover-open) .dp-ui__actions,
+.dp-ui__dialog:not([open]) .dp-ui__actions {
+  opacity: 0;
+  transition: opacity var(--dp-ui-motion-surface-exit, 150ms) linear;
+}
+
+.dp-ui__container--docked[popover]:popover-open .dp-ui__actions,
+.dp-ui__dialog[open] .dp-ui__actions {
+  opacity: 1;
+  transition: opacity
+    calc(
+      var(--dp-ui-motion-surface-enter, 300ms) - var(
+          --dp-ui-motion-surface-actions-delay,
+          150ms
+        )
+    )
+    linear var(--dp-ui-motion-surface-actions-delay, 150ms);
+}
+
+.dp-ui__pager,
+.dp-ui__menu,
+.dp-ui__navigation--year-grid,
+.dp-ui__navigation--month-grid,
+.dp-ui__year-selection,
+.dp-ui__month-selection {
+  animation: dp-ui-panel-in var(--dp-ui-motion-panel-fade-in, 200ms) linear both;
+}
+
+[data-rebuilt]:is(
+  .dp-ui__menu,
+  .dp-ui__navigation--year-grid,
+  .dp-ui__navigation--month-grid,
+  .dp-ui__year-selection,
+  .dp-ui__month-selection
+) {
+  animation: none;
+}
+
+.dp-ui__container--morphing
+  :is(
+    .dp-ui__pager,
+    .dp-ui__range,
+    .dp-ui__input-panel,
+    .dp-ui__supporting-text,
+    .dp-ui__icon-button--switch-view,
+    .dp-ui__top-bar,
+    .dp-ui__actions
+  ) {
+  animation: dp-ui-panel-in var(--dp-ui-motion-view-switch-fade-in, 150ms)
+    linear
+    calc(
+      var(--dp-ui-motion-view-switch, 300ms) - var(
+          --dp-ui-motion-view-switch-fade-in,
+          150ms
+        )
+    )
+    both;
+}
+
+:is(
+  .dp-ui__icon-button,
+  .dp-ui__menu-button,
+  .dp-ui__text-button,
+  .dp-ui__preset,
+  .dp-ui__date-indicator,
+  .dp-ui__menu-item,
+  .dp-ui__year-selection-item,
+  .dp-ui__month-selection-item
+)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  background-image: radial-gradient(
+    circle var(--dp-ui-ripple-radius) at var(--dp-ui-ripple-x, 50%)
+      var(--dp-ui-ripple-y, 50%),
+    color-mix(
+        in srgb,
+        currentColor calc(var(--dp-ui-sys-state-layer-pressed-opacity) * 100%),
+        transparent
+      )
+      99%,
+    transparent 100%
+  );
+}
+
+:is(
+    .dp-ui__icon-button,
+    .dp-ui__menu-button,
+    .dp-ui__text-button,
+    .dp-ui__preset,
+    .dp-ui__date-indicator,
+    .dp-ui__menu-item,
+    .dp-ui__year-selection-item,
+    .dp-ui__month-selection-item
+  ):is(.dp-ui--ripple-pressed, .dp-ui--ripple-active)::after {
+  opacity: 1;
+  animation: dp-ui-ripple var(--dp-ui-ripple-duration, 450ms)
+    var(--dp-ui-easing-emphasized-decelerate, cubic-bezier(0.05, 0.7, 0.1, 1))
+    both;
+}
+
+@starting-style {
+  .dp-ui__container--docked[popover]:popover-open,
+  .dp-ui__dialog[open] {
+    opacity: 0;
+    clip-path: inset(0 -24px 100% -24px);
+  }
+
+  .dp-ui__container--docked[popover][data-placement="top"]:popover-open {
+    clip-path: inset(100% -24px 0 -24px);
+  }
+
+  .dp-ui__dialog[open]::backdrop {
+    opacity: 0;
+  }
+
+  .dp-ui__container--docked[popover]:popover-open .dp-ui__actions,
+  .dp-ui__dialog[open] .dp-ui__actions {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dp-ui__container--docked[popover],
+  .dp-ui__container--docked[popover][data-placement="top"],
+  .dp-ui__dialog {
+    clip-path: none;
+    transition:
+      opacity var(--dp-ui-motion-surface-exit, 150ms) linear,
+      display var(--dp-ui-motion-surface-exit, 150ms) allow-discrete,
+      overlay var(--dp-ui-motion-surface-exit, 150ms) allow-discrete;
+  }
+
+  .dp-ui__container--docked[popover]:popover-open,
+  .dp-ui__container--docked[popover][data-placement="top"]:popover-open,
+  .dp-ui__dialog[open] {
+    clip-path: none;
+    transition:
+      opacity var(--dp-ui-motion-surface-enter-fade, 100ms) linear,
+      display var(--dp-ui-motion-surface-enter, 300ms) allow-discrete,
+      overlay var(--dp-ui-motion-surface-enter, 300ms) allow-discrete;
+  }
+
+  @starting-style {
+    .dp-ui__container--docked[popover]:popover-open,
+    .dp-ui__container--docked[popover][data-placement="top"]:popover-open,
+    .dp-ui__dialog[open] {
+      opacity: 0;
+      clip-path: none;
+    }
+  }
+
+  .dp-ui__container:is(.dp-ui__container--docked, .dp-ui__container--inline)
+    .dp-ui__pager {
+    transition: none;
+  }
+
+  .dp-ui__menu-button-icon {
+    transition:
+      opacity var(--dp-ui-motion-panel-fade-out, 100ms) linear,
+      visibility var(--dp-ui-motion-panel-fade-out, 100ms);
+  }
+
+  :is(
+    .dp-ui__icon-button,
+    .dp-ui__menu-button,
+    .dp-ui__text-button,
+    .dp-ui__preset,
+    .dp-ui__date-indicator,
+    .dp-ui__menu-item,
+    .dp-ui__year-selection-item,
+    .dp-ui__month-selection-item
+  )::after {
+    display: none;
+  }
+}

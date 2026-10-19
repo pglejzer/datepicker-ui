@@ -1,0 +1,211 @@
+:where(
+  .dp-ui,
+  .dp-ui__dialog,
+  .dp-ui__container--docked,
+  .dp-ui__container--inline
+) {
+  color-scheme: light dark;
+}
+
+.dp-ui[data-color-scheme="light"],
+.dp-ui__dialog[data-color-scheme="light"],
+.dp-ui__container[data-color-scheme="light"] {
+  color-scheme: light;
+}
+
+.dp-ui[data-color-scheme="dark"],
+.dp-ui__dialog[data-color-scheme="dark"],
+.dp-ui__container[data-color-scheme="dark"] {
+  color-scheme: dark;
+}
+
+:where(
+  .dp-ui,
+  .dp-ui__dialog,
+  .dp-ui__container:not(.dp-ui__container--modal)
+) {
+  --dp-ui-sys-color-surface-container-high: light-dark(#ece6f0, #2b2930);
+  --dp-ui-sys-color-surface-variant: light-dark(#e7e0ec, #49454f);
+  --dp-ui-sys-color-on-surface: light-dark(#1d1b20, #e6e0e9);
+  --dp-ui-sys-color-on-surface-variant: light-dark(#49454f, #cac4d0);
+  --dp-ui-sys-color-primary: light-dark(#6750a4, #d0bcff);
+  --dp-ui-sys-color-on-primary: light-dark(#ffffff, #381e72);
+  --dp-ui-sys-color-secondary-container: light-dark(#e8def8, #4a4458);
+  --dp-ui-sys-color-on-secondary-container: light-dark(#4a4458, #e8def8);
+  --dp-ui-sys-color-on-primary-container: light-dark(#4f378b, #eaddff);
+  --dp-ui-sys-color-outline: light-dark(#79747e, #938f99);
+  --dp-ui-sys-color-outline-variant: light-dark(#cac4d0, #49454f);
+  --dp-ui-sys-color-error: light-dark(#b3261e, #f2b8b5);
+  --dp-ui-sys-color-scrim: #000000;
+
+  --dp-ui-sys-shape-corner-none: 0;
+  --dp-ui-sys-shape-corner-extra-small: 4px;
+  --dp-ui-sys-shape-corner-small: 8px;
+  --dp-ui-sys-shape-corner-medium: 12px;
+  --dp-ui-sys-shape-corner-large: 16px;
+  --dp-ui-sys-shape-corner-extra-large: 28px;
+  --dp-ui-sys-shape-corner-full: 9999px;
+
+  --dp-ui-sys-typescale-font: Roboto, system-ui, sans-serif;
+  --dp-ui-sys-typescale-body-large-font: var(--dp-ui-sys-typescale-font);
+  --dp-ui-sys-typescale-body-large-size: 16px;
+  --dp-ui-sys-typescale-body-large-line-height: 24px;
+  --dp-ui-sys-typescale-body-large-weight: 400;
+  --dp-ui-sys-typescale-body-large-tracking: 0.5px;
+  --dp-ui-sys-typescale-body-small-font: var(--dp-ui-sys-typescale-font);
+  --dp-ui-sys-typescale-body-small-size: 12px;
+  --dp-ui-sys-typescale-body-small-line-height: 16px;
+  --dp-ui-sys-typescale-body-small-weight: 400;
+  --dp-ui-sys-typescale-body-small-tracking: 0.4px;
+  --dp-ui-sys-typescale-label-large-font: var(--dp-ui-sys-typescale-font);
+  --dp-ui-sys-typescale-label-large-size: 14px;
+  --dp-ui-sys-typescale-label-large-line-height: 20px;
+  --dp-ui-sys-typescale-label-large-weight: 500;
+  --dp-ui-sys-typescale-label-large-tracking: 0.1px;
+  --dp-ui-sys-typescale-label-small-font: var(--dp-ui-sys-typescale-font);
+  --dp-ui-sys-typescale-label-small-size: 11px;
+  --dp-ui-sys-typescale-label-small-line-height: 16px;
+  --dp-ui-sys-typescale-label-small-weight: 500;
+  --dp-ui-sys-typescale-label-small-tracking: 0.5px;
+  --dp-ui-sys-typescale-title-large-font: var(--dp-ui-sys-typescale-font);
+  --dp-ui-sys-typescale-title-large-size: 22px;
+  --dp-ui-sys-typescale-title-large-line-height: 28px;
+  --dp-ui-sys-typescale-title-large-weight: 400;
+  --dp-ui-sys-typescale-title-large-tracking: 0;
+  --dp-ui-sys-typescale-headline-large-font: var(--dp-ui-sys-typescale-font);
+  --dp-ui-sys-typescale-headline-large-size: 32px;
+  --dp-ui-sys-typescale-headline-large-line-height: 40px;
+  --dp-ui-sys-typescale-headline-large-weight: 400;
+  --dp-ui-sys-typescale-headline-large-tracking: 0;
+
+  --dp-ui-sys-state-layer-hover-opacity: 0.08;
+  --dp-ui-sys-state-layer-focus-opacity: 0.1;
+  --dp-ui-sys-state-layer-pressed-opacity: 0.1;
+  --dp-ui-sys-state-disabled-opacity: 0.38;
+
+  --dp-ui-sys-elevation-level3:
+    0 1px 3px rgba(0, 0, 0, 0.3), 0 4px 8px 3px rgba(0, 0, 0, 0.15);
+
+  --dp-ui-container-color: var(--dp-ui-sys-color-surface-container-high);
+  --dp-ui-container-text-color: var(--dp-ui-sys-color-on-surface);
+  --dp-ui-container-width: 360px;
+  --dp-ui-container-shape-docked: var(--dp-ui-sys-shape-corner-large);
+  --dp-ui-container-shape-modal: var(--dp-ui-sys-shape-corner-extra-large);
+  --dp-ui-container-elevation: var(--dp-ui-sys-elevation-level3);
+  --dp-ui-container-backdrop-filter: none;
+  --dp-ui-container-side-padding: 12px;
+  --dp-ui-scrim-color: var(--dp-ui-sys-color-scrim);
+  --dp-ui-scrim-opacity: 0.32;
+  --dp-ui-divider-color: var(--dp-ui-sys-color-outline-variant);
+
+  --dp-ui-header-height-docked: 64px;
+  --dp-ui-header-height-modal: 120px;
+  --dp-ui-header-supporting-text-color: var(
+    --dp-ui-sys-color-on-surface-variant
+  );
+  --dp-ui-header-headline-color: var(--dp-ui-sys-color-on-surface-variant);
+
+  --dp-ui-touch-target-size: 48px;
+  --dp-ui-menu-button-height: 40px;
+  --dp-ui-menu-button-label-text-color: var(
+    --dp-ui-sys-color-on-surface-variant
+  );
+  --dp-ui-menu-button-icon-size: 18px;
+  --dp-ui-icon-button-size: 40px;
+  --dp-ui-icon-button-icon-size: 24px;
+  --dp-ui-icon-button-icon-color: var(--dp-ui-sys-color-on-surface-variant);
+  --dp-ui-text-button-height: 36px;
+  --dp-ui-text-button-label-text-color: var(--dp-ui-sys-color-primary);
+
+  --dp-ui-weekday-label-text-color: var(--dp-ui-sys-color-on-surface);
+  --dp-ui-week-number-label-text-color: var(
+    --dp-ui-sys-color-on-surface-variant
+  );
+  --dp-ui-week-number-width: 48px;
+  --dp-ui-date-container-size: 48px;
+  --dp-ui-date-state-layer-size: 40px;
+  --dp-ui-date-content-row-height: 64px;
+  --dp-ui-date-content-color: var(--dp-ui-sys-color-on-surface-variant);
+  --dp-ui-date-label-text-color: var(--dp-ui-sys-color-on-surface);
+  --dp-ui-date-state-layer-color: var(--dp-ui-sys-color-on-surface);
+  --dp-ui-date-outside-month-opacity: 0.38;
+  --dp-ui-date-disabled-opacity: var(--dp-ui-sys-state-disabled-opacity);
+  --dp-ui-date-today-outline-width: 1px;
+  --dp-ui-date-today-outline-color: var(--dp-ui-sys-color-primary);
+  --dp-ui-date-today-label-text-color: var(--dp-ui-sys-color-primary);
+  --dp-ui-date-selected-container-color: var(--dp-ui-sys-color-primary);
+  --dp-ui-date-selected-label-text-color: var(--dp-ui-sys-color-on-primary);
+
+  --dp-ui-date-in-range-container-color: var(
+    --dp-ui-sys-color-secondary-container
+  );
+  --dp-ui-date-in-range-label-text-color: var(
+    --dp-ui-sys-color-on-secondary-container
+  );
+  --dp-ui-date-in-range-state-layer-color: var(
+    --dp-ui-sys-color-on-primary-container
+  );
+  --dp-ui-date-badge-color: var(--dp-ui-sys-color-primary);
+  --dp-ui-date-badge-selected-color: var(--dp-ui-sys-color-on-primary);
+  --dp-ui-date-badge-size: 4px;
+  --dp-ui-range-height: 568px;
+  --dp-ui-month-width: calc(7 * var(--dp-ui-date-container-size));
+  --dp-ui-month-gap: 24px;
+  --dp-ui-presets-width: 168px;
+  --dp-ui-preset-height: 32px;
+  --dp-ui-preset-shape: 8px;
+  --dp-ui-preset-outline-color: var(--dp-ui-sys-color-outline);
+  --dp-ui-preset-label-text-color: var(--dp-ui-sys-color-on-surface-variant);
+  --dp-ui-preset-pressed-container-color: var(
+    --dp-ui-sys-color-secondary-container
+  );
+  --dp-ui-preset-pressed-label-text-color: var(
+    --dp-ui-sys-color-on-secondary-container
+  );
+  --dp-ui-preset-row-height: 48px;
+  --dp-ui-input-container-width: 328px;
+
+  --dp-ui-text-field-height: 56px;
+  --dp-ui-text-field-shape: var(--dp-ui-sys-shape-corner-extra-small);
+  --dp-ui-text-field-outline-width: 1px;
+  --dp-ui-text-field-outline-color: var(--dp-ui-sys-color-outline);
+  --dp-ui-text-field-focus-outline-width: 2px;
+  --dp-ui-text-field-focus-outline-color: var(--dp-ui-sys-color-primary);
+  --dp-ui-text-field-label-container-color: var(--dp-ui-container-color);
+  --dp-ui-text-field-label-text-color: var(
+    --dp-ui-sys-color-on-surface-variant
+  );
+  --dp-ui-text-field-focus-label-text-color: var(--dp-ui-sys-color-primary);
+  --dp-ui-text-field-input-text-color: var(--dp-ui-sys-color-on-surface);
+  --dp-ui-text-field-supporting-text-color: var(
+    --dp-ui-sys-color-on-surface-variant
+  );
+  --dp-ui-text-field-error-color: var(--dp-ui-sys-color-error);
+
+  --dp-ui-menu-item-height: 48px;
+  --dp-ui-menu-item-label-text-color: var(--dp-ui-sys-color-on-surface);
+  --dp-ui-menu-item-icon-color: var(--dp-ui-sys-color-on-surface-variant);
+  --dp-ui-menu-item-selected-container-color: var(
+    --dp-ui-sys-color-surface-variant
+  );
+  --dp-ui-menu-max-height: 336px;
+  --dp-ui-scrollbar-thumb-color: var(--dp-ui-sys-color-on-surface-variant);
+
+  --dp-ui-year-item-width: 72px;
+  --dp-ui-year-item-height: 36px;
+  --dp-ui-year-item-label-text-color: var(--dp-ui-sys-color-on-surface-variant);
+  --dp-ui-year-item-selected-container-color: var(--dp-ui-sys-color-primary);
+  --dp-ui-year-item-selected-label-text-color: var(
+    --dp-ui-sys-color-on-primary
+  );
+  --dp-ui-year-selection-height: 288px;
+
+  --dp-ui-focus-ring-color: var(--dp-ui-sys-color-primary);
+  --dp-ui-focus-ring-width: 2px;
+  --dp-ui-focus-ring-offset: 2px;
+
+  --dp-ui-popover-gap: 4px;
+  --dp-ui-popover-edge-margin: 4px;
+  --dp-ui-popover-min-height: 160px;
+  --dp-ui-popover-z-index: 5001;
+}

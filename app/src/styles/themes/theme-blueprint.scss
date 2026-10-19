@@ -1,0 +1,24 @@
+/* Blueprint theme (follows the color scheme) */
+
+:is(.dp-ui, .dp-ui__dialog, .dp-ui__container)[data-theme="blueprint"] {
+  --dp-ui-sys-color-surface-container-high: light-dark(#e8f1fb, #0a2747);
+  --dp-ui-sys-color-surface-variant: light-dark(#f3f8fe, #103257);
+  --dp-ui-sys-color-on-surface: light-dark(#0a2e6e, #dbeafe);
+  --dp-ui-sys-color-on-surface-variant: light-dark(#3a5fa0, #86b5e6);
+  --dp-ui-sys-color-primary: light-dark(#0b4ea2, #56c5ff);
+  --dp-ui-sys-color-on-primary: light-dark(#ffffff, #0a2747);
+  --dp-ui-sys-color-on-primary-container: light-dark(#08245e, #d6eaff);
+  --dp-ui-sys-color-secondary-container: light-dark(#d3e4fb, #1a4e85);
+  --dp-ui-sys-color-on-secondary-container: light-dark(#08245e, #d6eaff);
+  --dp-ui-sys-color-outline: light-dark(#0b4ea2, #56c5ff);
+  --dp-ui-sys-color-outline-variant: light-dark(
+    rgba(11, 77, 162, 0.22),
+    rgba(120, 185, 255, 0.25)
+  );
+  --dp-ui-sys-color-error: light-dark(#c5302f, #ff7a7a);
+  --dp-ui-sys-color-scrim: light-dark(#0a2e6e, #000000);
+  --dp-ui-container-elevation: light-dark(
+    0 8px 24px rgba(11, 46, 110, 0.12),
+    0 8px 24px rgba(0, 0, 0, 0.55)
+  );
+}

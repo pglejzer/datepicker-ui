@@ -1,0 +1,21 @@
+name: Feature request
+description: Suggest a new option, event or behavior
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What do you want to do?
+      description: The use case, not the solution yet.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed API
+      description: How the option, method or event could look.
+      render: ts
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Workarounds you tried

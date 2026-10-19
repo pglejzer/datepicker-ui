@@ -1,0 +1,148 @@
+@use "../base/utilities" as *;
+
+@position-try --dp-ui-flip {
+  position-area: block-start span-inline-end;
+}
+
+.dp-ui__container {
+  --dp-ui-pager-rest-x: -100%;
+  display: flex;
+  flex-direction: column;
+  inline-size: var(--dp-ui-container-width);
+  max-inline-size: 100vw;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  color: var(--dp-ui-container-text-color);
+  background-color: var(--dp-ui-container-color);
+  border-radius: var(--dp-ui-container-shape-docked);
+  box-shadow: var(--dp-ui-container-elevation);
+  backdrop-filter: var(--dp-ui-container-backdrop-filter);
+  @include typescale(body-large);
+}
+
+.dp-ui__container--rtl {
+  --dp-ui-pager-rest-x: 100%;
+}
+
+.dp-ui__container:has(.dp-ui__week-number-header) {
+  inline-size: calc(
+    var(--dp-ui-container-width) + var(--dp-ui-week-number-width)
+  );
+}
+
+.dp-ui__container.dp-ui__container--multi-month {
+  --dp-ui-month-column-extra: 0px;
+  inline-size: calc(
+    var(--dp-ui-visible-months, 2) *
+      (var(--dp-ui-month-width) + var(--dp-ui-month-column-extra)) +
+      (var(--dp-ui-visible-months, 2) - 1) * var(--dp-ui-month-gap) + 2 *
+      var(--dp-ui-container-side-padding)
+  );
+}
+
+.dp-ui__container.dp-ui__container--multi-month:has(
+    .dp-ui__week-number-header
+  ) {
+  --dp-ui-month-column-extra: var(--dp-ui-week-number-width);
+}
+
+.dp-ui__calendar {
+  display: contents;
+}
+
+.dp-ui__container:not(.dp-ui__container--fullscreen):has(
+    > .dp-ui__calendar > .dp-ui__actions[hidden]
+  ),
+.dp-ui__container:not(.dp-ui__container--fullscreen):not(
+    :has(> .dp-ui__calendar > .dp-ui__actions)
+  ) {
+  padding-block-end: 12px;
+}
+
+.dp-ui__container--modal {
+  border-radius: var(--dp-ui-container-shape-modal);
+}
+
+.dp-ui__container--inline {
+  position: relative;
+  box-shadow: none;
+}
+
+.dp-ui__container--morphing {
+  overflow: hidden;
+}
+
+.dp-ui__container--morphing:not([popover]) {
+  position: relative;
+}
+
+.dp-ui__container--fullscreen.dp-ui__container--morphing {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+}
+
+.dp-ui__container.dp-ui__container--fullscreen {
+  inline-size: 100vw;
+  block-size: 100dvh;
+  max-inline-size: none;
+  max-block-size: none;
+  border-radius: var(--dp-ui-sys-shape-corner-none);
+  box-shadow: none;
+}
+
+.dp-ui__dialog:has(> .dp-ui__container--fullscreen) {
+  inset: 0;
+  inline-size: 100vw;
+  block-size: 100dvh;
+  max-inline-size: none;
+  max-block-size: none;
+  margin: 0;
+}
+
+.dp-ui__dialog {
+  inline-size: fit-content;
+  block-size: fit-content;
+  max-inline-size: 100vw;
+  max-block-size: 100dvh;
+  margin: auto;
+  padding: 0;
+  border: 0;
+  overflow: visible;
+  color: inherit;
+  background: transparent;
+}
+
+.dp-ui__dialog::backdrop {
+  background-color: color-mix(
+    in srgb,
+    var(--dp-ui-scrim-color, #000) calc(var(--dp-ui-scrim-opacity, 0.32) * 100%),
+    transparent
+  );
+}
+
+.dp-ui__container--docked[popover] {
+  position: fixed;
+  inset: auto;
+  inset-block-start: var(--dp-ui-popover-top, 0);
+  inset-inline-start: var(--dp-ui-popover-left, 0);
+  z-index: var(--dp-ui-popover-z-index);
+  max-block-size: var(--dp-ui-popover-available-height, 100dvh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+@supports (position-area: block-end) {
+  .dp-ui__container--docked[popover]:not([data-positioning="fallback"]) {
+    inset-block-start: auto;
+    inset-inline-start: auto;
+    position-anchor: var(--dp-ui-anchor-name);
+    position-area: block-end span-inline-end;
+    position-try-fallbacks: --dp-ui-flip;
+    position-try-order: most-height;
+    margin-block: var(--dp-ui-popover-gap);
+    max-block-size: none;
+  }
+}

@@ -1,603 +1,610 @@
+import type { WeekStartOption } from "../utils/date/intl";
+import type { FormatOption } from "../utils/date/format";
+import type { DateInput } from "./date";
+import type { CalendarMode, PageBy, Precision } from "./selection";
 import type {
-  DatepickerEventCallback,
-  OpenEventData,
   CancelEventData,
+  CloseEventData,
   ConfirmEventData,
-  UpdateEventData,
-  UpdateInfo,
+  ErrorEventData,
+  NavigateEventData,
+  OpenEventData,
+  PickerValue,
+  RangeEndEventData,
+  RangeStartEventData,
   SelectDayEventData,
   SelectMonthEventData,
   SelectYearEventData,
-  ErrorEventData,
-  RangeStartEventData,
-  RangeUpdateEventData,
-  RangeEndEventData,
-  RangeCancelEventData,
+  UpdateEventData,
 } from "./types";
 
-/**
- * Swipe/gesture configuration for calendar navigation
- */
-export interface SwipeOptions {
-  /**
-   * @description Enable swipe gestures
-   * @default true
-   */
-  enabled?: boolean;
+/** Built-in theme names. */
+export type ThemeName =
+  | "basic"
+  | "m3-green"
+  | "crane"
+  | "crane-straight"
+  | "m2"
+  | "glassmorphic"
+  | "pastel"
+  | "ai"
+  | "cyberpunk"
+  | "blueprint";
 
-  /**
-   * @description Velocity threshold for swipe detection (pixels per millisecond)
-   * @default 0.3
-   */
-  velocity?: number;
+/** A label that is a plain string or a map from `Intl.PluralRules` categories to strings. `{count}` is replaced by the number. */
+export type PluralLabel =
+  string | Readonly<Partial<Record<Intl.LDMLPluralRule, string>>>;
 
-  /**
-   * @description Duration of snap animation in milliseconds
-   * @default 200
-   */
-  snapDuration?: number;
-
-  /**
-   * @description Show overlapping month preview during swipe
-   * @default true
-   */
-  overlapPreview?: boolean;
-
-  /**
-   * @description Allow fast swipe to jump multiple months
-   * @default true
-   */
-  multipleMonthsJump?: boolean;
-
-  /**
-   * @description Enable touch gesture support
-   * @default true
-   */
-  touchEnabled?: boolean;
-
-  /**
-   * @description Enable mouse drag support
-   * @default true
-   */
-  mouseEnabled?: boolean;
-
-  /**
-   * @description Minimum distance in pixels to trigger swipe
-   * @default 50
-   */
-  threshold?: number;
-
-  /**
-   * @description Resistance factor when dragging beyond bounds (0-1)
-   * @default 0.5
-   */
-  resistance?: number;
+/** Extra presentation of a single day returned by `calendar.decorateDate`. */
+export interface DateDecoration {
+  /** Class name added to the day cell. */
+  className?: string;
+  /** Show a small badge dot on the day. */
+  badge?: boolean;
+  /** Text appended to the accessible name of the day. */
+  label?: string;
 }
 
-/**
- * Calendar behavior configuration
- */
+/** The two ends of a range preset. */
+export interface RangePresetValue {
+  /** First day of the range. */
+  start: DateInput;
+  /** Last day of the range, on or after `start`. */
+  end: DateInput;
+}
+
+/** A ready-made range offered next to the calendar, for example "Last 7 days". */
+export interface RangePreset {
+  /** Text of the preset button. */
+  label: string;
+  /** The range, or a function that returns it (called each time the picker refreshes, so "today" stays current). */
+  value: RangePresetValue | (() => RangePresetValue);
+}
+
+/** Which days exist and how the weeks are laid out. */
 export interface CalendarOptions {
   /**
-   * @description First day of week
-   * @default "auto"
-   * @example
-   * weekStart: "monday" // Week starts on Monday
-   * weekStart: "sunday" // Week starts on Sunday
-   * weekStart: "auto" // Detect from user's locale using Intl.Locale API
+   * What the user selects: one day, a range of days or any number of days.
+   * @default "single"
    */
-  weekStart?: "auto" | "monday" | "sunday";
-
+  mode?: CalendarMode;
   /**
-   * @description Locale for auto week start detection
-   * @default "en-US"
-   * @example locale: "pl-PL", locale: "en-GB", locale: "de-DE"
+   * What one selection is: a day, a month or a year. With `"month"` the value
+   * is `YYYY-MM` and with `"year"` it is `YYYY`, both standing for the first
+   * day of the period. Only used in `single` mode (other modes report an
+   * `invalid-option` error and use `"day"`). Typed text is masked only at
+   * day precision.
+   * @default "day"
+   */
+  precision?: Precision;
+  /**
+   * How many months are shown side by side, a positive integer. Applies to
+   * the docked and inline surfaces and to day precision, as many as fit the
+   * width at open (up to this number). A modal shows one month.
+   * @default 1
+   */
+  months?: number;
+  /**
+   * How far the previous / next arrows, the swipe and the keyboard page move:
+   * `"month"` one month, `"view"` as many months as are shown.
+   * @default "view"
+   */
+  pageBy?: PageBy;
+  /**
+   * Length limits of a range in days, both ends included, and ready-made
+   * ranges (`presets`). Only used in `range` mode. Presets show as a column
+   * beside the picker when it fits, otherwise as a chip row; clicking one
+   * picks the range and follows `behavior.closeOnSelect` and
+   * `behavior.commitOnChange`.
+   * @default undefined
+   */
+  range?: {
+    minLength?: number;
+    maxLength?: number;
+    presets?: readonly RangePreset[];
+  };
+  /**
+   * Limits of a multiple selection. Only used in `multiple` mode.
+   * @default undefined
+   */
+  multiple?: { max?: number };
+  /**
+   * Return `true` for a day that cannot be selected, on top of `minDate`,
+   * `maxDate`, `disabledDates` and `enabledDates`.
+   * @default undefined
+   */
+  isDateDisabled?: (date: Date) => boolean;
+  /**
+   * Weekdays that cannot be selected, `0` is Sunday and `6` is Saturday.
+   * @default []
+   */
+  disabledWeekdays?: readonly number[];
+  /**
+   * Return extra presentation for a day, or `undefined` for none.
+   * @default undefined
+   */
+  decorateDate?: (date: Date) => DateDecoration | undefined;
+  /**
+   * Content shown inside each day cell, for example a price: a string (text,
+   * never HTML), a DOM node, or `null` / `undefined` for none. The text is
+   * added to the accessible name of the day.
+   * @default undefined
+   */
+  renderDate?: (date: Date) => string | Node | null | undefined;
+  /**
+   * Field validity rule run on the presented value (`null` when empty) after
+   * `setValue()`, typed input and every commit. Return a message to mark the
+   * input invalid (`aria-invalid`, `setCustomValidity`, an `error` event with
+   * code `invalid-value`); return `null`, `undefined` or an empty string when
+   * the value is fine. It never blocks a pick or a commit.
+   * @default undefined
+   */
+  validate?: (value: PickerValue | null) => string | null | undefined;
+  /**
+   * BCP 47 locale for month and weekday names, the headline, the input format
+   * and the first day of the week. Falls back to `<html lang>`, then
+   * `navigator.language`, then `en-US`.
+   * @default the page locale
    */
   locale?: string;
-
   /**
-   * @description Minimum selectable date
+   * First day of the week. `auto` follows the locale.
+   * @default "auto"
    */
-  minDate?: Date;
-
+  weekStart?: WeekStartOption;
   /**
-   * @description Maximum selectable date
+   * Earliest selectable day: a `Date`, an ISO `YYYY-MM-DD` string or `"today"`.
+   * @default undefined
    */
-  maxDate?: Date;
-
+  minDate?: DateInput;
   /**
-   * @description Array of disabled dates
-   * @example disabledDates: [new Date(2025, 0, 15), new Date(2025, 0, 20)]
+   * Latest selectable day: a `Date`, an ISO `YYYY-MM-DD` string or `"today"`.
+   * @default undefined
    */
-  disabledDates?: Date[];
-
+  maxDate?: DateInput;
   /**
-   * @description Array of enabled dates (only these dates are selectable)
-   * @example enabledDates: [new Date(2025, 0, 15), new Date(2025, 0, 20)]
+   * Days that cannot be selected.
+   * @default []
    */
-  enabledDates?: Date[];
+  disabledDates?: readonly DateInput[];
+  /**
+   * When set, only these days can be selected.
+   * @default undefined
+   */
+  enabledDates?: readonly DateInput[];
 }
 
-/**
- * UI appearance and behavior configuration
- */
+/** Presentation and display behaviour. */
 export interface UIOptions {
   /**
-   * @description Date format for input display
-   * @default "dd/mm/yyyy"
-   * @example "dd/mm/yyyy", "mm/dd/yyyy", "yyyy-mm-dd", "dd.mm.yyyy", "yyyy/mm/dd"
+   * `auto` opens the docked popover on wide viewports and the modal dialog on
+   * compact ones; `docked` and `modal` force one of them.
+   * @default "auto"
    */
-  format?:
-    | "dd/mm/yyyy"
-    | "dd-mm-yyyy"
-    | "dd.mm.yyyy"
-    | "mm/dd/yyyy"
-    | "mm-dd-yyyy"
-    | "mm.dd.yyyy"
-    | "yyyy-mm-dd"
-    | "yyyy/mm/dd"
-    | "yyyy.mm.dd";
-
+  displayMode?: "auto" | "docked" | "modal";
   /**
-   * @description Enable automatic input masking while typing
-   * @default false
-   *
-   * When enabled:
-   * - Auto-inserts separators (/, -, .)
-   * - Corrects invalid values (day > 31 → 31, month > 12 → 12)
-   * - Adapts max day based on month and leap year
-   * - Preserves cursor position during corrections
-   * - Prevents impossible dates while typing
-   *
-   * When disabled:
-   * - Raw input passes through untouched
-   * - No automatic formatting or corrections
-   * - Validation happens only on blur
+   * Render the calendar permanently into a container instead of opening it.
+   * `container` is a selector or an element.
+   * @default { enabled: false }
    */
-  maskEnabled?: boolean;
-
+  inline?: { enabled?: boolean; container?: string | HTMLElement };
   /**
-   * @description Selector for icon element that opens picker
-   * @example iconSelector: ".calendar-icon"
-   *
-   * **REQUIRED for dropdown picker to work**
-   * - Only icon click opens dropdown picker
-   * - Input is used only for typing/mask
-   * - No input click handler when iconSelector is provided
-   *
-   * **Modal mode (future)**:
-   * - Will open on input click (without iconSelector)
-   * - Centered with backdrop
-   * - Different UI/UX
+   * `auto` follows the locale's numeric order and separators; otherwise a
+   * pattern built from `d dd M MM yy yyyy` and one separator of `/ . - space`.
+   * With `calendar.precision` `"month"` or `"year"` the pattern may leave out
+   * the finer parts (`"MM/yyyy"`, `"yyyy-MM"`, and for `"year"` also `"yyyy"`).
+   * @default "auto"
    */
-  iconSelector?: string;
-
+  format?: FormatOption;
   /**
-   * @description Display mode for picker
-   * @default "dropdown"
-   *
-   * **Current implementation**: Only "dropdown" is fully supported
-   * - Opens below/above input
-   * - Always scrollable
-   * - No backdrop
-   * - Triggered by icon click
-   *
-   * **"modal" mode**: Not yet implemented
-   * - Will be centered with backdrop
-   * - Different animation
-   * - Different event handling
-   */
-  displayMode?: "modal" | "dropdown";
-
-  /**
-   * @description Modal header label text
-   * @default "Select date"
-   * @example modalLabel: "Choose a date"
-   *
-   * Only used in modal mode
-   */
-  modalLabel?: string;
-
-  /**
-   * @description Show modal header label
-   * @default true
-   *
-   * Only used in modal mode
-   */
-  showModalLabel?: boolean;
-
-  /**
-   * @description Theme for the datepicker
+   * Theme applied to the picker surface: `basic`, `m3-green`, `crane`,
+   * `crane-straight`, `m2`, `glassmorphic`, `pastel`, `ai`, `cyberpunk`,
+   * `blueprint`. `basic` and `blueprint` follow `colorScheme`, the others have
+   * one fixed scheme.
    * @default "basic"
    */
-  theme?:
-    | "basic"
-    | "crane"
-    | "crane-straight"
-    | "m2"
-    | "m3-green"
-    | "dark"
-    | "glassmorphic"
-    | "pastel"
-    | "ai"
-    | "cyberpunk";
-
+  theme?: ThemeName;
   /**
-   * @description Show week numbers in calendar
-   * @default false
+   * `auto` detects the scheme when the picker opens: the first opaque
+   * `background-color` from the input up to `<html>` decides (dark when its
+   * luminance is low); without one, the page `color-scheme` decides (`dark`
+   * is dark, `light dark` follows the OS, anything else is light). An inline
+   * picker follows later page changes. `light` and `dark` force one. Themes
+   * with a single version ignore this option.
+   * @default "auto"
    */
-  showWeekNumbers?: boolean;
-
+  colorScheme?: "auto" | "light" | "dark";
   /**
-   * @description Year range for year picker
-   * @default { before: 100, after: 20 }
-   * @example
-   * yearRange: { before: 20, after: 5 } // 20 years before, 5 years after current year
-   * yearRange: { before: 5, after: 15 } // 5 years before, 15 years after current year
-   *
-   * Maximum values: before: 100, after: 100
-   */
-  yearRange?: {
-    /**
-     * @description Years before current year
-     * @default 100
-     * @minimum 1
-     * @maximum 100
-     */
-    before?: number;
-    /**
-     * @description Years after current year
-     * @default 20
-     * @minimum 1
-     * @maximum 100
-     */
-    after?: number;
-  };
-
-  /**
-   * @description Show "Today" button
+   * Range pickers in a modal open full screen below this window width:
+   * `true` below 600 px, a number below that many px (for example 840), `false`
+   * never. With `displayMode: "auto"` the surface is docked from 600 px, so a
+   * value above 600 only matters with `displayMode: "modal"`. Decided when the
+   * picker opens.
    * @default true
    */
-  showTodayButton?: boolean;
-
+  fullscreen?: boolean | number;
   /**
-   * @description Show "Clear" button
+   * Selector or element that opens the picker besides the input, for example
+   * a calendar icon button.
+   * @default undefined
+   */
+  toggleButton?: string | HTMLElement;
+  /**
+   * Show ISO week numbers before each row.
    * @default false
    */
-  showClearButton?: boolean;
-
+  weekNumbers?: boolean;
   /**
-   * @description Show backdrop when datepicker is open
+   * Show the days of neighbouring months in the first and last rows. `true`
+   * and `{}` show them selectable; `{ selectable: false }` shows them dimmed
+   * and inert.
    * @default false
-   *
-   * **Dropdown mode**: No backdrop (current behavior)
-   * **Modal mode**: Will use backdrop (future)
    */
-  backdrop?: boolean;
-
+  outsideDays?: boolean | { selectable?: boolean };
   /**
-   * @description Enable/disable animations
+   * Always render six week rows, so the calendar keeps its height from month
+   * to month.
+   * @default false
+   */
+  fixedWeeks?: boolean;
+  /**
+   * Years offered in the year selection, counted from the current year.
+   * @default { before: 100, after: 20 }
+   */
+  yearRange?: { before?: number; after?: number };
+  /**
+   * Show the Today button in the footer.
+   * @default false
+   */
+  todayButton?: boolean;
+  /**
+   * Show the Clear button in the footer. `true` also clears the input; pass
+   * `{ clearInput: false }` to keep the typed text.
+   * @default false
+   */
+  clearButton?: boolean | { clearInput?: boolean };
+  /**
+   * Show the footer with the action buttons. Unset means shown, except in
+   * inline mode.
+   * @default undefined
+   */
+  footer?: boolean;
+  /**
+   * Play motion. Always off with `prefers-reduced-motion: reduce`.
    * @default true
    */
   animation?: boolean;
-
   /**
-   * @description Force mobile mode
+   * Keep the page scrollable while the modal is open.
    * @default false
    */
-  mobile?: boolean;
-
+  allowPageScroll?: boolean;
   /**
-   * @description Enable scrollbar when datepicker is open
-   * @default true
-   *
-   * **Dropdown mode**: Always allows scroll (current default)
-   * **Modal mode**: Can block scroll with backdrop (future)
-   */
-  enableScrollbar?: boolean;
-
-  /**
-   * @description Additional CSS class for the wrapper
-   * @example cssClass: "my-custom-datepicker"
-   */
-  cssClass?: string;
-
-  /**
-   * @description Selector where to append modal (default: body)
+   * Extra class names added to the picker surface.
    * @default ""
    */
-  appendModalSelector?: string;
-
+  cssClass?: string;
   /**
-   * @description Inline mode configuration
-   * @example
-   * inline: {
-   *   enabled: true,
-   *   containerId: "datepicker-container",
-   *   showButtons: false,
-   *   autoUpdate: true
-   * }
+   * Selector or element the modal dialog is appended to. Defaults to the
+   * picker host.
+   * @default undefined
    */
-  inline?: {
-    enabled?: boolean;
-    containerId?: string;
-    showButtons?: boolean;
-    autoUpdate?: boolean;
-  };
-
+  appendTo?: string | HTMLElement;
   /**
-   * @description Enable range selection mode
+   * Drag, wheel and swipe between months.
    * @default true
-   *
-   * When enabled:
-   * - Normal click selects single date (default behavior)
-   * - Long-press (250ms) on any day activates range selection
-   * - After long-press: first click sets start, second sets end
-   * - Hover shows live preview between start and end
-   * - Close (X) button cancels range and returns to single-date mode
-   * - Save button commits range selection
-   * - ESC also cancels active range
-   * - Third click on range resets and starts new range
-   *
-   * When disabled:
-   * - Only single-date selection available
-   * - Long-press has no effect
-   *
-   * Works in both dropdown and modal modes
    */
-  rangeSelection?: boolean;
-
+  swipe?: boolean;
   /**
-   * @description Swipe/gesture configuration for calendar navigation
-   * @default { enabled: true }
-   *
-   * Features:
-   * - Touch swipe on mobile devices
-   * - Mouse drag on desktop
-   * - Smooth overlapping month preview
-   * - Velocity-based multi-month jumps
-   * - RTL support (auto-reversed)
-   *
-   * @example
-   * swipe: {
-   *   enabled: true,
-   *   velocity: 0.3,
-   *   snapDuration: 200,
-   *   overlapPreview: true,
-   *   multipleMonthsJump: true,
-   *   touchEnabled: true,
-   *   mouseEnabled: true
-   * }
+   * Show the button that switches between the calendar and the text input
+   * view, where the mode and surface support it.
+   * @default true
    */
-  swipe?: SwipeOptions;
+  viewSwitch?: boolean;
+  /**
+   * View shown when the picker opens, where the mode and surface support the
+   * input view.
+   * @default "calendar"
+   */
+  initialView?: "calendar" | "input";
+  /**
+   * Mask the text typed into the input to `ui.format` (digits only, separators added).
+   * Single mode and the split range fields (`ui.endInput`), day precision only.
+   * @default false
+   */
+  mask?: boolean;
+  /**
+   * Selector or element of the page's second `<input>`, which turns a range
+   * picker into a Start / End pair: the main input holds the start, this one
+   * the end. Read when `create()` runs; only used in `range` mode. Typing
+   * commits only a full pair (or two empty fields). Clicking a field opens
+   * the picker on that end, and the field being picked gets the class
+   * `dp-ui__input--active`.
+   * @default undefined
+   */
+  endInput?: string | HTMLElement;
+  /**
+   * First calendar panel when the picker opens: the day grid, the month list
+   * (docked, inline) or grid (modal), or the year list or grid. `initialView:
+   * "input"` wins; ignored in `range` mode and when `calendar.precision` is not
+   * `"day"`.
+   * @default "day"
+   */
+  startView?: "day" | "month" | "year";
 }
 
-/**
- * Text labels configuration
- */
+/** Texts used by buttons and assistive technology. Month and weekday names come from `Intl`. */
 export interface LabelsOptions {
   /**
-   * @description Month names (full)
-   * @default ['January', 'February', ...]
+   * Modal header supporting text.
+   * @default "Select date"
    */
-  months?: string[];
-
+  title?: string;
   /**
-   * @description Month names (short)
-   * @default ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+   * Header supporting text with `calendar.precision: "month"`.
+   * @default "Select month"
    */
-  monthsShort?: string[];
-
+  monthTitle?: string;
   /**
-   * @description Custom month names array (12 items)
-   * @example ['Styczeń', 'Luty', 'Marzec', ...]
+   * Header supporting text with `calendar.precision: "year"`.
+   * @default "Select year"
    */
-  customMonths?: string[];
-
+  yearTitle?: string;
   /**
-   * @description Number of letters to show from month name
-   * @default 3
-   * @example monthLetters: 3 → 'Aug', monthLetters: 1 → 'A'
+   * Modal headline while no date is selected.
+   * @default "No date selected"
    */
-  monthLetters?: number;
-
+  noDate?: string;
   /**
-   * @description Weekday names (short)
-   * @default ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
-   */
-  weekdays?: string[];
-
-  /**
-   * @description Custom weekday names array (7 items, starting from Sunday)
-   * @example ['Niedz', 'Pon', 'Wt', 'Śr', 'Czw', 'Pt', 'Sob']
-   */
-  customWeekdays?: string[];
-
-  /**
-   * @description Number of letters to show from weekday name
-   * @default 1
-   * @example weekdayLetters: 1 → 'S', weekdayLetters: 2 → 'Su'
-   */
-  weekdayLetters?: number;
-
-  /**
-   * @description "Today" button text
-   * @default "Today"
-   */
-  today?: string;
-
-  /**
-   * @description "Clear" button text
-   * @default "Clear"
-   */
-  clear?: string;
-
-  /**
-   * @description "Cancel" button text
-   * @default "Cancel"
-   */
-  cancel?: string;
-
-  /**
-   * @description "OK" button text
+   * Confirm button.
    * @default "OK"
    */
   confirm?: string;
+  /**
+   * Cancel button.
+   * @default "Cancel"
+   */
+  cancel?: string;
+  /**
+   * Today button.
+   * @default "Today"
+   */
+  today?: string;
+  /**
+   * Clear button.
+   * @default "Clear"
+   */
+  clear?: string;
+  /**
+   * Accessible name of the toggle button.
+   * @default "Choose date"
+   */
+  openCalendar?: string;
+  /**
+   * Previous month button.
+   * @default "Previous month"
+   */
+  previousMonth?: string;
+  /**
+   * Next month button.
+   * @default "Next month"
+   */
+  nextMonth?: string;
+  /**
+   * Previous year button.
+   * @default "Previous year"
+   */
+  previousYear?: string;
+  /**
+   * Next year button.
+   * @default "Next year"
+   */
+  nextYear?: string;
+  /**
+   * Month menu button and list.
+   * @default "Choose month"
+   */
+  chooseMonth?: string;
+  /**
+   * Year menu button and list.
+   * @default "Choose year"
+   */
+  chooseYear?: string;
+  /**
+   * Week number column header.
+   * @default "Week"
+   */
+  weekNumber?: string;
+  /**
+   * Message for a typed text that is not a date.
+   * @default "Enter a valid date"
+   */
+  invalidDate?: string;
+  /**
+   * Message for a typed date that is disabled or out of range.
+   * @default "This date is not available"
+   */
+  unavailableDate?: string;
+  /**
+   * Header supporting text in `range` mode.
+   * @default "Select dates"
+   */
+  rangeTitle?: string;
+  /**
+   * Headline placeholder for the missing start of a range.
+   * @default "Start"
+   */
+  rangeStart?: string;
+  /**
+   * Headline placeholder for the missing end of a range.
+   * @default "End"
+   */
+  rangeEnd?: string;
+  /**
+   * Headline in `multiple` mode; `{count}` is the number of selected days.
+   * @default "{count} selected"
+   */
+  multipleSelected?: PluralLabel;
+  /**
+   * Save button of the fullscreen range picker.
+   * @default "Save"
+   */
+  save?: string;
+  /**
+   * Close button of the fullscreen range picker.
+   * @default "Close"
+   */
+  close?: string;
+  /**
+   * Accessible name of the button that shows the text input view.
+   * @default "Switch to text input"
+   */
+  switchToInput?: string;
+  /**
+   * Accessible name of the button that shows the calendar view.
+   * @default "Switch to calendar"
+   */
+  switchToCalendar?: string;
+  /**
+   * Label of the date text field in `single` mode.
+   * @default "Date"
+   */
+  dateField?: string;
+  /**
+   * Label of the start date text field in `range` mode.
+   * @default "Start date"
+   */
+  startDateField?: string;
+  /**
+   * Label of the end date text field in `range` mode.
+   * @default "End date"
+   */
+  endDateField?: string;
+  /**
+   * Message for a range whose end is before its start or breaks the length limits.
+   * @default "End date must be on or after the start date"
+   */
+  invalidRange?: string;
+  /**
+   * Message for a typed date before `minDate`; `{date}` is the minimum date.
+   * @default "Enter a date on or after {date}"
+   */
+  beforeMinDate?: string;
+  /**
+   * Message for a typed date after `maxDate`; `{date}` is the maximum date.
+   * @default "Enter a date on or before {date}"
+   */
+  afterMaxDate?: string;
+  /**
+   * Accessible name of the range presets group.
+   * @default "Presets"
+   */
+  presets?: string;
+  /**
+   * Name of the Page Up key in the keyboard shortcut tooltips of the navigation buttons.
+   * @default "Page Up"
+   */
+  pageUpKey?: string;
+  /**
+   * Name of the Page Down key in the keyboard shortcut tooltips of the navigation buttons.
+   * @default "Page Down"
+   */
+  pageDownKey?: string;
+  /**
+   * Name of the Shift key in the keyboard shortcut tooltips (`Shift+Page Up`, `Shift+M`).
+   * @default "Shift"
+   */
+  shiftKey?: string;
+  /**
+   * Placeholder letters for the day in the format hint shown under the field (Polish: "dd").
+   * @default "dd"
+   */
+  hintDay?: string;
+  /**
+   * Placeholder letters for the month in the format hint shown under the field (Polish: "mm").
+   * @default "mm"
+   */
+  hintMonth?: string;
+  /**
+   * Placeholder letters for the year in the format hint shown under the field (Polish: "rrrr").
+   * A two-digit year format uses the first two characters.
+   * @default "yyyy"
+   */
+  hintYear?: string;
 }
 
-/**
- * Behavior configuration
- */
+/** Interaction rules. */
 export interface BehaviorOptions {
   /**
-   * @description Close datepicker on date selection
-   * @default true
-   *
-   * **Dropdown mode**: Default true (quick select)
-   * **Modal mode**: Default false (confirm/cancel pattern)
+   * Commit and close as soon as a day is picked.
+   * @default false
    */
   closeOnSelect?: boolean;
-
   /**
-   * @description Close datepicker on cancel button click
+   * Close the picker when it is cancelled.
    * @default true
    */
   closeOnCancel?: boolean;
-
   /**
-   * @description Close datepicker on backdrop click
+   * Commit every change to the input immediately, without the confirm button.
+   * @default false
+   */
+  commitOnChange?: boolean;
+  /**
+   * Keep the picker open when the user clicks outside of it.
+   * @default false
+   */
+  ignoreOutsideClick?: boolean;
+  /**
+   * Move focus back to the input when the picker closes.
    * @default true
    */
-  closeOnClickOutside?: boolean;
-
+  returnFocus?: boolean;
   /**
-   * @description Auto-apply selected date without confirmation
-   * @default false
-   */
-  autoApply?: boolean;
-
-  /**
-   * @description Enable focus trap in modal
-   * @default false
-   *
-   * **Dropdown mode**: No focus trap (allows tab out)
-   * **Modal mode**: Will trap focus (accessibility)
-   */
-  focusTrap?: boolean;
-
-  /**
-   * @description Focus input after closing modal
-   * @default false
-   */
-  focusInputAfterClose?: boolean;
-
-  /**
-   * @description Delay for clickable elements (ms)
-   * @default 300
-   */
-  delayHandler?: number;
-
-  /**
-   * @description Custom ID for the datepicker instance
-   * @example id: "my-datepicker-1"
+   * Custom instance id for `DatepickerUI.getById()`.
+   * @default undefined
    */
   id?: string;
 }
 
-/**
- * Event callbacks configuration
- */
+/** User callbacks, called through the event bridge. */
 export interface CallbacksOptions {
-  /**
-   * @description Triggered when datepicker opens
-   */
-  onOpen?: DatepickerEventCallback<OpenEventData>;
-
-  /**
-   * @description Triggered when datepicker closes
-   */
-  onClose?: DatepickerEventCallback<Record<string, never>>;
-
-  /**
-   * @description Triggered when user cancels
-   */
-  onCancel?: DatepickerEventCallback<CancelEventData>;
-
-  /**
-   * @description Triggered when user confirms date
-   */
-  onConfirm?: DatepickerEventCallback<ConfirmEventData>;
-
-  /**
-   * @description Triggered during interaction (real-time)
-   * @param data - Event data with selected date
-   * @param info - Information about event source
-   *
-   * @example
-   * ```typescript
-   * onUpdate: (data, info) => {
-   *   console.log('Date:', data.date);
-   *   console.log('Triggered by:', info.event);
-   *
-   *   // Filter by event type
-   *   if (info.event === 'confirm' || info.event === 'cancel') {
-   *     // Only process on confirm/cancel
-   *   }
-   * }
-   * ```
-   */
-  onUpdate?: (data: UpdateEventData, info: UpdateInfo) => void;
-
-  /**
-   * @description Triggered when day is selected
-   */
-  onSelectDay?: DatepickerEventCallback<SelectDayEventData>;
-
-  /**
-   * @description Triggered when month view changes
-   */
-  onSelectMonth?: DatepickerEventCallback<SelectMonthEventData>;
-
-  /**
-   * @description Triggered when year view changes
-   */
-  onSelectYear?: DatepickerEventCallback<SelectYearEventData>;
-
-  /**
-   * @description Triggered on invalid date
-   */
-  onError?: DatepickerEventCallback<ErrorEventData>;
-
-  /**
-   * @description Triggered when range selection starts
-   */
-  onRangeStart?: DatepickerEventCallback<RangeStartEventData>;
-
-  /**
-   * @description Triggered during range hover/drag preview
-   */
-  onRangeUpdate?: DatepickerEventCallback<RangeUpdateEventData>;
-
-  /**
-   * @description Triggered when range selection completes
-   */
-  onRangeEnd?: DatepickerEventCallback<RangeEndEventData>;
-
-  /**
-   * @description Triggered when range selection is cancelled
-   */
-  onRangeCancel?: DatepickerEventCallback<RangeCancelEventData>;
+  /** Called when the picker opens. */
+  onOpen?: (data: OpenEventData) => void;
+  /** Called when the picker closes. */
+  onClose?: (data: CloseEventData) => void;
+  /** Called when the picker is dismissed without committing. */
+  onCancel?: (data: CancelEventData) => void;
+  /** Called when a value is committed or cleared. */
+  onConfirm?: (data: ConfirmEventData) => void;
+  /** Called after `setOptions()` applied a patch. */
+  onUpdate?: (data: UpdateEventData) => void;
+  /** Called for invalid typed dates and rejected options. */
+  onError?: (data: ErrorEventData) => void;
+  /** Called when a day is picked. */
+  onSelectDay?: (data: SelectDayEventData) => void;
+  /** Called when a month is chosen in the month menu. */
+  onSelectMonth?: (data: SelectMonthEventData) => void;
+  /** Called when a year is chosen. */
+  onSelectYear?: (data: SelectYearEventData) => void;
+  /** Called when the first day of a range is picked. */
+  onRangeStart?: (data: RangeStartEventData) => void;
+  /** Called when the range is completed. */
+  onRangeEnd?: (data: RangeEndEventData) => void;
+  /** Called when the displayed month changes. */
+  onNavigate?: (data: NavigateEventData) => void;
 }
 
-/**
- * Main options type with grouped structure
- */
+/** Options accepted by the `DatepickerUI` constructor and `setOptions()`. */
 export interface DatepickerOptions {
+  /** Days, locale and week layout. */
   calendar?: CalendarOptions;
+  /** Presentation and display behaviour. */
   ui?: UIOptions;
+  /** Button texts and accessible names. */
   labels?: LabelsOptions;
+  /** Interaction rules. */
   behavior?: BehaviorOptions;
+  /** Event callbacks. */
   callbacks?: CallbacksOptions;
 }
-
-export type OptionTypes = DatepickerOptions;

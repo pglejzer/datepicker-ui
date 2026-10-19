@@ -1,17 +1,21 @@
-/**
- * Material 2 Theme for DatepickerUI
- */
-
-[data-theme='m2'] {
-  --dp-primary: #1976d2;
-  --dp-on-primary: #ffffff;
-  --dp-surface: #ffffff;
-  --dp-on-surface: #000000;
-  --dp-outline: rgba(0, 0, 0, 0.12);
-  --dp-focus: #1976d2;
-}
-
-.dp-ui[data-theme='m2'] {
-  background-color: var(--dp-surface);
-  color: var(--dp-on-surface);
+/* M2 theme for DatepickerUI, ported from timepicker-ui */
+:is(.dp-ui, .dp-ui__dialog, .dp-ui__container)[data-theme="m2"] {
+  color-scheme: light;
+  --dp-ui-sys-color-surface-container-high: #ffffff;
+  --dp-ui-sys-color-surface-variant: #e0e0e0;
+  --dp-ui-sys-color-on-surface: #000000;
+  --dp-ui-sys-color-on-surface-variant: rgba(0, 0, 0, 0.6);
+  --dp-ui-sys-color-primary: #6200ee;
+  --dp-ui-sys-color-on-primary: #ffffff;
+  --dp-ui-sys-color-secondary-container: #ece0fd;
+  --dp-ui-sys-color-on-secondary-container: #6200ee;
+  --dp-ui-sys-color-on-primary-container: #6200ee;
+  --dp-ui-sys-color-outline-variant: #d6d6d6;
+  --dp-ui-sys-color-outline: #8b5cf6;
+  --dp-ui-focus-ring-color: #8b5cf6;
+  --dp-ui-container-elevation:
+    0px 3px 5px -1px rgba(0, 0, 0, 0.2), 0px 5px 8px 0px rgba(0, 0, 0, 0.14),
+    0px 1px 14px 0px rgba(0, 0, 0, 0.12);
+  --dp-ui-container-shape-docked: 4px;
+  --dp-ui-container-shape-modal: 4px;
 }

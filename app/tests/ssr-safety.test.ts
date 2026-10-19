@@ -1,31 +1,28 @@
-/**
- * SSR Safety Test
- * Ensures DatepickerUI can be imported in Node.js environment without errors
- */
+// @vitest-environment node
+import { describe, expect, it, vi } from "vitest";
 
-describe('SSR Safety', () => {
-  it('should import DatepickerUI without crashing in Node.js-like environment', () => {
-    expect(() => {
-      require('../src/index');
-    }).not.toThrow();
+describe("SSR safety", () => {
+  it("runs without DOM globals", () => {
+    expect(typeof window).toBe("undefined");
+    expect(typeof document).toBe("undefined");
   });
 
-  it('should not access window/document at module top-level', () => {
-    const originalWindow = global.window;
-    const originalDocument = global.document;
+  it("imports the library entry without touching window or document at module top level", async () => {
+    vi.resetModules();
 
-    // @ts-expect-error - testing SSR
-    delete global.window;
-    // @ts-expect-error - testing SSR
-    delete global.document;
+    const lib = await import("@/index");
 
-    expect(() => {
-      // Force re-import
-      jest.resetModules();
-      require('../src/index');
-    }).not.toThrow();
+    expect(typeof lib.default).toBe("function");
+    expect(lib.DatepickerUI).toBe(lib.default);
+    expect(lib.DEFAULT_DATEPICKER_OPTIONS.ui.displayMode).toBe("auto");
+  });
 
-    global.window = originalWindow;
-    global.document = originalDocument;
+  it("imports the kit entry without touching window or document at module top level", async () => {
+    vi.resetModules();
+
+    const kit = await import("@/kit");
+
+    expect(typeof kit.resolvePattern).toBe("function");
+    expect(typeof kit.PopoverHost).toBe("function");
   });
 });

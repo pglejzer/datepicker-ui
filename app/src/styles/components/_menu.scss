@@ -1,0 +1,79 @@
+@use "../base/utilities" as *;
+
+.dp-ui__menu {
+  block-size: var(--dp-ui-panel-height, var(--dp-ui-menu-max-height));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  @include thin-scrollbar;
+}
+
+.dp-ui__menu-item {
+  @include ripple-host;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-block-size: var(--dp-ui-menu-item-height);
+  padding-inline: 16px;
+  color: var(--dp-ui-menu-item-label-text-color);
+  cursor: pointer;
+  outline: none;
+  -webkit-user-select: none;
+  user-select: none;
+  @include typescale(body-large);
+}
+
+.dp-ui__menu-item-icon {
+  inline-size: 24px;
+  block-size: 24px;
+  color: var(--dp-ui-menu-item-icon-color);
+  visibility: hidden;
+}
+
+.dp-ui__menu-item--selected,
+.dp-ui__menu-item[aria-selected="true"] {
+  background-color: var(--dp-ui-menu-item-selected-container-color);
+}
+
+.dp-ui__menu-item--selected .dp-ui__menu-item-icon,
+.dp-ui__menu-item[aria-selected="true"] .dp-ui__menu-item-icon {
+  visibility: visible;
+}
+
+.dp-ui__menu-item-label {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+}
+
+.dp-ui__menu-item-label:only-child {
+  margin-inline-start: 40px;
+}
+
+.dp-ui__menu-item:hover {
+  @include state-layer-over(
+    var(--dp-ui-menu-item-base, transparent),
+    var(--dp-ui-menu-item-label-text-color),
+    --dp-ui-sys-state-layer-hover-opacity
+  );
+}
+
+.dp-ui__menu-item#{$focus-visible} {
+  @include state-layer-over(
+    var(--dp-ui-menu-item-base, transparent),
+    var(--dp-ui-menu-item-label-text-color),
+    --dp-ui-sys-state-layer-focus-opacity
+  );
+  @include focus-ring(calc(-1 * var(--dp-ui-focus-ring-width)));
+}
+
+.dp-ui__menu-item:active {
+  @include state-layer-over(
+    var(--dp-ui-menu-item-base, transparent),
+    var(--dp-ui-menu-item-label-text-color),
+    --dp-ui-sys-state-layer-pressed-opacity
+  );
+}
+
+.dp-ui__menu-item--selected,
+.dp-ui__menu-item[aria-selected="true"] {
+  --dp-ui-menu-item-base: var(--dp-ui-menu-item-selected-container-color);
+}

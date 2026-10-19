@@ -1,0 +1,52 @@
+name: Bug report
+description: Something in the picker does not work as described
+labels: ["bug"]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: The `@pglejzer/datepicker-ui` version you use.
+      placeholder: "1.0.0"
+    validations:
+      required: true
+  - type: textarea
+    id: options
+    attributes:
+      label: Options
+      description: The options you pass to `new DatepickerUI(...)`.
+      render: ts
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: A link to a CodePen / StackBlitz helps the most.
+      placeholder: |
+        1. Open the picker
+        2. Click ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected and actual behavior
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and OS
+      placeholder: "Chrome 140, Windows 11"
+    validations:
+      required: true
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Display mode
+      options:
+        - docked
+        - modal
+        - inline
+        - not sure

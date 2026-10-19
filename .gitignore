@@ -6,6 +6,12 @@ app/dist
 datepicker-ui-*
 lib*
 dist/
+dist-demo/
 coverage/
+*.tgz
+.eslintcache
 readme/*.md
 .env
+docs/not_to_commit_this/
+docs/superpowers/*
+.verify/

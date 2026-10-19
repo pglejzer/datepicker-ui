@@ -1,0 +1,21 @@
+# CRLF in the working tree, LF in the repository. Matches .editorconfig and Prettier (endOfLine: crlf).
+* text=auto eol=crlf
+
+# Shell scripts run by Git hooks must keep LF
+app/.husky/* text eol=lf
+*.sh text eol=lf
+
+# Binary files: never touch line endings
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.pdf binary
+*.zip binary
+*.tgz binary

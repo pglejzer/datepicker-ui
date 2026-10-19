@@ -1,0 +1,51 @@
+:where(
+  .dp-ui__container,
+  .dp-ui__container *,
+  .dp-ui__container *::before,
+  .dp-ui__container *::after,
+  .dp-ui__dialog
+) {
+  box-sizing: border-box;
+}
+
+:where(.dp-ui__container)
+  :is(ul, li, table, caption, thead, tbody, tr, th, td, div, span) {
+  margin: 0;
+  padding: 0;
+}
+
+:where(.dp-ui__container) button {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-align: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+:where(.dp-ui__container) ul {
+  list-style: none;
+}
+
+:where(.dp-ui__container) svg {
+  display: block;
+  fill: currentColor;
+  flex: none;
+}
+
+:where(.dp-ui__container) table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+.dp-ui__container [hidden] {
+  display: none !important;
+}
+
+:where(.dp-ui__container) button:disabled {
+  cursor: default;
+}
