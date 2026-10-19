@@ -3,3 +3,7 @@
  */
 
 /* Add custom theme overrides here */
+
+.dp-ui__date.demo-weekend:not(.dp-ui__date--selected) .dp-ui__date-indicator {
+  color: light-dark(#b3261e, #f2b8b5);
+}
