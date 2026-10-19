@@ -1,146 +1,223 @@
 import type { CoreState } from "../datepicker/CoreState";
-import type { EventEmitter, DatepickerEventMap } from "../utils/EventEmitter";
-import { DateParser } from "../utils/DateParser";
-import { DateFormatter } from "../utils/DateFormatter";
-import type { DateFormat } from "../utils/DateParser";
+import type { DateRules } from "../types/internal";
+import type { Selection } from "../types/selection";
+import type { DatepickerEventMap, UnavailableReason } from "../types/types";
+import type { EventEmitter } from "../utils/EventEmitter";
+import { maskDateText } from "../utils/date/mask";
+import { hintLetters } from "../utils/date/format";
+import { periodHint } from "../utils/date/period";
+import { selectionIssue } from "../utils/selection/constraints";
+import { unavailableMessage } from "../utils/selection/messages";
+import { emptySelection, isEmptySelection } from "../utils/selection/model";
+import {
+  formatSelection,
+  parseSelection,
+  parseSerialized,
+} from "../utils/selection/text";
+import { describeField, type FieldDescription } from "./input/fieldDescription";
+import { clearField, markField } from "./input/fieldError";
+import { SplitFields } from "./input/SplitFields";
+import { panelId } from "./renderers/shellButtons";
+
+export type TypedResult =
+  | { readonly kind: "empty" }
+  | { readonly kind: "valid"; readonly selection: Selection }
+  | { readonly kind: "invalid" }
+  | {
+      readonly kind: "unavailable";
+      readonly selection: Selection;
+      readonly reason: UnavailableReason;
+    };
+
+export interface InputManagerDeps {
+  readonly rules: DateRules;
+  onTyped(selection: Selection): void;
+}
 
 export class InputManager {
-  private core: CoreState;
-  private emitter: EventEmitter<DatepickerEventMap>;
-  private cleanupHandlers: Array<() => void> = [];
+  private readonly split: SplitFields;
+  private readonly descriptions = new Map<HTMLInputElement, FieldDescription>();
 
-  constructor(core: CoreState, emitter: EventEmitter<DatepickerEventMap>) {
-    this.core = core;
-    this.emitter = emitter;
-  }
-
-  init(): void {
-    if (typeof window === "undefined") return;
-    this.bindInputEvents();
-  }
-
-  formatDate(date: Date | null): string {
-    const format = this.getFormat();
-    return DateFormatter.format(date, format);
-  }
-
-  parseDate(value: string): Date | null {
-    if (!value || value.trim() === "") return null;
-
-    const format = this.getFormat();
-    const result = DateParser.parse(value, format);
-
-    return result.isValid ? result.date : null;
-  }
-
-  updateInputValue(): void {
-    const input = this.core.getInput();
-    if (!input) return;
-
-    if (input.hasAttribute("readonly")) {
-      const formatted = this.formatDate(this.core.selectedDate);
-      input.value = formatted;
-      return;
-    }
-
-    const formatted = this.formatDate(this.core.selectedDate);
-    input.value = formatted;
-
-    this.clearErrorState();
-  }
-
-  private bindInputEvents(): void {
-    const input = this.core.getInput();
-    if (!input) return;
-
-    const blurHandler = (): void => {
-      if (input.hasAttribute("readonly")) return;
-      this.handleInputBlur();
-    };
-
-    const pasteHandler = (e: ClipboardEvent): void => {
-      if (input.hasAttribute("readonly")) {
-        e.preventDefault();
-        return;
-      }
-    };
-
-    input.addEventListener("blur", blurHandler);
-    input.addEventListener("paste", pasteHandler);
-
-    this.cleanupHandlers.push(() => {
-      input.removeEventListener("blur", blurHandler);
-      input.removeEventListener("paste", pasteHandler);
+  constructor(
+    private readonly core: CoreState,
+    private readonly emitter: EventEmitter<DatepickerEventMap>,
+    private readonly deps: InputManagerDeps,
+  ) {
+    this.split = new SplitFields(core, emitter, {
+      rules: deps.rules,
+      onTyped: (selection) => {
+        deps.onTyped(selection);
+      },
+      describe: (field, message) => {
+        this.describe(field, message);
+      },
     });
   }
 
-  private handleInputBlur(): void {
-    const input = this.core.getInput();
-    if (!input) return;
-
-    const value = input.value.trim();
-
-    if (value === "") {
-      this.core.setSelectedDate(null);
-      this.clearErrorState();
-      this.emitter.emit("update", {
-        date: null,
-        timestamp: Date.now(),
-      });
+  bind(signal: AbortSignal): void {
+    this.describeFields(signal);
+    if (this.split.end !== null) {
+      this.split.bind(signal);
       return;
     }
+    const { input } = this.core;
+    input.addEventListener(
+      "blur",
+      () => {
+        this.commit();
+      },
+      { signal },
+    );
+    input.addEventListener(
+      "input",
+      () => {
+        this.applyMask();
+      },
+      { signal },
+    );
+    input.addEventListener(
+      "keydown",
+      (event) => {
+        if (event.key !== "Enter") return;
+        event.preventDefault();
+        this.commit();
+      },
+      { signal },
+    );
+  }
 
-    const format = this.getFormat();
-    const result = DateParser.parse(value, format);
-
-    if (result.isValid && result.date) {
-      this.core.setSelectedDate(result.date);
-      this.core.setCurrentMonth(result.date.getMonth());
-      this.core.setCurrentYear(result.date.getFullYear());
-
-      input.value = this.formatDate(result.date);
-
-      this.clearErrorState();
-
-      this.emitter.emit("update", {
-        date: result.date,
-        timestamp: Date.now(),
-      });
-    } else {
-      this.setErrorState();
-
-      this.emitter.emit("error", {
-        code: "E_INVALID_FORMAT",
-        message: result.error || "Invalid date format",
-        inputValue: value,
-      });
+  write(selection: Selection): void {
+    if (this.split.end !== null) {
+      this.split.write(selection);
+      return;
     }
+    this.core.input.value = formatSelection(
+      selection,
+      this.core.options.pattern,
+      this.core.options.precision,
+    );
+    this.clearError();
   }
 
-  private getFormat(): DateFormat {
-    return (this.core.options.ui?.format as DateFormat) || "dd/mm/yyyy";
+  readInitial(): Selection {
+    if (this.split.end !== null) {
+      return this.split.readInitial();
+    }
+    const { mode, pattern, precision } = this.core.options;
+    const text = this.core.input.value;
+    return (
+      parseSerialized(text, mode, precision) ??
+      parseSelection(text, mode, pattern, precision) ??
+      emptySelection(mode)
+    );
   }
 
-  private setErrorState(): void {
-    const input = this.core.getInput();
-    if (!input) return;
-
-    input.classList.add("dp-ui--error");
-    input.setAttribute("aria-invalid", "true");
+  evaluate(text: string): TypedResult {
+    const { mode, pattern, limits, precision } = this.core.options;
+    const selection = parseSelection(text, mode, pattern, precision);
+    if (selection === null) return { kind: "invalid" };
+    if (isEmptySelection(selection)) return { kind: "empty" };
+    const reason = selectionIssue(selection, limits, (date) =>
+      this.deps.rules.unavailableReason(date),
+    );
+    if (reason !== null) return { kind: "unavailable", selection, reason };
+    return { kind: "valid", selection };
   }
 
-  private clearErrorState(): void {
-    const input = this.core.getInput();
-    if (!input) return;
-
-    input.classList.remove("dp-ui--error");
-    input.removeAttribute("aria-invalid");
+  markInvalid(message: string): void {
+    if (this.split.end !== null) {
+      this.split.markInvalid(message);
+      return;
+    }
+    this.showError(message);
+    this.emitter.emit("error", { code: "invalid-value", message });
   }
 
   destroy(): void {
-    this.cleanupHandlers.forEach((cleanup) => cleanup());
-    this.cleanupHandlers = [];
+    this.clearError();
+    this.split.clearError();
+    this.descriptions.forEach((description) => {
+      description.destroy();
+    });
+    this.descriptions.clear();
+  }
 
-    this.clearErrorState();
+  private describeFields(signal: AbortSignal): void {
+    const { input, host, instanceId } = this.core;
+    const { end } = this.split;
+    const hint = (): string => {
+      const { pattern, precision, labels } = this.core.options;
+      return periodHint(pattern, precision, hintLetters(labels));
+    };
+    const fields: [HTMLInputElement, string][] = [[input, "input-description"]];
+    if (end !== null) fields.push([end, "end-input-description"]);
+    for (const [field, key] of fields) {
+      const id = panelId(instanceId, key);
+      this.descriptions.set(field, describeField(field, host, id, hint()));
+    }
+    this.core.events.on(
+      "change:options",
+      () => {
+        const next = hint();
+        this.descriptions.forEach((description) => {
+          description.setHint(next);
+        });
+      },
+      signal,
+    );
+  }
+
+  private describe(field: HTMLInputElement, message: string | null): void {
+    this.descriptions.get(field)?.setError(message);
+  }
+
+  private applyMask(): void {
+    const { input, options } = this.core;
+    if (!options.mask || options.mode !== "single") return;
+    if (options.precision !== "day") return;
+    const masked = maskDateText(input.value, options.pattern);
+    if (masked === input.value) return;
+    input.value = masked;
+    input.setSelectionRange(masked.length, masked.length);
+  }
+
+  private commit(): void {
+    const text = this.core.input.value;
+    const result = this.evaluate(text);
+    if (result.kind === "empty") {
+      this.clearError();
+      this.deps.onTyped(emptySelection(this.core.options.mode));
+    } else if (result.kind === "valid") {
+      this.write(result.selection);
+      this.deps.onTyped(result.selection);
+    } else if (result.kind === "invalid") {
+      const message = this.core.options.labels.invalidDate;
+      this.showError(message);
+      this.emitter.emit("error", {
+        code: "invalid-date",
+        message,
+        input: text,
+      });
+    } else {
+      const { reason } = result;
+      const message = unavailableMessage(reason, this.core.options);
+      this.showError(message);
+      this.emitter.emit("error", {
+        code: "unavailable-date",
+        message,
+        input: text,
+        reason,
+      });
+    }
+  }
+
+  private showError(message: string): void {
+    markField(this.core.input, this.core.host, message);
+    this.describe(this.core.input, message);
+  }
+
+  private clearError(): void {
+    clearField(this.core.input, this.core.host);
+    this.describe(this.core.input, null);
   }
 }
