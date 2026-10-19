@@ -1,12 +1,24 @@
 {
   "name": "@pglejzer/datepicker-ui",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "datepicker-ui is a customizable date selection library built with TypeScript, designed to work seamlessly alongside timepicker-ui. Based on Google's Material Design, lightweight, themeable, and framework agnostic.",
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "type": "module",
+  "main": "./dist/cjs/index.cjs",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/esm/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "kit": [
+        "./dist/esm/kit.d.ts"
+      ]
+    }
+  },
   "style": "./dist/css/index.css",
-  "sideEffects": false,
+  "unpkg": "./dist/umd/index.js",
+  "jsdelivr": "./dist/umd/index.js",
+  "sideEffects": [
+    "**/*.css"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/pglejzer/datepicker-ui.git"
@@ -18,19 +30,40 @@
   ],
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "import": {
+        "types": "./dist/esm/index.d.ts",
+        "default": "./dist/esm/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/index.d.cts",
+        "default": "./dist/cjs/index.cjs"
+      }
+    },
+    "./kit": {
+      "import": {
+        "types": "./dist/esm/kit.d.ts",
+        "default": "./dist/esm/kit.js"
+      },
+      "require": {
+        "types": "./dist/cjs/kit.d.cts",
+        "default": "./dist/cjs/kit.cjs"
+      }
     },
     "./main.css": "./dist/css/main.css",
     "./index.css": "./dist/css/index.css",
     "./theme-crane.css": "./dist/css/themes/theme-crane.css",
-    "./theme-dark.css": "./dist/css/themes/theme-dark.css",
+    "./theme-crane-straight.css": "./dist/css/themes/theme-crane-straight.css",
     "./theme-m2.css": "./dist/css/themes/theme-m2.css",
     "./theme-m3-green.css": "./dist/css/themes/theme-m3-green.css",
     "./theme-glassmorphic.css": "./dist/css/themes/theme-glassmorphic.css",
     "./theme-pastel.css": "./dist/css/themes/theme-pastel.css",
     "./theme-ai.css": "./dist/css/themes/theme-ai.css",
-    "./theme-cyberpunk.css": "./dist/css/themes/theme-cyberpunk.css"
+    "./theme-cyberpunk.css": "./dist/css/themes/theme-cyberpunk.css",
+    "./theme-blueprint.css": "./dist/css/themes/theme-blueprint.css",
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "keywords": [
     "material-design",
