@@ -1,0 +1,167 @@
+@use "../base/utilities" as *;
+
+.dp-ui__presets {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  padding-block: 6px 12px;
+  padding-inline: var(--dp-ui-container-side-padding);
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+
+.dp-ui__presets::-webkit-scrollbar {
+  display: none;
+}
+
+.dp-ui__preset {
+  @include ripple-host;
+  @include touch-target;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  block-size: var(--dp-ui-preset-height);
+  padding-block: 0;
+  padding-inline: 12px;
+  border: 1px solid var(--dp-ui-preset-outline-color);
+  border-radius: var(--dp-ui-preset-shape);
+  color: var(--dp-ui-preset-label-text-color);
+  background-color: transparent;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color var(--dp-ui-motion-select-fill, 150ms) linear;
+  -webkit-user-select: none;
+  user-select: none;
+  @include typescale(label-large);
+}
+
+.dp-ui__preset[aria-pressed="true"] {
+  border-color: transparent;
+  color: var(--dp-ui-preset-pressed-label-text-color);
+  background-color: var(--dp-ui-preset-pressed-container-color);
+}
+
+.dp-ui__preset:hover {
+  @include state-layer(
+    var(--dp-ui-preset-label-text-color),
+    --dp-ui-sys-state-layer-hover-opacity
+  );
+}
+
+.dp-ui__preset#{$focus-visible} {
+  @include state-layer(
+    var(--dp-ui-preset-label-text-color),
+    --dp-ui-sys-state-layer-focus-opacity
+  );
+}
+
+.dp-ui__preset:active {
+  @include state-layer(
+    var(--dp-ui-preset-label-text-color),
+    --dp-ui-sys-state-layer-pressed-opacity
+  );
+}
+
+.dp-ui__preset[aria-pressed="true"]:hover {
+  @include state-layer-over(
+    var(--dp-ui-preset-pressed-container-color),
+    var(--dp-ui-preset-pressed-label-text-color),
+    --dp-ui-sys-state-layer-hover-opacity
+  );
+}
+
+.dp-ui__preset[aria-pressed="true"]#{$focus-visible} {
+  @include state-layer-over(
+    var(--dp-ui-preset-pressed-container-color),
+    var(--dp-ui-preset-pressed-label-text-color),
+    --dp-ui-sys-state-layer-focus-opacity
+  );
+}
+
+.dp-ui__preset[aria-pressed="true"]:active {
+  @include state-layer-over(
+    var(--dp-ui-preset-pressed-container-color),
+    var(--dp-ui-preset-pressed-label-text-color),
+    --dp-ui-sys-state-layer-pressed-opacity
+  );
+}
+
+.dp-ui__preset:disabled {
+  opacity: var(--dp-ui-sys-state-disabled-opacity);
+  background-color: transparent;
+  cursor: default;
+  pointer-events: none;
+}
+
+.dp-ui__container--presets {
+  display: grid;
+  grid-template-columns: var(--dp-ui-presets-width) minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.dp-ui__container--presets
+  > .dp-ui__calendar
+  > :not(.dp-ui__presets, .dp-ui__live-region) {
+  grid-column: 2;
+  min-inline-size: 0;
+}
+
+.dp-ui__container--presets > .dp-ui__calendar > .dp-ui__presets {
+  grid-column: 1;
+  grid-row: 1 / -1;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  padding-block: 8px;
+  padding-inline: var(--dp-ui-container-side-padding);
+  border-inline-end: 1px solid var(--dp-ui-divider-color);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  @include thin-scrollbar;
+}
+
+.dp-ui__container--presets > .dp-ui__calendar > .dp-ui__presets .dp-ui__preset {
+  justify-content: flex-start;
+  block-size: var(--dp-ui-preset-row-height);
+  padding-inline: 16px;
+  border: 0;
+  border-radius: var(--dp-ui-sys-shape-corner-full);
+  white-space: normal;
+  text-align: start;
+}
+
+.dp-ui__container--range.dp-ui__container--presets:not(
+    .dp-ui__container--input
+  ) {
+  inline-size: calc(var(--dp-ui-container-width) + var(--dp-ui-presets-width));
+}
+
+.dp-ui__container--range.dp-ui__container--presets:not(
+    .dp-ui__container--input
+  ):has(.dp-ui__week-number-header) {
+  inline-size: calc(
+    var(--dp-ui-container-width) + var(--dp-ui-presets-width) +
+      var(--dp-ui-week-number-width)
+  );
+}
+
+.dp-ui__container--range.dp-ui__container--presets.dp-ui__container--multi-month:not(
+    .dp-ui__container--input
+  ) {
+  inline-size: calc(
+    var(--dp-ui-presets-width) + var(--dp-ui-visible-months, 2) *
+      (var(--dp-ui-month-width) + var(--dp-ui-month-column-extra, 0px)) +
+      (var(--dp-ui-visible-months, 2) - 1) * var(--dp-ui-month-gap) + 2 *
+      var(--dp-ui-container-side-padding)
+  );
+}
+
+.dp-ui__container--presets.dp-ui__container--input {
+  display: flex;
+}

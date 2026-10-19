@@ -1,0 +1,43 @@
+@use "../base/utilities" as *;
+
+.dp-ui__pager {
+  overflow: hidden;
+  overflow: clip;
+  touch-action: pan-y;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.dp-ui__pager--swipe {
+  cursor: grab;
+}
+
+.dp-ui__pager--dragging,
+.dp-ui__pager--dragging .dp-ui__date {
+  cursor: grabbing;
+}
+
+.dp-ui__pager-track {
+  display: flex;
+  inline-size: 100%;
+  transform: translateX(var(--dp-ui-pager-rest-x));
+  will-change: transform;
+}
+
+.dp-ui__page {
+  flex: 0 0 100%;
+  box-sizing: border-box;
+  min-inline-size: 0;
+  padding-inline: var(--dp-ui-container-side-padding);
+}
+
+.dp-ui__container:is(.dp-ui__container--docked, .dp-ui__container--inline)
+  .dp-ui__pager {
+  block-size: var(--dp-ui-pager-height, auto);
+  transition: block-size var(--dp-ui-motion-docked-height, 300ms)
+    var(--dp-ui-easing-emphasized, cubic-bezier(0.2, 0, 0, 1));
+}
+
+.dp-ui__container--modal .dp-ui__pager {
+  min-block-size: calc(56px + var(--dp-ui-date-container-size) * 7);
+}

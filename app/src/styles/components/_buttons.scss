@@ -1,0 +1,137 @@
+@use "../base/utilities" as *;
+
+.dp-ui__icon-button,
+.dp-ui__menu-button,
+.dp-ui__text-button {
+  @include ripple-host;
+  @include touch-target;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--dp-ui-sys-shape-corner-full);
+  background-color: transparent;
+  transition:
+    background-color var(--dp-ui-motion-select-fill, 150ms) linear,
+    opacity var(--dp-ui-motion-panel-fade-out, 100ms) linear,
+    visibility var(--dp-ui-motion-panel-fade-out, 100ms);
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.dp-ui__icon-button {
+  inline-size: var(--dp-ui-icon-button-size);
+  block-size: var(--dp-ui-icon-button-size);
+  color: var(--dp-ui-icon-button-icon-color);
+}
+
+.dp-ui__icon-button svg {
+  inline-size: var(--dp-ui-icon-button-icon-size);
+  block-size: var(--dp-ui-icon-button-icon-size);
+}
+
+.dp-ui__menu-button {
+  gap: 8px;
+  block-size: var(--dp-ui-menu-button-height);
+  padding-inline: 12px 8px;
+  color: var(--dp-ui-menu-button-label-text-color);
+  @include typescale(label-large);
+}
+
+.dp-ui__menu-button-icon {
+  inline-size: var(--dp-ui-menu-button-icon-size);
+  block-size: var(--dp-ui-menu-button-icon-size);
+  transition:
+    transform var(--dp-ui-motion-select-fill, 150ms) linear,
+    opacity var(--dp-ui-motion-panel-fade-out, 100ms) linear,
+    visibility var(--dp-ui-motion-panel-fade-out, 100ms);
+}
+
+.dp-ui__menu-button[aria-expanded="true"] .dp-ui__menu-button-icon {
+  transform: rotate(180deg);
+}
+
+.dp-ui__text-button {
+  block-size: var(--dp-ui-text-button-height);
+  min-inline-size: 48px;
+  padding-inline: 12px;
+  color: var(--dp-ui-text-button-label-text-color);
+  @include typescale(label-large);
+}
+
+.dp-ui__icon-button:hover,
+.dp-ui__menu-button:hover {
+  @include state-layer(
+    var(--dp-ui-menu-button-label-text-color),
+    --dp-ui-sys-state-layer-hover-opacity
+  );
+}
+
+.dp-ui__icon-button:hover {
+  @include state-layer(
+    var(--dp-ui-icon-button-icon-color),
+    --dp-ui-sys-state-layer-hover-opacity
+  );
+}
+
+.dp-ui__text-button:hover {
+  @include state-layer(
+    var(--dp-ui-text-button-label-text-color),
+    --dp-ui-sys-state-layer-hover-opacity
+  );
+}
+
+.dp-ui__icon-button#{$focus-visible},
+.dp-ui__menu-button#{$focus-visible} {
+  @include state-layer(
+    var(--dp-ui-menu-button-label-text-color),
+    --dp-ui-sys-state-layer-focus-opacity
+  );
+}
+
+.dp-ui__text-button#{$focus-visible} {
+  @include state-layer(
+    var(--dp-ui-text-button-label-text-color),
+    --dp-ui-sys-state-layer-focus-opacity
+  );
+}
+
+.dp-ui__icon-button:active,
+.dp-ui__menu-button:active {
+  @include state-layer(
+    var(--dp-ui-menu-button-label-text-color),
+    --dp-ui-sys-state-layer-pressed-opacity
+  );
+}
+
+.dp-ui__text-button:active {
+  @include state-layer(
+    var(--dp-ui-text-button-label-text-color),
+    --dp-ui-sys-state-layer-pressed-opacity
+  );
+}
+
+.dp-ui__icon-button:disabled,
+.dp-ui__menu-button:disabled,
+.dp-ui__text-button:disabled,
+.dp-ui__icon-button[aria-disabled="true"],
+.dp-ui__menu-button[aria-disabled="true"],
+.dp-ui__text-button[aria-disabled="true"] {
+  opacity: var(--dp-ui-sys-state-disabled-opacity);
+  background-color: transparent;
+  pointer-events: none;
+}
+
+.dp-ui__container--rtl
+  :is(
+    .dp-ui__icon-button--prev-month,
+    .dp-ui__icon-button--next-month,
+    .dp-ui__icon-button--prev-year,
+    .dp-ui__icon-button--next-year
+  )
+  svg {
+  transform: scaleX(-1);
+}
+
+.dp-ui__container--modal .dp-ui__text-button {
+  block-size: 40px;
+}

@@ -1,0 +1,188 @@
+@use "../base/utilities" as *;
+
+.dp-ui__container--range {
+  inline-size: var(--dp-ui-container-width);
+  block-size: var(--dp-ui-range-height);
+}
+
+.dp-ui__container--range.dp-ui__container--docked[popover] {
+  overflow: hidden;
+}
+
+.dp-ui__container--range :is(.dp-ui__header--range, .dp-ui__actions) {
+  flex: none;
+}
+
+.dp-ui__container--range.dp-ui__container--input {
+  block-size: auto;
+}
+
+.dp-ui__header--range {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  padding-block: 16px 12px;
+  padding-inline: 24px 12px;
+}
+
+.dp-ui__header--range .dp-ui__supporting-text {
+  block-size: auto;
+  line-height: var(--dp-ui-sys-typescale-label-large-line-height);
+}
+
+.dp-ui__header--range .dp-ui__headline {
+  margin-block-start: 8px;
+  block-size: auto;
+  @include typescale(title-large);
+  transition: opacity var(--dp-ui-motion-headline-fade, 50ms) linear;
+}
+
+.dp-ui__container--input .dp-ui__header--range .dp-ui__headline {
+  font-size: var(--dp-ui-sys-typescale-headline-large-size);
+  line-height: var(--dp-ui-sys-typescale-headline-large-line-height);
+}
+
+.dp-ui__header--range .dp-ui__header-text {
+  min-inline-size: 0;
+}
+
+.dp-ui__top-bar {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  block-size: 48px;
+  margin-block-start: 12px;
+  margin-inline: -64px -12px;
+  padding-inline-end: 12px;
+}
+
+.dp-ui__container--fullscreen .dp-ui__header--range {
+  padding-block-start: 0;
+  padding-inline: 64px 12px;
+}
+
+.dp-ui__range {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-block-size: 0;
+  border-block-start: 1px solid var(--dp-ui-divider-color);
+}
+
+.dp-ui__range ~ .dp-ui__actions {
+  border-block-start: 1px solid var(--dp-ui-divider-color);
+}
+
+.dp-ui__container--input .dp-ui__range ~ .dp-ui__actions {
+  border-block-start: 0;
+}
+
+.dp-ui__container--range .dp-ui__input-panel {
+  border-block-start: 1px solid var(--dp-ui-divider-color);
+}
+
+.dp-ui__weekdays-bar {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  flex: none;
+  align-items: center;
+  justify-items: center;
+  block-size: var(--dp-ui-date-container-size);
+  padding-inline: var(--dp-ui-container-side-padding);
+}
+
+.dp-ui__weekdays-bar .dp-ui__weekday {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+}
+
+.dp-ui__month-list {
+  position: relative;
+  flex: 1;
+  min-block-size: 0;
+  padding-inline: var(--dp-ui-container-side-padding);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+
+.dp-ui__month-list::-webkit-scrollbar {
+  display: none;
+}
+
+.dp-ui__month-list .dp-ui__weekdays {
+  @extend .dp-ui__visually-hidden;
+}
+
+.dp-ui__month-subhead {
+  padding-block: 20px 12px;
+  padding-inline: 12px 0;
+  color: var(--dp-ui-header-supporting-text-color);
+  text-align: start;
+  @include typescale(label-large);
+}
+
+.dp-ui__months {
+  display: flex;
+  justify-content: center;
+  gap: var(--dp-ui-month-gap);
+  min-inline-size: 0;
+}
+
+.dp-ui__months > .dp-ui__month-grid {
+  flex: none;
+  inline-size: calc(
+    var(--dp-ui-month-width) + var(--dp-ui-month-column-extra, 0px)
+  );
+}
+
+.dp-ui__months .dp-ui__month-subhead {
+  padding-block: calc(
+    (48px - var(--dp-ui-sys-typescale-label-large-line-height)) / 2
+  );
+  padding-inline: 0;
+  text-align: center;
+}
+
+.dp-ui__months
+  tr
+  > .dp-ui__date:first-child:is(
+    .dp-ui__date--in-range,
+    .dp-ui__date--range-end
+  )::before {
+  inset-inline-start: 0;
+}
+
+.dp-ui__months
+  tr
+  > .dp-ui__date:last-child:is(
+    .dp-ui__date--in-range,
+    .dp-ui__date--range-start
+  )::before {
+  inset-inline-end: 0;
+}
+
+.dp-ui__container--range.dp-ui__container--multi-month {
+  block-size: auto;
+}
+
+.dp-ui__container--multi-month .dp-ui__range:has(> .dp-ui__navigation--months) {
+  position: relative;
+}
+
+.dp-ui__navigation--months {
+  position: absolute;
+  z-index: 1;
+  inset-block-start: 0;
+  inset-inline: var(--dp-ui-container-side-padding);
+  justify-content: space-between;
+  padding-block: 0;
+  pointer-events: none;
+}
+
+.dp-ui__navigation--months .dp-ui__icon-button {
+  pointer-events: auto;
+}

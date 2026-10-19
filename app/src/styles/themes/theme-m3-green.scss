@@ -1,17 +1,18 @@
-/**
- * Material 3 Green Theme for DatepickerUI
- */
+/* Material 3 green theme (light only) */
 
-[data-theme='m3-green'] {
-  --dp-primary: #6750a4;
-  --dp-on-primary: #ffffff;
-  --dp-surface: #ffffff;
-  --dp-on-surface: #000000;
-  --dp-outline: rgba(0, 0, 0, 0.12);
-  --dp-focus: #6750a4;
-}
-
-.dp-ui[data-theme='m3-green'] {
-  background-color: var(--dp-surface);
-  color: var(--dp-on-surface);
+:is(.dp-ui, .dp-ui__dialog, .dp-ui__container)[data-theme="m3-green"] {
+  color-scheme: light;
+  --dp-ui-sys-color-surface-container-high: #e5eadc;
+  --dp-ui-sys-color-surface-variant: #e0e4d6;
+  --dp-ui-sys-color-on-surface: #1a1c18;
+  --dp-ui-sys-color-on-surface-variant: #43483f;
+  --dp-ui-sys-color-primary: #386a20;
+  --dp-ui-sys-color-on-primary: #ffffff;
+  --dp-ui-sys-color-on-primary-container: #042100;
+  --dp-ui-sys-color-secondary-container: #d9e7cb;
+  --dp-ui-sys-color-on-secondary-container: #131f0d;
+  --dp-ui-sys-color-outline: #74796d;
+  --dp-ui-sys-color-outline-variant: #c4c8bb;
+  --dp-ui-sys-color-error: #ba1a1a;
+  --dp-ui-sys-color-scrim: #000000;
 }

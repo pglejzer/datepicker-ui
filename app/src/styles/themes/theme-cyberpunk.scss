@@ -1,18 +1,24 @@
-/**
- * Cyberpunk Theme for DatepickerUI
- */
-
-[data-theme='cyberpunk'] {
-  --dp-primary: #ff00ff;
-  --dp-on-primary: #000000;
-  --dp-surface: #0a0a0a;
-  --dp-on-surface: #00ffff;
-  --dp-outline: rgba(255, 0, 255, 0.5);
-  --dp-focus: #ff00ff;
-}
-
-.dp-ui[data-theme='cyberpunk'] {
-  background-color: var(--dp-surface);
-  color: var(--dp-on-surface);
-  box-shadow: 0 0 20px rgba(255, 0, 255, 0.3);
+/* Cyberpunk theme for DatepickerUI, ported from timepicker-ui */
+:is(.dp-ui, .dp-ui__dialog, .dp-ui__container)[data-theme="cyberpunk"] {
+  color-scheme: dark;
+  --dp-ui-sys-color-surface-container-high: #0f0c29;
+  --dp-ui-sys-color-surface-variant: #1a1a2e;
+  --dp-ui-sys-color-on-surface: #00f0ff;
+  --dp-ui-sys-color-on-surface-variant: #00f0ff;
+  --dp-ui-sys-color-primary: #00f0ff;
+  --dp-ui-sys-color-on-primary: #0f0c29;
+  --dp-ui-sys-color-secondary-container: #00f0ff;
+  --dp-ui-sys-color-on-secondary-container: #0f0c29;
+  --dp-ui-sys-color-on-primary-container: #0f0c29;
+  --dp-ui-sys-color-outline-variant: rgba(0, 240, 255, 0.3);
+  --dp-ui-sys-color-outline: rgb(255, 255, 255);
+  --dp-ui-focus-ring-color: rgb(255, 255, 255);
+  --dp-ui-sys-color-error: #ff5c7a;
+  --dp-ui-date-in-range-container-color: #0e4a5c;
+  --dp-ui-date-in-range-label-text-color: #e0fdff;
+  --dp-ui-preset-pressed-container-color: #0e4a5c;
+  --dp-ui-preset-pressed-label-text-color: #e0fdff;
+  --dp-ui-container-elevation: 0 0 12px #00f0ff;
+  --dp-ui-container-shape-docked: 1rem;
+  --dp-ui-container-shape-modal: 1rem;
 }

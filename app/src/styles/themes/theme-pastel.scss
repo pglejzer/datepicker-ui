@@ -1,17 +1,28 @@
-/**
- * Pastel Theme for DatepickerUI
- */
-
-[data-theme='pastel'] {
-  --dp-primary: #f8b4d9;
-  --dp-on-primary: #000000;
-  --dp-surface: #fff5f8;
-  --dp-on-surface: #2d1b21;
-  --dp-outline: rgba(248, 180, 217, 0.3);
-  --dp-focus: #f8b4d9;
-}
-
-.dp-ui[data-theme='pastel'] {
-  background-color: var(--dp-surface);
-  color: var(--dp-on-surface);
+/* Pastel theme for DatepickerUI, ported from timepicker-ui */
+:is(.dp-ui, .dp-ui__dialog, .dp-ui__container)[data-theme="pastel"] {
+  color-scheme: light;
+  --dp-ui-sys-color-surface-container-high: #fdf6f0;
+  --dp-ui-sys-color-surface-variant: #fae3d9;
+  --dp-ui-sys-color-on-surface: #3b3b3b;
+  --dp-ui-sys-color-on-surface-variant: #836b61;
+  --dp-ui-sys-color-primary: #ffb6b9;
+  --dp-ui-sys-color-on-primary: #3b3b3b;
+  --dp-ui-sys-color-secondary-container: #ffb6b9;
+  --dp-ui-sys-color-on-secondary-container: #3b3b3b;
+  --dp-ui-sys-color-on-primary-container: #3b3b3b;
+  --dp-ui-sys-color-outline-variant: #efdcd2;
+  --dp-ui-sys-color-outline: #c9646a;
+  --dp-ui-focus-ring-color: #a8474e;
+  --dp-ui-text-field-focus-outline-color: #a8474e;
+  --dp-ui-text-field-focus-label-text-color: #a8474e;
+  --dp-ui-date-in-range-container-color: #ffe3e4;
+  --dp-ui-text-button-label-text-color: #a8474e;
+  --dp-ui-preset-pressed-container-color: #ffe3e4;
+  --dp-ui-preset-pressed-label-text-color: #3b3b3b;
+  --dp-ui-date-today-outline-color: #a8474e;
+  --dp-ui-date-today-label-text-color: #a8474e;
+  --dp-ui-date-badge-color: #a8474e;
+  --dp-ui-container-elevation: 0 4px 16px rgba(0, 0, 0, 0.05);
+  --dp-ui-container-shape-docked: 1.25rem;
+  --dp-ui-container-shape-modal: 1.25rem;
 }

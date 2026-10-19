@@ -1,0 +1,94 @@
+@use "../base/utilities" as *;
+
+.dp-ui__input-panel {
+  display: flex;
+  flex: none;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px 24px;
+}
+
+.dp-ui__text-field {
+  position: relative;
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.dp-ui__text-field-input {
+  box-sizing: border-box;
+  inline-size: 100%;
+  block-size: var(--dp-ui-text-field-height);
+  margin: 0;
+  padding-block: 0;
+  padding-inline: 16px;
+  border: var(--dp-ui-text-field-outline-width) solid
+    var(--dp-ui-text-field-outline-color);
+  border-radius: var(--dp-ui-text-field-shape);
+  outline: none;
+  color: var(--dp-ui-text-field-input-text-color);
+  caret-color: var(--dp-ui-text-field-focus-outline-color);
+  background-color: transparent;
+  -webkit-appearance: none;
+  appearance: none;
+  @include typescale(body-large);
+}
+
+.dp-ui__text-field-input::placeholder {
+  color: var(--dp-ui-text-field-supporting-text-color);
+  opacity: 1;
+}
+
+.dp-ui__text-field-label {
+  position: absolute;
+  inset-block-start: -8px;
+  inset-inline-start: 12px;
+  padding-inline: 4px;
+  max-inline-size: calc(100% - 24px);
+  overflow: hidden;
+  color: var(--dp-ui-text-field-label-text-color);
+  background-color: var(--dp-ui-text-field-label-container-color);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  @include typescale(body-small);
+}
+
+.dp-ui__text-field-supporting {
+  min-block-size: 20px;
+  padding: 4px 16px 0;
+  color: var(--dp-ui-text-field-supporting-text-color);
+  @include typescale(body-small);
+}
+
+.dp-ui__text-field:focus-within .dp-ui__text-field-input {
+  border-color: var(--dp-ui-text-field-focus-outline-color);
+  box-shadow: inset 0 0 0 1px var(--dp-ui-text-field-focus-outline-color);
+}
+
+.dp-ui__text-field:focus-within .dp-ui__text-field-label {
+  color: var(--dp-ui-text-field-focus-label-text-color);
+}
+
+.dp-ui__text-field--error .dp-ui__text-field-input {
+  border-color: var(--dp-ui-text-field-error-color);
+  caret-color: var(--dp-ui-text-field-error-color);
+}
+
+.dp-ui__text-field--error:focus-within .dp-ui__text-field-input {
+  border-color: var(--dp-ui-text-field-error-color);
+  box-shadow: inset 0 0 0 1px var(--dp-ui-text-field-error-color);
+}
+
+.dp-ui__text-field--error .dp-ui__text-field-label,
+.dp-ui__text-field--error:focus-within .dp-ui__text-field-label,
+.dp-ui__text-field--error .dp-ui__text-field-supporting {
+  color: var(--dp-ui-text-field-error-color);
+}
+
+.dp-ui__container--input.dp-ui__container--modal {
+  inline-size: var(--dp-ui-input-container-width);
+}
+
+.dp-ui__container--input {
+  block-size: auto;
+}

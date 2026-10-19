@@ -1,0 +1,79 @@
+@mixin typescale($name) {
+  font-family: var(--dp-ui-sys-typescale-#{$name}-font);
+  font-size: var(--dp-ui-sys-typescale-#{$name}-size);
+  line-height: var(--dp-ui-sys-typescale-#{$name}-line-height);
+  font-weight: var(--dp-ui-sys-typescale-#{$name}-weight);
+  letter-spacing: var(--dp-ui-sys-typescale-#{$name}-tracking);
+}
+
+@mixin state-layer($color, $opacity) {
+  background-color: color-mix(
+    in srgb,
+    #{$color} calc(var(#{$opacity}) * 100%),
+    transparent
+  );
+}
+
+@mixin state-layer-over($base, $color, $opacity) {
+  background-color: color-mix(
+    in srgb,
+    #{$color} calc(var(#{$opacity}) * 100%),
+    #{$base}
+  );
+}
+
+@mixin ripple-host {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+@mixin touch-target {
+  overflow: visible;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset-block: min(0px, calc((100% - var(--dp-ui-touch-target-size)) / 2));
+    inset-inline: min(0px, calc((100% - var(--dp-ui-touch-target-size)) / 2));
+  }
+}
+
+@mixin thin-scrollbar {
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    border: 2px solid transparent;
+    border-radius: 4px;
+    background-color: var(--dp-ui-scrollbar-thumb-color);
+    background-clip: padding-box;
+  }
+
+  @supports not selector(::-webkit-scrollbar) {
+    scrollbar-width: thin;
+    scrollbar-color: var(--dp-ui-scrollbar-thumb-color) transparent;
+  }
+}
+
+@mixin focus-ring($offset: var(--dp-ui-focus-ring-offset)) {
+  outline: var(--dp-ui-focus-ring-width) solid var(--dp-ui-focus-ring-color);
+  outline-offset: $offset;
+}
+
+$focus-visible: ":focus-visible:not(:where(.dp-ui--pointer *))";
+
+.dp-ui__visually-hidden,
+.dp-ui__month-heading,
+.dp-ui__live-region {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

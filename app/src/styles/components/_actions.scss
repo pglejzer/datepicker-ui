@@ -1,0 +1,21 @@
+@use "../base/utilities" as *;
+
+.dp-ui__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px 12px;
+}
+
+.dp-ui__actions-start,
+.dp-ui__actions-end {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dp-ui__actions-end {
+  margin-inline-start: auto;
+  gap: 16px;
+}

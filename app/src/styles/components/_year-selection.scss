@@ -1,0 +1,129 @@
+@use "../base/utilities" as *;
+
+:is(.dp-ui__year-selection, .dp-ui__month-selection) {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  justify-items: center;
+  align-content: start;
+  row-gap: 16px;
+  block-size: var(--dp-ui-year-selection-height);
+  padding-block: 8px;
+  padding-inline: var(--dp-ui-container-side-padding);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  @include thin-scrollbar;
+}
+
+.dp-ui__container--modal :is(.dp-ui__year-selection, .dp-ui__month-selection) {
+  block-size: calc(var(--dp-ui-date-container-size) * 7 - 16px);
+  border-block-end: 1px solid var(--dp-ui-divider-color);
+}
+
+:is(.dp-ui__year-selection-item, .dp-ui__month-selection-item) {
+  @include ripple-host;
+  @include touch-target;
+  inline-size: var(--dp-ui-year-item-width);
+  block-size: var(--dp-ui-year-item-height);
+  border: 1px solid transparent;
+  border-radius: var(--dp-ui-sys-shape-corner-full);
+  background-color: transparent;
+  color: var(--dp-ui-year-item-label-text-color);
+  outline: none;
+  transition:
+    background-color var(--dp-ui-motion-select-fill, 150ms) linear,
+    color var(--dp-ui-motion-select-fill, 150ms) linear;
+  @include typescale(body-large);
+}
+
+:is(
+  .dp-ui__year-selection-item--current,
+  .dp-ui__month-selection-item--current
+) {
+  border-color: var(--dp-ui-date-today-outline-color);
+  color: var(--dp-ui-date-today-label-text-color);
+}
+
+:is(
+  .dp-ui__year-selection-item--selected,
+  .dp-ui__month-selection-item--selected,
+  .dp-ui__year-selection-item[aria-selected="true"],
+  .dp-ui__month-selection-item[aria-selected="true"]
+) {
+  border-color: var(--dp-ui-year-item-selected-container-color);
+  background-color: var(--dp-ui-year-item-selected-container-color);
+  color: var(--dp-ui-year-item-selected-label-text-color);
+}
+
+:is(.dp-ui__year-selection-item, .dp-ui__month-selection-item):hover {
+  @include state-layer(
+    var(--dp-ui-year-item-label-text-color),
+    --dp-ui-sys-state-layer-hover-opacity
+  );
+}
+
+:is(
+  .dp-ui__year-selection-item,
+  .dp-ui__month-selection-item
+)#{$focus-visible} {
+  @include state-layer(
+    var(--dp-ui-year-item-label-text-color),
+    --dp-ui-sys-state-layer-focus-opacity
+  );
+  @include focus-ring;
+}
+
+:is(.dp-ui__year-selection-item, .dp-ui__month-selection-item):active {
+  @include state-layer(
+    var(--dp-ui-year-item-label-text-color),
+    --dp-ui-sys-state-layer-pressed-opacity
+  );
+}
+
+:is(
+  .dp-ui__year-selection-item--selected,
+  .dp-ui__month-selection-item--selected,
+  .dp-ui__year-selection-item[aria-selected="true"],
+  .dp-ui__month-selection-item[aria-selected="true"]
+):hover {
+  @include state-layer-over(
+    var(--dp-ui-year-item-selected-container-color),
+    var(--dp-ui-year-item-selected-label-text-color),
+    --dp-ui-sys-state-layer-hover-opacity
+  );
+}
+
+:is(
+  .dp-ui__year-selection-item--selected,
+  .dp-ui__month-selection-item--selected,
+  .dp-ui__year-selection-item[aria-selected="true"],
+  .dp-ui__month-selection-item[aria-selected="true"]
+)#{$focus-visible} {
+  @include state-layer-over(
+    var(--dp-ui-year-item-selected-container-color),
+    var(--dp-ui-year-item-selected-label-text-color),
+    --dp-ui-sys-state-layer-focus-opacity
+  );
+}
+
+:is(
+  .dp-ui__year-selection-item--selected,
+  .dp-ui__month-selection-item--selected,
+  .dp-ui__year-selection-item[aria-selected="true"],
+  .dp-ui__month-selection-item[aria-selected="true"]
+):active {
+  @include state-layer-over(
+    var(--dp-ui-year-item-selected-container-color),
+    var(--dp-ui-year-item-selected-label-text-color),
+    --dp-ui-sys-state-layer-pressed-opacity
+  );
+}
+
+:is(
+  .dp-ui__year-selection-item,
+  .dp-ui__month-selection-item
+)[aria-disabled="true"] {
+  opacity: var(--dp-ui-sys-state-disabled-opacity);
+  background-color: transparent;
+  pointer-events: none;
+  cursor: default;
+}
