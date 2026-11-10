@@ -7,7 +7,7 @@ body:
     attributes:
       label: Version
       description: The `@pglejzer/datepicker-ui` version you use.
-      placeholder: "1.0.0"
+      placeholder: "1.1.0"
     validations:
       required: true
   - type: textarea

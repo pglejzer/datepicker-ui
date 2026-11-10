@@ -7,7 +7,7 @@ A date picker for web forms. Attach it to an `<input>` and users pick a date, a 
 [![license](https://img.shields.io/badge/license-MIT-green.svg)](https://img.shields.io/npm/l/@pglejzer/datepicker-ui)
 [![Coverage Status](https://coveralls.io/repos/github/pglejzer/datepicker-ui/badge.svg?branch=main)](https://coveralls.io/github/pglejzer/datepicker-ui?branch=main)
 [![CI](https://github.com/pglejzer/datepicker-ui/actions/workflows/ci.yml/badge.svg)](https://github.com/pglejzer/datepicker-ui/actions/workflows/ci.yml)
-[![Socket Badge](https://badge.socket.dev/npm/package/@pglejzer/datepicker-ui/1.0.0)](https://badge.socket.dev/npm/package/@pglejzer/datepicker-ui/1.0.0)
+[![Socket Badge](https://badge.socket.dev/npm/package/@pglejzer/datepicker-ui/1.1.0)](https://badge.socket.dev/npm/package/@pglejzer/datepicker-ui/1.1.0)
 
 [Live demo](https://timepicker-ui.vercel.app/datepicker) · [Documentation](https://timepicker-ui.vercel.app/datepicker/quick-start) · [Changelog](./CHANGELOG.md) · [timepicker-ui](https://timepicker-ui.vercel.app)
 
@@ -25,7 +25,7 @@ A date picker for web forms. Attach it to an `<input>` and users pick a date, a 
 
 - [Single date, range and multiple dates](https://timepicker-ui.vercel.app/datepicker/docs/selection-modes), with [range limits](https://timepicker-ui.vercel.app/datepicker/examples/selection/range-limits)
 - [Docked popover](https://timepicker-ui.vercel.app/datepicker/examples/basic/docked), [modal dialog](https://timepicker-ui.vercel.app/datepicker/examples/basic/modal) and [inline calendar](https://timepicker-ui.vercel.app/datepicker/examples/basic/inline), with a full-screen range picker on small screens ([display modes](https://timepicker-ui.vercel.app/datepicker/docs/display-modes))
-- [Typed input](https://timepicker-ui.vercel.app/datepicker/docs/typed-input) with an opt-in mask, and a switch between the calendar and the input view
+- [Typed input](https://timepicker-ui.vercel.app/datepicker/docs/typed-input) with an opt-in mask for the page input, and a switch between the calendar and an input view that always formats typed digits
 - [Several months side by side](https://timepicker-ui.vercel.app/datepicker/examples/features/several-months)
 - [Range presets](https://timepicker-ui.vercel.app/datepicker/examples/selection/range-presets) and [two fields for a range](https://timepicker-ui.vercel.app/datepicker/examples/selection/two-fields)
 - [Month and year pickers](https://timepicker-ui.vercel.app/datepicker/docs/precision)
@@ -74,14 +74,21 @@ picker.open();
 picker.close();
 picker.destroy({ keepInputValue: true });
 picker.getValue(); // DateValue, { start, end }, DateValue[] or null, by calendar.mode
-picker.setValue("2025-03-14"); // a Date or an ISO string; { start, end } or an array in other modes
+picker.setValue("2025-03-14"); // a Date, an ISO string or "today"; { start, end } or an array in other modes
 picker.setOptions({ ui: { theme: "crane" } });
 picker.setActiveEnd("end"); // range mode: the end the next pick sets
+picker.clear(); // empty the value, emits "clear" and the input's input + change events
+picker.setValue(null); // empty the value quietly, without those events
+picker.setView("input"); // "calendar" | "input", switch the view
+picker.getView();
+picker.goTo("2025-06-01"); // show that month without selecting
+picker.getVisibleRange(); // { from, to } first and last day shown, or null
+picker.isSelectable("2025-03-14"); // checks a day, a range or an array against every rule
 picker.getElement(); // the .dp-ui host element
 
 const off = picker.on("confirm", ({ value }) => {}); // on() and once() return a function that removes the handler
 off();
-picker.on("cancel", ({ reason }) => {});
+picker.on("cancel", ({ reason }) => {}); // "button" | "escape" | "outside" | "toggle"
 picker.on("open", ({ mode }) => {});
 picker.on("close", () => {});
 picker.on("update", ({ options }) => {});
@@ -89,7 +96,9 @@ picker.on("error", ({ code, message }) => {});
 picker.on("select:day", ({ value, selected }) => {});
 picker.on("select:month", ({ year, month }) => {});
 picker.on("select:year", ({ year }) => {});
-picker.on("navigate", ({ year, month, direction, source }) => {});
+picker.on("navigate", ({ year, month, direction, source, from, to }) => {}); // source: drag, wheel, button, keyboard, menu, open, api, resize, scroll
+picker.on("switch:view", ({ view }) => {});
+picker.on("clear", ({ previousValue }) => {});
 picker.on("range:start", ({ value }) => {});
 picker.on("range:end", ({ start, end }) => {});
 picker.once("confirm", handler);
@@ -99,6 +108,8 @@ DatepickerUI.getById("my-id");
 DatepickerUI.getAllInstances();
 DatepickerUI.destroyAll();
 ```
+
+The main entry also exports the types `PickerView`, `SwitchViewEventData`, `ClearEventData`, `VisibleRange`, `NavigateSource` and `CancelReason`.
 
 Docs: [methods](https://timepicker-ui.vercel.app/datepicker/api/methods), [events](https://timepicker-ui.vercel.app/datepicker/api/events), [events example](https://timepicker-ui.vercel.app/datepicker/examples/advanced/events), [external API example](https://timepicker-ui.vercel.app/datepicker/examples/advanced/external-api)
 
@@ -110,9 +121,10 @@ Grouped by area into `calendar`, `ui`, `labels`, `behavior` and `callbacks`. Pas
 new DatepickerUI(input, {
   calendar: {
     mode: "single" | "range" | "multiple",       // default "single"
+    defaultValue: "today",       // starting value of an empty input, shape of setValue()
     range: { minLength, maxLength, presets: [] },
     multiple: { max },
-    months: 1,                  // months side by side, docked and inline
+    months: 1,                  // months side by side, docked look
     precision: "day" | "month" | "year",         // default "day", single mode only
     locale: "en-GB",            // default: page locale
     minDate: "today", maxDate: "2026-12-31",
@@ -124,7 +136,13 @@ new DatepickerUI(input, {
   },
   ui: {
     displayMode: "auto" | "docked" | "modal",    // default "auto"
-    inline: { enabled: false, container: "#calendar" | element },
+    layout: "auto" | "docked" | "modal" | "fullscreen", // look on any surface, default "auto"
+    inline: {
+      enabled: false, container: "#calendar" | element,
+      headline: true,                              // false hides the inline headline
+      navigation: "menus" | "caption",             // "caption": text next to the arrows, no menus
+      announceSelection: true,                     // false leaves selection announcements to the host
+    },
     format: "auto" | "dd.MM.yyyy",
     theme: "basic" | "m3-green" | "crane" | "blueprint" | ...,
     colorScheme: "auto" | "light" | "dark",      // default "auto"
@@ -134,13 +152,13 @@ new DatepickerUI(input, {
     mask: false,
     cssClass: "",
   },
-  labels: { title, confirm, cancel, today, clear, previousMonth, nextMonth, invalidDate, ... },
+  labels: { title, confirm, cancel, today, clear, previousMonth, nextMonth, invalidDate, inRange, ... },
   behavior: { closeOnSelect: false, commitOnChange: false, returnFocus: true, id: "" },
-  callbacks: { onOpen, onClose, onCancel, onConfirm, onUpdate, onError, onSelectDay, onSelectMonth, onSelectYear, onNavigate, onRangeStart, onRangeEnd },
+  callbacks: { onOpen, onClose, onCancel, onConfirm, onUpdate, onError, onSelectDay, onSelectMonth, onSelectYear, onNavigate, onRangeStart, onRangeEnd, onSwitchView, onClear },
 });
 ```
 
-An invalid value falls back to the default and emits an `error` event with code `invalid-option`. More on [layouts](https://timepicker-ui.vercel.app/datepicker/docs/layouts) and [changing options at runtime](https://timepicker-ui.vercel.app/datepicker/examples/advanced/set-options).
+With `ui.displayMode: "auto"`, a docked picker that fits neither below nor above the field opens as a dialog, so the result depends on where the field is on the page. An invalid value falls back to the default and emits an `error` event with code `invalid-option`. More on [layouts](https://timepicker-ui.vercel.app/datepicker/docs/layouts) and [changing options at runtime](https://timepicker-ui.vercel.app/datepicker/examples/advanced/set-options).
 
 ## Themes
 
@@ -156,6 +174,10 @@ new DatepickerUI("#date", { ui: { theme: "m2" } });
 ```
 
 Or import `@pglejzer/datepicker-ui/index.css` to get the core and every theme. Writing your own theme: [themes guide](https://timepicker-ui.vercel.app/datepicker/docs/themes), [custom theme example](https://timepicker-ui.vercel.app/datepicker/examples/themes/custom-theme), [CSS classes](https://timepicker-ui.vercel.app/datepicker/api/css-classes) and [CSS variables](https://timepicker-ui.vercel.app/datepicker/api/css-variables).
+
+New classes: `dp-ui__calendar--modal`, `dp-ui__navigation--caption` with `dp-ui__caption`, and `dp-ui__presets--column`, which gives a presets group outside the picker the column look. `--dp-ui-date-container-min-size` (36px) and `--dp-ui-date-container-max-size` (48px) bound the day cell size.
+
+An inline picker narrows to fit its container, down to 36px cells, and scrolls sideways below that. The container needs a width that does not come from the picker: a flex or grid item needs `min-width: 0`, and a centered grid item or an `inline-block` also needs `width: 100%`.
 
 ## Frameworks
 
@@ -184,10 +206,20 @@ The same pattern works in Vue, Svelte and Angular. See the [frameworks and SSR g
 
 `@pglejzer/datepicker-ui/kit` is a second entry for packages built on top of the picker. It exports the popover, dialog and inline surfaces (`PopoverHost`, `DialogHost`, `InlineHost`), the rule that picks docked or modal (`resolveSurfaceMode`), color scheme detection and the date text helpers (`parseDate`, `formatDate`, `resolvePattern`, `maskDateText`). Like the main entry, it is safe to import during server rendering. See the [kit guide](https://timepicker-ui.vercel.app/datepicker/docs/kit).
 
+Also exported:
+
+- `applyTheme` and the `SurfaceTheme` type write the theme, color scheme, extra classes and right-to-left state onto a surface root.
+- `createTextButton` builds the picker's text button.
+- `fitsViewport(root, anchor)` tells whether a docked surface fits the window entirely below or entirely above its anchor.
+- `Pager` and `PagerOptions` give the month paging with its drag and wheel gestures.
+- `RANGE_SEPARATOR` and `splitRangeText` write and split range text.
+- `leadingDateLength` and `normalizeDigits` help with typed dates.
+- `resolveWeekStart`, `weekdayNames`, `formatMonthYear` and `formatFullDate` are the calendar's week and name helpers.
+- The hosts accept a `labelledBy` option, the id of a visible title that names the surface. `setLabel(label, labelledBy?)` renames a shown surface by the same rule.
+
 ```js
 import { parseDate, resolvePattern } from "@pglejzer/datepicker-ui/kit";
 ```
-
 ## Need a time picker?
 
 [timepicker-ui](https://timepicker-ui.vercel.app) is the companion time picker from the same author. It has no dependencies and uses the same theme names, so the two pickers match.

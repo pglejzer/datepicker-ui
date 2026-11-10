@@ -1,6 +1,6 @@
 {
   "name": "@pglejzer/datepicker-ui",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "datepicker-ui is a customizable date selection library built with TypeScript, designed to work seamlessly alongside timepicker-ui. Based on Google's Material Design, lightweight, themeable, and framework agnostic.",
   "type": "module",
   "main": "./dist/cjs/index.cjs",
