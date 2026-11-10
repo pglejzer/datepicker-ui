@@ -1,7 +1,7 @@
 import type { DatepickerOptions } from "../../src/index";
 
 export const INPUT =
-  "w-64 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors";
+  "w-full max-w-64 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors";
 export const ACTIVE_FIELD =
   "[&.dp-ui\\_\\_input--active]:ring-2 [&.dp-ui\\_\\_input--active]:ring-violet-500 [&.dp-ui\\_\\_input--active]:border-violet-500";
 export const OUTPUT =
@@ -35,7 +35,10 @@ export const column = (...items: string[]): string =>
   `<div class="grid gap-4 justify-items-center">${items.join("")}</div>`;
 
 export const inlineBox = (id: string, placeholder?: string): string =>
-  column(field(id, placeholder), `<div id="${id}-box"></div>`);
+  column(
+    field(id, placeholder),
+    `<div id="${id}-box" class="flex w-full min-w-0 justify-center"></div>`,
+  );
 
 export const inlineUi = (id: string): { enabled: true; container: string } => ({
   enabled: true,
