@@ -158,7 +158,7 @@ exceptions listed after the routing. Routing is by path:
 - `app/tests/`, `app/vitest.config.ts` → `test-engineer`
 - build and tool configs (`tsdown.config.ts`, `vite.config.ts`, `vite-plugin-svg-text.ts`,
   `eslint.config.js`, Prettier, `tsconfig*.json`, `.husky/`), `package.json`, `app/package.json`,
-  `dist/`, version bump / changelog / release → `build-release`
+  `dist/`, `.github/workflows/publish.yml`, version bump / changelog / release → `build-release`
 
 **Cross-cutting agent** (not pinned to one path — scoped by concern):
 - `accessibility` — a11y of the library (`app/src`): ARIA, keyboard, focus, screen-reader,
