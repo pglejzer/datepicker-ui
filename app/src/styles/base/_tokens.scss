@@ -1,19 +1,12 @@
-:where(
-  .dp-ui,
-  .dp-ui__dialog,
-  .dp-ui__container--docked,
-  .dp-ui__container--inline
-) {
+:where(.dp-ui__dialog, .dp-ui__container--docked, .dp-ui__container--inline) {
   color-scheme: light dark;
 }
 
-.dp-ui[data-color-scheme="light"],
 .dp-ui__dialog[data-color-scheme="light"],
 .dp-ui__container[data-color-scheme="light"] {
   color-scheme: light;
 }
 
-.dp-ui[data-color-scheme="dark"],
 .dp-ui__dialog[data-color-scheme="dark"],
 .dp-ui__container[data-color-scheme="dark"] {
   color-scheme: dark;
@@ -122,8 +115,9 @@
     --dp-ui-sys-color-on-surface-variant
   );
   --dp-ui-week-number-width: 48px;
-  --dp-ui-date-container-size: 48px;
-  --dp-ui-date-state-layer-size: 40px;
+  --dp-ui-date-container-min-size: 36px;
+  --dp-ui-date-container-max-size: 48px;
+  --dp-ui-date-columns: 7;
   --dp-ui-date-content-row-height: 64px;
   --dp-ui-date-content-color: var(--dp-ui-sys-color-on-surface-variant);
   --dp-ui-date-label-text-color: var(--dp-ui-sys-color-on-surface);
@@ -149,7 +143,6 @@
   --dp-ui-date-badge-selected-color: var(--dp-ui-sys-color-on-primary);
   --dp-ui-date-badge-size: 4px;
   --dp-ui-range-height: 568px;
-  --dp-ui-month-width: calc(7 * var(--dp-ui-date-container-size));
   --dp-ui-month-gap: 24px;
   --dp-ui-presets-width: 168px;
   --dp-ui-preset-height: 32px;
@@ -208,4 +201,18 @@
   --dp-ui-popover-edge-margin: 4px;
   --dp-ui-popover-min-height: 160px;
   --dp-ui-popover-z-index: 5001;
+}
+
+:where(.dp-ui, .dp-ui__dialog, .dp-ui__container) {
+  --dp-ui-date-container-size: clamp(
+    var(--dp-ui-date-container-min-size),
+    (100cqi - 2 * var(--dp-ui-container-side-padding)) /
+      var(--dp-ui-date-columns),
+    var(--dp-ui-date-container-max-size)
+  );
+  --dp-ui-date-state-layer-size: min(
+    40px,
+    var(--dp-ui-date-container-size) - 8px
+  );
+  --dp-ui-month-width: calc(7 * var(--dp-ui-date-container-size));
 }

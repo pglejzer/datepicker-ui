@@ -1,6 +1,9 @@
 /* Pastel theme for DatepickerUI, ported from timepicker-ui */
-:is(.dp-ui, .dp-ui__dialog, .dp-ui__container)[data-theme="pastel"] {
+:is(.dp-ui__dialog, .dp-ui__container)[data-theme="pastel"] {
   color-scheme: light;
+}
+
+:is(.dp-ui, .dp-ui__dialog, .dp-ui__container)[data-theme="pastel"] {
   --dp-ui-sys-color-surface-container-high: #fdf6f0;
   --dp-ui-sys-color-surface-variant: #fae3d9;
   --dp-ui-sys-color-on-surface: #3b3b3b;

@@ -46,11 +46,13 @@
   background-color: var(--dp-ui-preset-pressed-container-color);
 }
 
-.dp-ui__preset:hover {
-  @include state-layer(
-    var(--dp-ui-preset-label-text-color),
-    --dp-ui-sys-state-layer-hover-opacity
-  );
+@include hover-only {
+  .dp-ui__preset:hover {
+    @include state-layer(
+      var(--dp-ui-preset-label-text-color),
+      --dp-ui-sys-state-layer-hover-opacity
+    );
+  }
 }
 
 .dp-ui__preset#{$focus-visible} {
@@ -67,12 +69,14 @@
   );
 }
 
-.dp-ui__preset[aria-pressed="true"]:hover {
-  @include state-layer-over(
-    var(--dp-ui-preset-pressed-container-color),
-    var(--dp-ui-preset-pressed-label-text-color),
-    --dp-ui-sys-state-layer-hover-opacity
-  );
+@include hover-only {
+  .dp-ui__preset[aria-pressed="true"]:hover {
+    @include state-layer-over(
+      var(--dp-ui-preset-pressed-container-color),
+      var(--dp-ui-preset-pressed-label-text-color),
+      --dp-ui-sys-state-layer-hover-opacity
+    );
+  }
 }
 
 .dp-ui__preset[aria-pressed="true"]#{$focus-visible} {
@@ -114,6 +118,9 @@
 .dp-ui__container--presets > .dp-ui__calendar > .dp-ui__presets {
   grid-column: 1;
   grid-row: 1 / -1;
+}
+
+.dp-ui__presets--column {
   flex-direction: column;
   align-items: stretch;
   gap: 0;
@@ -126,7 +133,7 @@
   @include thin-scrollbar;
 }
 
-.dp-ui__container--presets > .dp-ui__calendar > .dp-ui__presets .dp-ui__preset {
+.dp-ui__presets--column .dp-ui__preset {
   justify-content: flex-start;
   block-size: var(--dp-ui-preset-row-height);
   padding-inline: 16px;

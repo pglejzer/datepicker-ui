@@ -17,6 +17,21 @@
   align-items: center;
 }
 
+@container (width < 320px) {
+  .dp-ui__header--docked {
+    padding-inline: 8px;
+  }
+
+  .dp-ui__header--docked > .dp-ui__navigation-group > .dp-ui__icon-button {
+    --dp-ui-icon-button-size: 32px;
+  }
+
+  .dp-ui__header--docked > .dp-ui__navigation-group > .dp-ui__menu-button {
+    gap: 4px;
+    padding-inline: 8px 4px;
+  }
+}
+
 .dp-ui__navigation-group:has(.dp-ui__menu-button:disabled) .dp-ui__icon-button,
 .dp-ui__menu-button:disabled .dp-ui__menu-button-icon {
   visibility: hidden;

@@ -9,7 +9,7 @@
   display: flex;
   flex-direction: column;
   inline-size: var(--dp-ui-container-width);
-  max-inline-size: 100vw;
+  max-inline-size: 100%;
   margin: 0;
   padding: 0;
   border: 0;
@@ -22,11 +22,16 @@
   @include typescale(body-large);
 }
 
+.dp-ui__container:has(> .dp-ui__calendar) {
+  container-type: inline-size;
+}
+
 .dp-ui__container--rtl {
   --dp-ui-pager-rest-x: 100%;
 }
 
 .dp-ui__container:has(.dp-ui__week-number-header) {
+  --dp-ui-date-columns: 8;
   inline-size: calc(
     var(--dp-ui-container-width) + var(--dp-ui-week-number-width)
   );
@@ -34,6 +39,7 @@
 
 .dp-ui__container.dp-ui__container--multi-month {
   --dp-ui-month-column-extra: 0px;
+  --dp-ui-date-container-size: var(--dp-ui-date-container-max-size);
   inline-size: calc(
     var(--dp-ui-visible-months, 2) *
       (var(--dp-ui-month-width) + var(--dp-ui-month-column-extra)) +
@@ -67,7 +73,17 @@
 
 .dp-ui__container--inline {
   position: relative;
+  overflow-x: auto;
   box-shadow: none;
+}
+
+.dp-ui__container--inline
+  > .dp-ui__calendar
+  > :is(.dp-ui__content, .dp-ui__range) {
+  min-inline-size: calc(
+    var(--dp-ui-date-columns) * var(--dp-ui-date-container-min-size) + 2 *
+      var(--dp-ui-container-side-padding)
+  );
 }
 
 .dp-ui__container--morphing {
@@ -78,7 +94,9 @@
   position: relative;
 }
 
-.dp-ui__container--fullscreen.dp-ui__container--morphing {
+.dp-ui__container--fullscreen.dp-ui__container--morphing:not(
+    .dp-ui__container--inline
+  ) {
   position: absolute;
   inset: 0;
   margin: auto;
@@ -91,6 +109,11 @@
   max-block-size: none;
   border-radius: var(--dp-ui-sys-shape-corner-none);
   box-shadow: none;
+}
+
+.dp-ui__container.dp-ui__container--inline.dp-ui__container--fullscreen {
+  inline-size: 100%;
+  block-size: 100%;
 }
 
 .dp-ui__dialog:has(> .dp-ui__container--fullscreen) {

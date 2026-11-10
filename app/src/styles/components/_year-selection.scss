@@ -14,7 +14,9 @@
   @include thin-scrollbar;
 }
 
-.dp-ui__container--modal :is(.dp-ui__year-selection, .dp-ui__month-selection) {
+.dp-ui__calendar--modal
+  > .dp-ui__content
+  > :is(.dp-ui__year-selection, .dp-ui__month-selection) {
   block-size: calc(var(--dp-ui-date-container-size) * 7 - 16px);
   border-block-end: 1px solid var(--dp-ui-divider-color);
 }
@@ -54,11 +56,13 @@
   color: var(--dp-ui-year-item-selected-label-text-color);
 }
 
-:is(.dp-ui__year-selection-item, .dp-ui__month-selection-item):hover {
-  @include state-layer(
-    var(--dp-ui-year-item-label-text-color),
-    --dp-ui-sys-state-layer-hover-opacity
-  );
+@include hover-only {
+  :is(.dp-ui__year-selection-item, .dp-ui__month-selection-item):hover {
+    @include state-layer(
+      var(--dp-ui-year-item-label-text-color),
+      --dp-ui-sys-state-layer-hover-opacity
+    );
+  }
 }
 
 :is(
@@ -79,17 +83,19 @@
   );
 }
 
-:is(
-  .dp-ui__year-selection-item--selected,
-  .dp-ui__month-selection-item--selected,
-  .dp-ui__year-selection-item[aria-selected="true"],
-  .dp-ui__month-selection-item[aria-selected="true"]
-):hover {
-  @include state-layer-over(
-    var(--dp-ui-year-item-selected-container-color),
-    var(--dp-ui-year-item-selected-label-text-color),
-    --dp-ui-sys-state-layer-hover-opacity
-  );
+@include hover-only {
+  :is(
+    .dp-ui__year-selection-item--selected,
+    .dp-ui__month-selection-item--selected,
+    .dp-ui__year-selection-item[aria-selected="true"],
+    .dp-ui__month-selection-item[aria-selected="true"]
+  ):hover {
+    @include state-layer-over(
+      var(--dp-ui-year-item-selected-container-color),
+      var(--dp-ui-year-item-selected-label-text-color),
+      --dp-ui-sys-state-layer-hover-opacity
+    );
+  }
 }
 
 :is(

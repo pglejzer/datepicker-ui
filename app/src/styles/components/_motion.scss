@@ -100,14 +100,21 @@
   visibility: hidden;
 }
 
-.dp-ui__container--docked[popover]:not(:popover-open) .dp-ui__actions,
-.dp-ui__dialog:not([open]) .dp-ui__actions {
+.dp-ui__container--docked[popover]:not(:popover-open)
+  > .dp-ui__calendar
+  > .dp-ui__actions,
+.dp-ui__dialog:not([open])
+  > .dp-ui__container
+  > .dp-ui__calendar
+  > .dp-ui__actions {
   opacity: 0;
   transition: opacity var(--dp-ui-motion-surface-exit, 150ms) linear;
 }
 
-.dp-ui__container--docked[popover]:popover-open .dp-ui__actions,
-.dp-ui__dialog[open] .dp-ui__actions {
+.dp-ui__container--docked[popover]:popover-open
+  > .dp-ui__calendar
+  > .dp-ui__actions,
+.dp-ui__dialog[open] > .dp-ui__container > .dp-ui__calendar > .dp-ui__actions {
   opacity: 1;
   transition: opacity
     calc(
@@ -129,6 +136,7 @@
 }
 
 [data-rebuilt]:is(
+  .dp-ui__pager,
   .dp-ui__menu,
   .dp-ui__navigation--year-grid,
   .dp-ui__navigation--month-grid,
@@ -219,8 +227,13 @@
     opacity: 0;
   }
 
-  .dp-ui__container--docked[popover]:popover-open .dp-ui__actions,
-  .dp-ui__dialog[open] .dp-ui__actions {
+  .dp-ui__container--docked[popover]:popover-open
+    > .dp-ui__calendar
+    > .dp-ui__actions,
+  .dp-ui__dialog[open]
+    > .dp-ui__container
+    > .dp-ui__calendar
+    > .dp-ui__actions {
     opacity: 0;
   }
 }
@@ -256,7 +269,11 @@
   }
 
   .dp-ui__container:is(.dp-ui__container--docked, .dp-ui__container--inline)
-    .dp-ui__pager {
+    .dp-ui__pager,
+  .dp-ui__container--modal
+    > .dp-ui__calendar:not(.dp-ui__calendar--modal)
+    > .dp-ui__content
+    > .dp-ui__pager {
     transition: none;
   }
 

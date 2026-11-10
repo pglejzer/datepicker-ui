@@ -81,6 +81,7 @@
   }
 
   .dp-ui__date--disabled .dp-ui__date-indicator,
+  .dp-ui__menu-item[aria-disabled="true"],
   .dp-ui__year-selection-item[aria-disabled="true"],
   .dp-ui__month-selection-item[aria-disabled="true"],
   .dp-ui__icon-button:disabled,

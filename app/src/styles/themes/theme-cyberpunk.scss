@@ -1,6 +1,9 @@
 /* Cyberpunk theme for DatepickerUI, ported from timepicker-ui */
-:is(.dp-ui, .dp-ui__dialog, .dp-ui__container)[data-theme="cyberpunk"] {
+:is(.dp-ui__dialog, .dp-ui__container)[data-theme="cyberpunk"] {
   color-scheme: dark;
+}
+
+:is(.dp-ui, .dp-ui__dialog, .dp-ui__container)[data-theme="cyberpunk"] {
   --dp-ui-sys-color-surface-container-high: #0f0c29;
   --dp-ui-sys-color-surface-variant: #1a1a2e;
   --dp-ui-sys-color-on-surface: #00f0ff;

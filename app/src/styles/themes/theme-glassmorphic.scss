@@ -1,6 +1,9 @@
 /* Glassmorphic theme for DatepickerUI, ported from timepicker-ui */
-:is(.dp-ui, .dp-ui__dialog, .dp-ui__container)[data-theme="glassmorphic"] {
+:is(.dp-ui__dialog, .dp-ui__container)[data-theme="glassmorphic"] {
   color-scheme: dark;
+}
+
+:is(.dp-ui, .dp-ui__dialog, .dp-ui__container)[data-theme="glassmorphic"] {
   --dp-ui-sys-color-surface-container-high: rgba(16, 16, 24, 0.78);
   --dp-ui-sys-color-surface-variant: rgba(255, 255, 255, 0.14);
   --dp-ui-sys-color-on-surface: rgba(255, 255, 255, 0.95);

@@ -1,0 +1,87 @@
+@use "../base/utilities" as *;
+
+.dp-ui__date--in-range::before,
+.dp-ui__date--range-start::before,
+.dp-ui__date--range-end::before {
+  content: "";
+  position: absolute;
+  inset-block: calc(
+    (var(--dp-ui-date-container-size) - var(--dp-ui-date-state-layer-size)) / 2
+  );
+  inset-inline: 0;
+  background-color: var(--dp-ui-date-in-range-container-color);
+  pointer-events: none;
+}
+
+.dp-ui__month-grid:has(.dp-ui__date-content)
+  :is(
+    .dp-ui__date--in-range,
+    .dp-ui__date--range-start,
+    .dp-ui__date--range-end
+  )::before {
+  inset-block: calc(
+      (var(--dp-ui-date-container-size) - var(--dp-ui-date-state-layer-size)) /
+        2
+    )
+    auto;
+  block-size: var(--dp-ui-date-state-layer-size);
+}
+
+.dp-ui__date--range-start::before {
+  inset-inline-start: 50%;
+}
+
+.dp-ui__date--range-end::before {
+  inset-inline-end: 50%;
+}
+
+.dp-ui__date--range-start.dp-ui__date--range-end::before {
+  content: none;
+}
+
+tr
+  > .dp-ui__date:first-child:is(
+    .dp-ui__date--in-range,
+    .dp-ui__date--range-end
+  )::before {
+  inset-inline-start: calc(-1 * var(--dp-ui-container-side-padding));
+}
+
+tr
+  > .dp-ui__date:last-child:is(
+    .dp-ui__date--in-range,
+    .dp-ui__date--range-start
+  )::before {
+  inset-inline-end: calc(-1 * var(--dp-ui-container-side-padding));
+}
+
+.dp-ui__date--in-range .dp-ui__date-indicator {
+  color: var(--dp-ui-date-in-range-label-text-color);
+}
+
+@include hover-only {
+  :where(.dp-ui__pager:not(.dp-ui__pager--dragging), .dp-ui__range)
+    .dp-ui__date--in-range:not(.dp-ui__date--disabled):hover
+    .dp-ui__date-indicator {
+    @include state-layer(
+      var(--dp-ui-date-in-range-state-layer-color),
+      --dp-ui-sys-state-layer-hover-opacity
+    );
+  }
+}
+
+.dp-ui__date--in-range:not(.dp-ui__date--disabled)#{$focus-visible}
+  .dp-ui__date-indicator {
+  @include state-layer(
+    var(--dp-ui-date-in-range-state-layer-color),
+    --dp-ui-sys-state-layer-focus-opacity
+  );
+}
+
+.dp-ui__date--in-range:not(.dp-ui__date--disabled):active
+  .dp-ui__date-indicator {
+  @include state-layer(
+    var(--dp-ui-date-in-range-state-layer-color),
+    --dp-ui-sys-state-layer-pressed-opacity
+  );
+}
