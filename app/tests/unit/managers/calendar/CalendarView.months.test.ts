@@ -131,6 +131,25 @@ describe("CalendarView with several months", () => {
     ).toHaveLength(1);
   });
 
+  it("follows the window width while open", async () => {
+    await open();
+    expect(surface()).toHaveClass("dp-ui__container--multi-month");
+
+    setViewportWidth(700);
+    await flush();
+
+    expect(surface()).not.toHaveClass("dp-ui__container--multi-month");
+    expect(
+      activePage().querySelectorAll("table.dp-ui__month-grid"),
+    ).toHaveLength(1);
+
+    setViewportWidth(1280);
+    await flush();
+
+    expect(surface()).toHaveClass("dp-ui__container--multi-month");
+    expect(captions()).toEqual(["October 2026", "November 2026"]);
+  });
+
   it("is one month in a modal even on a wide window", async () => {
     await open({ ui: { displayMode: "modal" } });
 

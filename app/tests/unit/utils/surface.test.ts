@@ -1,11 +1,16 @@
 import { describe, expect, it } from "vitest";
+import type { LayoutOption } from "@/types/internal";
+import type { CalendarMode } from "@/types/selection";
 import {
+  calendarLayout,
   homePanel,
+  inlineChrome,
   isFullscreenRange,
   resolveSurfaceMode,
   resolveViewLayout,
   startPanel,
   supportsInputView,
+  type InlineChrome,
   type ViewLayoutInput,
 } from "@/utils/surface";
 
@@ -13,8 +18,7 @@ const layoutInput = (patch: Partial<ViewLayoutInput>): ViewLayoutInput => ({
   months: 2,
   precision: "day",
   mode: "single",
-  surface: "docked",
-  fullscreen: false,
+  layout: "docked",
   width: 1280,
   weekNumbers: false,
   presets: 0,
@@ -70,8 +74,11 @@ describe("resolveViewLayout", () => {
     ).toBe(3);
   });
 
-  it("is always one month on a modal surface", () => {
-    expect(resolveViewLayout(layoutInput({ surface: "modal" })).months).toBe(1);
+  it("is always one month in the modal and full-screen layouts", () => {
+    expect(resolveViewLayout(layoutInput({ layout: "modal" })).months).toBe(1);
+    expect(
+      resolveViewLayout(layoutInput({ layout: "fullscreen" })).months,
+    ).toBe(1);
   });
 
   it("is one month for month and year precision", () => {
@@ -128,11 +135,11 @@ describe("resolveViewLayout", () => {
     });
 
     it("uses a row on a modal and full-screen surface", () => {
-      expect(range({ surface: "modal" })).toEqual({
+      expect(range({ layout: "modal" })).toEqual({
         months: 1,
         presets: "row",
       });
-      expect(range({ fullscreen: true })).toEqual({
+      expect(range({ layout: "fullscreen" })).toEqual({
         months: 1,
         presets: "row",
       });
@@ -145,7 +152,7 @@ describe("resolveViewLayout", () => {
 
   it("is one month in full screen", () => {
     expect(
-      resolveViewLayout(layoutInput({ mode: "range", fullscreen: true }))
+      resolveViewLayout(layoutInput({ mode: "range", layout: "fullscreen" }))
         .months,
     ).toBe(1);
   });
@@ -160,33 +167,35 @@ describe("homePanel", () => {
 });
 
 describe("startPanel", () => {
-  it("opens the day grid for day, on every surface", () => {
+  it("opens the day grid for day, in every layout", () => {
     expect(startPanel("day", "docked")).toBe("days");
-    expect(startPanel("day", "inline")).toBe("days");
     expect(startPanel("day", "modal")).toBe("days");
+    expect(startPanel("day", "fullscreen")).toBe("days");
   });
 
-  it("opens the menus on docked and inline surfaces", () => {
+  it("opens the menus in the docked layout", () => {
     expect(startPanel("month", "docked")).toBe("month-menu");
-    expect(startPanel("month", "inline")).toBe("month-menu");
     expect(startPanel("year", "docked")).toBe("year-menu");
-    expect(startPanel("year", "inline")).toBe("year-menu");
   });
 
-  it("opens the full grids on a modal surface", () => {
+  it("opens the full grids in the modal and full-screen layouts", () => {
     expect(startPanel("month", "modal")).toBe("month-grid");
     expect(startPanel("year", "modal")).toBe("year-grid");
+    expect(startPanel("month", "fullscreen")).toBe("month-grid");
+    expect(startPanel("year", "fullscreen")).toBe("year-grid");
   });
 });
 
 describe("supportsInputView", () => {
-  it("keeps the day precision rules per mode and surface", () => {
+  it("keeps the day precision rules per mode and layout", () => {
     expect(supportsInputView("single", "modal", "day")).toBe(true);
+    expect(supportsInputView("single", "fullscreen", "day")).toBe(true);
     expect(supportsInputView("single", "docked", "day")).toBe(false);
-    expect(supportsInputView("single", "inline", "day")).toBe(false);
     expect(supportsInputView("range", "docked", "day")).toBe(true);
     expect(supportsInputView("range", "modal", "day")).toBe(true);
+    expect(supportsInputView("range", "fullscreen", "day")).toBe(true);
     expect(supportsInputView("multiple", "modal", "day")).toBe(false);
+    expect(supportsInputView("multiple", "docked", "day")).toBe(false);
   });
 
   it("is never supported at month or year precision", () => {
@@ -195,6 +204,121 @@ describe("supportsInputView", () => {
       expect(supportsInputView("single", "docked", precision)).toBe(false);
       expect(supportsInputView("range", "modal", precision)).toBe(false);
     }
+  });
+});
+
+describe("calendarLayout", () => {
+  const opts = (
+    mode: CalendarMode,
+    layout: LayoutOption = "auto",
+  ): Parameters<typeof calendarLayout>[1] => ({
+    mode,
+    fullscreenBelow: 600,
+    layout,
+  });
+
+  describe('"auto"', () => {
+    it("is docked on a docked surface", () => {
+      expect(calendarLayout("docked", opts("single"), 1280)).toBe("docked");
+      expect(calendarLayout("docked", opts("range"), 300)).toBe("docked");
+    });
+
+    it("is full screen for a modal range below ui.fullscreen", () => {
+      expect(calendarLayout("modal", opts("range"), 400)).toBe("fullscreen");
+      expect(calendarLayout("modal", opts("range"), 599)).toBe("fullscreen");
+      expect(calendarLayout("modal", opts("range"), 600)).toBe("modal");
+    });
+
+    it("is modal for a modal single", () => {
+      expect(calendarLayout("modal", opts("single"), 400)).toBe("modal");
+    });
+
+    it("is docked inline", () => {
+      expect(calendarLayout("inline", opts("single"), 1280)).toBe("docked");
+      expect(calendarLayout("inline", opts("range"), 400)).toBe("docked");
+    });
+  });
+
+  it('"docked" is docked on every surface, also for a small modal range', () => {
+    for (const surface of ["docked", "modal", "inline"] as const) {
+      expect(calendarLayout(surface, opts("single", "docked"), 400)).toBe(
+        "docked",
+      );
+      expect(calendarLayout(surface, opts("range", "docked"), 400)).toBe(
+        "docked",
+      );
+    }
+  });
+
+  describe('"modal"', () => {
+    it("is modal on the popover and inline", () => {
+      expect(calendarLayout("docked", opts("single", "modal"), 1280)).toBe(
+        "modal",
+      );
+      expect(calendarLayout("docked", opts("range", "modal"), 400)).toBe(
+        "modal",
+      );
+      expect(calendarLayout("inline", opts("range", "modal"), 400)).toBe(
+        "modal",
+      );
+    });
+
+    it("keeps the ui.fullscreen rule in a dialog", () => {
+      expect(calendarLayout("modal", opts("range", "modal"), 599)).toBe(
+        "fullscreen",
+      );
+      expect(calendarLayout("modal", opts("range", "modal"), 600)).toBe(
+        "modal",
+      );
+      expect(calendarLayout("modal", opts("single", "modal"), 400)).toBe(
+        "modal",
+      );
+    });
+  });
+
+  describe('"fullscreen"', () => {
+    it("is full screen for a range in a dialog at every width and inline", () => {
+      expect(calendarLayout("modal", opts("range", "fullscreen"), 1280)).toBe(
+        "fullscreen",
+      );
+      expect(calendarLayout("inline", opts("range", "fullscreen"), 1280)).toBe(
+        "fullscreen",
+      );
+    });
+
+    it("is modal on the popover and for the other modes", () => {
+      expect(calendarLayout("docked", opts("range", "fullscreen"), 1280)).toBe(
+        "modal",
+      );
+      expect(calendarLayout("modal", opts("single", "fullscreen"), 400)).toBe(
+        "modal",
+      );
+      expect(
+        calendarLayout("inline", opts("multiple", "fullscreen"), 1280),
+      ).toBe("modal");
+    });
+  });
+});
+
+describe("inlineChrome", () => {
+  const custom: InlineChrome = {
+    headline: false,
+    navigation: "caption",
+    announceSelection: false,
+  };
+
+  it("returns the defaults for a docked or modal surface", () => {
+    const defaults = {
+      headline: true,
+      navigation: "menus",
+      announceSelection: true,
+    };
+    expect(inlineChrome("docked", custom)).toEqual(defaults);
+    expect(inlineChrome("modal", custom)).toEqual(defaults);
+  });
+
+  it("passes the inline options through on an inline surface", () => {
+    expect(inlineChrome("inline", custom)).toEqual(custom);
   });
 });
 

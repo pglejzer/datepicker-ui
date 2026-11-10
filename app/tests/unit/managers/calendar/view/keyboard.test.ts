@@ -27,6 +27,7 @@ const setup = (
     draft?: Selection;
     rtl?: boolean;
     home?: Panel;
+    caption?: boolean;
   } = {},
 ): Setup => {
   const root = document.createElement("div");
@@ -52,12 +53,14 @@ const setup = (
     today: vi.fn(),
     clear: vi.fn(),
     typeDraft: vi.fn(),
+    renderedMonths: vi.fn(),
   };
   const deps: KeyboardDeps = {
     core,
     actions,
     layout: config.layout ?? "docked",
     home: config.home ?? "days",
+    caption: () => config.caption ?? false,
     cellAt: (target) => (target === cell ? dateCell : null),
     isRtl: () => config.rtl ?? false,
   };
@@ -186,6 +189,30 @@ describe("bindKeyboard", () => {
       expect(m.defaultPrevented).toBe(false);
       expect(y.defaultPrevented).toBe(false);
       expect(actions.showPanel).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("caption navigation", () => {
+    it.each(["docked", "modal"] as const)(
+      "opens nothing for Shift+M and Shift+Y in the %s layout",
+      (layout) => {
+        const { press, actions } = setup({ layout, caption: true });
+
+        const m = press("M", { shiftKey: true });
+        const y = press("Y", { shiftKey: true });
+
+        expect(m.defaultPrevented).toBe(false);
+        expect(y.defaultPrevented).toBe(false);
+        expect(actions.showPanel).not.toHaveBeenCalled();
+      },
+    );
+
+    it("keeps the arrow keys working", () => {
+      const { press, actions } = setup({ caption: true });
+
+      press("ArrowRight");
+
+      expect(actions.focusDate).toHaveBeenCalledWith(oct(18));
     });
   });
 
@@ -442,6 +469,7 @@ describe("bindKeyboard", () => {
       actions: { focusDate } as unknown as PickerActions,
       layout: "docked",
       home: "days",
+      caption: () => false,
       cellAt: () => ({ element: cell, date: oct(17) }),
       isRtl: () => false,
     });

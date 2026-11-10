@@ -14,25 +14,30 @@ import { isSameDay } from "@/utils/date/plainDate";
 const OCT: PlainDate = { year: 2026, month: 10, day: 17 };
 const view = { year: 2026, month: 10 };
 
-const makeCtx = (overrides: Partial<GridContext> = {}): GridContext => ({
-  locale: "en-US",
-  weekStart: 0,
-  weekNumbers: false,
-  showOutside: false,
-  labels: { weekNumber: "Week" },
-  isSelected: () => false,
-  isDisabled: () => false,
-  rangeRole: () => null,
-  decorate: () => null,
-  rangeLabels: { start: "Start", end: "End" },
-  headingVisible: false,
-  weekdaysVisible: true,
-  today: OCT,
-  focus: OCT,
-  outsideSelectable: true,
-  content: () => null,
-  ...overrides,
-});
+const makeCtx = (overrides: Partial<GridContext> = {}): GridContext => {
+  const ctx: GridContext = {
+    locale: "en-US",
+    weekStart: 0,
+    weekNumbers: false,
+    showOutside: false,
+    labels: { weekNumber: "Week" },
+    isSelected: () => false,
+    isDisabled: () => false,
+    rangeRole: () => null,
+    labelRole: () => null,
+    decorate: () => null,
+    rangeLabels: { start: "Start", end: "End", inRange: "In range" },
+    headingVisible: false,
+    weekdaysVisible: true,
+    today: OCT,
+    focus: OCT,
+    outsideSelectable: true,
+    content: () => null,
+    ...overrides,
+  };
+  if (overrides.labelRole !== undefined) return ctx;
+  return { ...ctx, labelRole: (date) => ctx.rangeRole(date) };
+};
 
 const render = (overrides: Partial<GridContext> = {}) => {
   const ctx = makeCtx(overrides);
@@ -223,6 +228,48 @@ describe("renderMonthGrid range and decorations", () => {
     );
     expect(cell(table, "2026-10-28").getAttribute("aria-label")).toMatch(
       /, End$/,
+    );
+  });
+
+  it("labels in-range cells with the In range suffix", () => {
+    const table = render({ rangeRole: roleFor(20, 24) });
+    expect(cell(table, "2026-10-22")).toHaveAttribute(
+      "aria-label",
+      "Thursday, October 22, 2026, In range",
+    );
+  });
+
+  it("uses labels.inRange from the context", () => {
+    const table = render({
+      rangeRole: roleFor(20, 24),
+      rangeLabels: { start: "Od", end: "Do", inRange: "W zakresie" },
+    });
+    expect(cell(table, "2026-10-22").getAttribute("aria-label")).toMatch(
+      /, W zakresie$/,
+    );
+    expect(cell(table, "2026-10-20").getAttribute("aria-label")).toMatch(
+      /, Od$/,
+    );
+  });
+
+  it("takes the label from labelRole, not rangeRole, and keeps the classes", () => {
+    const table = render({
+      rangeRole: roleFor(20, 24),
+      labelRole: (date) => (date.day === 20 ? "start" : null),
+    });
+    const inner = cell(table, "2026-10-22");
+    expect(inner).toHaveClass("dp-ui__date--in-range");
+    expect(inner).toHaveAttribute("aria-selected", "true");
+    expect(inner.getAttribute("aria-label")).not.toMatch(/In range/);
+    expect(cell(table, "2026-10-20").getAttribute("aria-label")).toMatch(
+      /, Start$/,
+    );
+  });
+
+  it("adds no role suffix when labelRole is null (single selection)", () => {
+    const table = render({ isSelected: (date) => date.day === 22 });
+    expect(cell(table, "2026-10-22").getAttribute("aria-label")).not.toMatch(
+      /In range|Start|End/,
     );
   });
 

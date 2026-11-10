@@ -5,7 +5,7 @@ import type { DateRules } from "@/types/internal";
 import type { PlainDate } from "@/types/date";
 import type { Selection, SelectionLimits } from "@/types/selection";
 import type { UnavailableReason } from "@/types/types";
-import { resolvePattern } from "@/utils/date/format";
+import { resolvePattern, type FormatPattern } from "@/utils/date/format";
 import { unavailableMessage } from "@/utils/selection/messages";
 import { limits, NO_LIMITS, oct } from "../../../helpers/selection";
 
@@ -61,6 +61,7 @@ const setup = (
     minDay?: number | null;
     limits?: SelectionLimits;
     labels?: typeof DEFAULT_LABELS;
+    pattern?: FormatPattern;
   } = {},
 ) => {
   const onDraft = vi.fn();
@@ -68,7 +69,7 @@ const setup = (
   const panel = createDateInputPanel({
     instanceId: options.instanceId ?? "dp-1",
     draft,
-    pattern,
+    pattern: options.pattern ?? pattern,
     labels: options.labels ?? labels,
     rules: makeRules(options.disabledDay ?? null, options.minDay ?? null),
     limits: options.limits ?? NO_LIMITS,
@@ -92,6 +93,11 @@ const setup = (
 const type = (input: HTMLInputElement, text: string): void => {
   input.value = text;
   input.dispatchEvent(new Event("change", { bubbles: true }));
+};
+
+const typeLive = (input: HTMLInputElement, text: string): void => {
+  input.value = text;
+  input.dispatchEvent(new Event("input", { bubbles: true }));
 };
 
 const enter = (input: HTMLInputElement): void => {
@@ -260,6 +266,47 @@ describe("createDateInputPanel", () => {
     const { inputs } = setup(single(null));
     type(inputs[0], "10/5/2026");
     expect(inputs[0].value).toBe("10/05/2026");
+  });
+
+  describe("mask while typing", () => {
+    it("adds the separators of the format to typed digits", () => {
+      const { inputs } = setup(single(null));
+      typeLive(inputs[0], "1006");
+      expect(inputs[0].value).toBe("10/06");
+      typeLive(inputs[0], "10062026");
+      expect(inputs[0].value).toBe("10/06/2026");
+    });
+
+    it("uses the separator and order of another format", () => {
+      const { inputs } = setup(single(null), {
+        pattern: resolvePattern("dd.MM.yyyy", "pl-PL"),
+      });
+      typeLive(inputs[0], "06102026");
+      expect(inputs[0].value).toBe("06.10.2026");
+    });
+
+    it("drops a trailing separator after a two-digit year and parses it", () => {
+      const { inputs, onDraft } = setup(single(null), {
+        pattern: resolvePattern("dd.MM.yyyy", "en-US"),
+      });
+      typeLive(inputs[0], "21.10.26.");
+      expect(inputs[0].value).toBe("21.10.26");
+      inputs[0].dispatchEvent(new Event("change", { bubbles: true }));
+      expect(onDraft).toHaveBeenCalledWith({
+        mode: "single",
+        date: oct(21),
+      });
+    });
+
+    it("masks both range fields", () => {
+      const { inputs } = setup(range(null, null));
+      typeLive(inputs[0], "10062026");
+      typeLive(inputs[1], "1009");
+      expect(inputs.map((input) => input.value)).toEqual([
+        "10/06/2026",
+        "10/09",
+      ]);
+    });
   });
 
   describe("format hint as supporting text", () => {

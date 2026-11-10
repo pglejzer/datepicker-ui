@@ -271,6 +271,8 @@ describe("PickerActionHandler", () => {
         month: 12,
         direction: 1,
         source: "keyboard",
+        from: { value: "2026-12-01" },
+        to: { value: "2027-01-31" },
       });
     });
 

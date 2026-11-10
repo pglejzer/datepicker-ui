@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { PlainDate } from "@/types/date";
 import type { CalendarMode, Precision, Selection } from "@/types/selection";
 import type { DateValue, PickerValueInput } from "@/types/types";
@@ -67,6 +67,54 @@ describe("toPickerValue", () => {
     spy.mockClear();
     toPickerValue({ mode: "multiple", dates: [oct(1), oct(2), oct(3)] }, spy);
     expect(spy).toHaveBeenCalledTimes(3);
+  });
+});
+
+describe("toSelection with today", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 10, 9, 10));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("reads today in single mode at every precision", () => {
+    expect(toSelection("today", "single", "day")).toEqual({
+      mode: "single",
+      date: { year: 2026, month: 11, day: 9 },
+    });
+    expect(toSelection("today", "single", "month")).toEqual({
+      mode: "single",
+      date: { year: 2026, month: 11, day: 1 },
+    });
+    expect(toSelection("today", "single", "year")).toEqual({
+      mode: "single",
+      date: { year: 2026, month: 1, day: 1 },
+    });
+  });
+
+  it("reads today as either end of a range and in a list", () => {
+    expect(
+      toSelection({ start: "today", end: "today" }, "range", "day"),
+    ).toEqual({
+      mode: "range",
+      start: { year: 2026, month: 11, day: 9 },
+      end: { year: 2026, month: 11, day: 9 },
+    });
+    expect(
+      toSelection({ start: "today", end: "2026-11-01" }, "range", "day"),
+    ).toBeNull();
+    expect(toSelection(["today"], "multiple", "day")).toEqual({
+      mode: "multiple",
+      dates: [{ year: 2026, month: 11, day: 9 }],
+    });
+  });
+
+  it("still rejects other words", () => {
+    expect(toSelection("tomorrow", "single", "day")).toBeNull();
+    expect(toSelection("Today", "single", "day")).toBeNull();
   });
 });
 

@@ -1,6 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { CoreState } from "@/datepicker/CoreState";
 import DatepickerUI from "@/datepicker/DatepickerUI";
+import type { CalendarShell } from "@/managers/calendar/CalendarView";
+import { createRangeView } from "@/managers/range/RangeView";
+import type { DateRules } from "@/types/internal";
 import type { DatepickerOptions } from "@/types/options";
+import type { ViewLayout } from "@/utils/surface";
 import type { RangeEndEventData, RangeStartEventData } from "@/types/types";
 import {
   clickDate,
@@ -95,6 +100,29 @@ describe("RangeView", () => {
           ".dp-ui__month-list .dp-ui__week-number, .dp-ui__month-list th.dp-ui__week-number",
         ),
       ).toBeNull();
+    });
+
+    it("marks the view element as modal only for a modal surface", async () => {
+      await open({ ui: { displayMode: "modal" } });
+      expect(surface()?.querySelector(".dp-ui__calendar")).toHaveClass(
+        "dp-ui__calendar--modal",
+      );
+    });
+
+    it("marks the view element as modal in full screen", async () => {
+      setViewportWidth(500);
+      await open({ ui: { displayMode: "modal" } });
+      expect(surface()).toHaveClass("dp-ui__container--fullscreen");
+      expect(surface()?.querySelector(".dp-ui__calendar")).toHaveClass(
+        "dp-ui__calendar--modal",
+      );
+    });
+
+    it("does not mark a docked view element", async () => {
+      await open();
+      expect(surface()?.querySelector(".dp-ui__calendar")).not.toHaveClass(
+        "dp-ui__calendar--modal",
+      );
     });
 
     it("shows an empty headline as Start - End", async () => {
@@ -450,6 +478,33 @@ describe("RangeView", () => {
       }
     });
 
+    it("docked on a wide window: the group carries --column", async () => {
+      setViewportWidth(1280);
+      await open(presetsOf());
+
+      expect(document.querySelector(".dp-ui__presets")).toHaveClass(
+        "dp-ui__presets--column",
+      );
+    });
+
+    it("a chip row does not carry --column (modal and narrow docked)", async () => {
+      setViewportWidth(1280);
+      await open({ ...presetsOf(), ui: { displayMode: "modal" } });
+      expect(document.querySelector(".dp-ui__presets")).not.toHaveClass(
+        "dp-ui__presets--column",
+      );
+
+      DatepickerUI.destroyAll();
+      await flush();
+      cleanupDom();
+
+      setViewportWidth(500);
+      await open({ ...presetsOf(), ui: { displayMode: "docked" } });
+      expect(document.querySelector(".dp-ui__presets")).not.toHaveClass(
+        "dp-ui__presets--column",
+      );
+    });
+
     it("modal: a row, so no --presets modifier", async () => {
       setViewportWidth(1280);
       await open({ ...presetsOf(), ui: { displayMode: "modal" } });
@@ -465,6 +520,24 @@ describe("RangeView", () => {
 
       expect(surface()).not.toHaveClass("dp-ui__container--presets");
       expect(document.querySelectorAll(".dp-ui__preset")).toHaveLength(2);
+    });
+
+    it("moves the presets to a row when the window narrows while open", async () => {
+      setViewportWidth(1280);
+      await open({ ...presetsOf(), ui: { displayMode: "docked" } });
+      expect(surface()).toHaveClass("dp-ui__container--presets");
+
+      setViewportWidth(353);
+      await flush();
+
+      expect(surface()).toHaveClass("dp-ui__container--docked");
+      expect(surface()).not.toHaveClass("dp-ui__container--presets");
+      expect(document.querySelectorAll(".dp-ui__preset")).toHaveLength(2);
+
+      setViewportWidth(1280);
+      await flush();
+
+      expect(surface()).toHaveClass("dp-ui__container--presets");
     });
 
     it("a click sets the draft like a finished range and emits range:end only", async () => {
@@ -601,6 +674,170 @@ describe("RangeView", () => {
     });
   });
 
+  describe("inline chrome", () => {
+    type InlineOptions = NonNullable<
+      NonNullable<DatepickerOptions["ui"]>["inline"]
+    >;
+
+    const openInline = async (
+      inline: InlineOptions = {},
+      options: DatepickerOptions = {},
+    ): Promise<{ picker: DatepickerUI; container: HTMLElement }> => {
+      const container = document.createElement("div");
+      document.body.appendChild(container);
+      const picker = new DatepickerUI(mountInput(), {
+        ...options,
+        calendar: { locale: "en-US", ...options.calendar, mode: "range" },
+        ui: { ...options.ui, inline: { enabled: true, container, ...inline } },
+      });
+      picker.create();
+      await flush();
+      return { picker, container };
+    };
+
+    const liveRegion = (): string | null | undefined =>
+      document.querySelector(".dp-ui__live-region")?.textContent;
+
+    it("renders the range header by default", async () => {
+      const { container } = await openInline();
+      expect(container.querySelector(".dp-ui__header--range")).not.toBeNull();
+      expect(container.querySelector(".dp-ui__top-bar")).toBeNull();
+    });
+
+    it("renders no range header with headline: false", async () => {
+      const { container } = await openInline({ headline: false });
+      expect(container.querySelector(".dp-ui__header--range")).toBeNull();
+      expect(container.querySelector(".dp-ui__headline")).toBeNull();
+      expect(container.querySelector(".dp-ui__month-list")).not.toBeNull();
+    });
+
+    describe('layout: "fullscreen"', () => {
+      it("marks the container and renders the top bar", async () => {
+        const { container } = await openInline(
+          {},
+          { ui: { layout: "fullscreen" } },
+        );
+        const root = container.querySelector(".dp-ui__container");
+        expect(root).toHaveClass("dp-ui__container--inline");
+        expect(root).toHaveClass("dp-ui__container--range");
+        expect(root).toHaveClass("dp-ui__container--fullscreen");
+        const bar = container.querySelector(".dp-ui__top-bar");
+        expect(bar?.querySelector(".dp-ui__icon-button--close")).not.toBeNull();
+        expect(bar?.querySelector(".dp-ui__text-button--save")).not.toBeNull();
+        expect(container.querySelector(".dp-ui__headline")).not.toBeNull();
+      });
+
+      it("keeps only the top bar with headline: false", async () => {
+        const { container } = await openInline(
+          { headline: false },
+          { ui: { layout: "fullscreen" } },
+        );
+        const header = container.querySelector(".dp-ui__header--range");
+        expect(header).not.toBeNull();
+        expect(header?.children).toHaveLength(1);
+        expect(header?.firstElementChild).toHaveClass("dp-ui__top-bar");
+        expect(container.querySelector(".dp-ui__headline")).toBeNull();
+        expect(
+          container.querySelector(".dp-ui__icon-button--close"),
+        ).not.toBeNull();
+        expect(
+          container.querySelector(".dp-ui__text-button--save"),
+        ).not.toBeNull();
+      });
+
+      it("close emits cancel, resets the draft to the value and stays mounted", async () => {
+        const { picker, container } = await openInline(
+          {},
+          { ui: { layout: "fullscreen" } },
+        );
+        picker.setValue({ start: "2026-10-01", end: "2026-10-07" });
+        await flush();
+        const onCancel = vi.fn();
+        picker.on("cancel", onCancel);
+
+        clickDate("2026-10-20");
+        expect(cell("2026-10-20")).toHaveClass("dp-ui__date--selected");
+        clickSelector(".dp-ui__icon-button--close");
+        await flush();
+
+        expect(onCancel).toHaveBeenCalledTimes(1);
+        expect(onCancel).toHaveBeenCalledWith({ reason: "button" });
+        expect(container.querySelector(".dp-ui__container")).not.toBeNull();
+        expect(cell("2026-10-20")).not.toHaveClass("dp-ui__date--selected");
+        expect(cell("2026-10-01")).toHaveClass("dp-ui__date--range-start");
+        expect(cell("2026-10-07")).toHaveClass("dp-ui__date--range-end");
+        expect(picker.getValue()).toMatchObject({
+          start: { value: "2026-10-01" },
+          end: { value: "2026-10-07" },
+        });
+      });
+
+      it("save commits a complete range, emits confirm and stays mounted", async () => {
+        const { picker, container } = await openInline(
+          {},
+          { ui: { layout: "fullscreen" } },
+        );
+        const onConfirm = vi.fn();
+        picker.on("confirm", onConfirm);
+        const save = document.querySelector<HTMLButtonElement>(
+          ".dp-ui__text-button--save",
+        )!;
+        expect(save).toBeDisabled();
+
+        clickDate("2026-10-20");
+        clickDate("2026-10-25");
+        expect(save).toBeEnabled();
+        save.click();
+        await flush();
+
+        expect(onConfirm).toHaveBeenCalledTimes(1);
+        expect(container.querySelector(".dp-ui__container")).not.toBeNull();
+        expect(picker.getValue()).toMatchObject({
+          start: { value: "2026-10-20" },
+          end: { value: "2026-10-25" },
+        });
+      });
+    });
+
+    describe("announceSelection", () => {
+      it("announces a pick by default", async () => {
+        await openInline();
+        clickDate("2026-10-20");
+        expect(liveRegion()).toContain("Oct 20");
+      });
+
+      it("leaves the live region empty after a pick with announceSelection: false", async () => {
+        await openInline({ announceSelection: false });
+        clickDate("2026-10-20");
+        clickDate("2026-10-25");
+        expect(liveRegion()).toBe("");
+      });
+
+      it("still announces the months on a next-month click", async () => {
+        setViewportWidth(1280);
+        await openInline(
+          { announceSelection: false },
+          {
+            calendar: { months: 2 },
+          },
+        );
+
+        clickSelector(
+          ".dp-ui__navigation--months .dp-ui__icon-button--next-month",
+        );
+        await flush();
+
+        expect(liveRegion()).toContain("December");
+      });
+
+      it("ignores announceSelection: false on a docked surface", async () => {
+        await open({ ui: { inline: { announceSelection: false } } });
+        clickDate("2026-10-20");
+        expect(liveRegion()).toContain("Oct 20");
+      });
+    });
+  });
+
   describe("not fullscreen", () => {
     it("range modal at 1024 px has no top bar and uses Confirm", async () => {
       await open({ ui: { displayMode: "modal" } });
@@ -610,6 +847,188 @@ describe("RangeView", () => {
       expect(
         document.querySelector(".dp-ui__text-button--confirm"),
       ).toBeDisabled();
+    });
+  });
+
+  describe("fit and reveal on a view built directly", () => {
+    const rules: DateRules = {
+      isDisabled: () => false,
+      unavailableReason: () => null,
+      isMonthDisabled: () => false,
+      yearBounds: () => ({ min: 1926, max: 2046 }),
+      isSelectable: () => true,
+    };
+    const originalObserver = globalThis.ResizeObserver;
+    let shells: CalendarShell[] = [];
+    let sizeCallback: ((entries: unknown[]) => void) | null = null;
+
+    beforeEach(() => {
+      sizeCallback = null;
+      class StubObserver {
+        constructor(cb: (entries: unknown[]) => void) {
+          sizeCallback = cb;
+        }
+        observe(): void {}
+        unobserve(): void {}
+        disconnect(): void {}
+      }
+      globalThis.ResizeObserver =
+        StubObserver as unknown as typeof ResizeObserver;
+    });
+
+    afterEach(() => {
+      globalThis.ResizeObserver = originalObserver;
+      for (const shell of shells) shell.destroy();
+      shells = [];
+    });
+
+    const build = (
+      presets: ViewLayout["presets"] = "none",
+      parent: HTMLElement = document.body,
+    ): { shell: CalendarShell; core: CoreState } => {
+      const host = document.createElement("div");
+      const input = document.createElement("input");
+      host.appendChild(input);
+      document.body.appendChild(host);
+      const core = new CoreState(input, host, false, {
+        calendar: {
+          mode: "range",
+          locale: "en-US",
+          range: {
+            presets: [
+              {
+                label: "Early",
+                value: { start: "2026-10-01", end: "2026-10-07" },
+              },
+            ],
+          },
+        },
+      });
+      core.resetSession();
+      core.setCalendarLayout("docked");
+      core.setLayout({ months: 1, presets });
+      const actions = {
+        select: vi.fn(),
+        focusDate: vi.fn(),
+        navigate: vi.fn(),
+        page: vi.fn(),
+        selectRange: vi.fn(),
+        jumpTo: vi.fn(),
+        showPanel: vi.fn(),
+        confirm: vi.fn(),
+        cancel: vi.fn(),
+        today: vi.fn(),
+        clear: vi.fn(),
+        typeDraft: vi.fn(),
+        renderedMonths: vi.fn(),
+      };
+      const shell = createRangeView({
+        core,
+        actions,
+        rules,
+        mode: "docked",
+        fullscreen: false,
+      });
+      shells.push(shell);
+      parent.appendChild(shell.element);
+      return { shell, core };
+    };
+
+    const containerEl = (): HTMLElement => {
+      const container = document.createElement("div");
+      container.className = "dp-ui__container";
+      document.body.appendChild(container);
+      return container;
+    };
+
+    it("fit applies the range chrome once the view sits in its container", () => {
+      const container = containerEl();
+      const { shell } = build("column", container);
+      expect(container).not.toHaveClass("dp-ui__container--range");
+
+      shell.fit();
+
+      expect(container).toHaveClass("dp-ui__container--range");
+      expect(container).toHaveClass("dp-ui__container--presets");
+    });
+
+    it("fit leaves document.activeElement unchanged", () => {
+      const container = containerEl();
+      const outside = document.createElement("button");
+      document.body.appendChild(outside);
+      const { shell } = build("none", container);
+      outside.focus();
+
+      shell.fit();
+
+      expect(document.activeElement).toBe(outside);
+    });
+
+    it("fit does nothing after destroy", () => {
+      const container = containerEl();
+      const { shell } = build("none", container);
+      shell.destroy();
+
+      expect(() => {
+        shell.fit();
+      }).not.toThrow();
+      expect(container).not.toHaveClass("dp-ui__container--range");
+    });
+
+    describe("list reveal when the list becomes visible", () => {
+      const HEIGHT = 200;
+
+      const stubLayout = (shell: CalendarShell): HTMLElement => {
+        const list =
+          shell.element.querySelector<HTMLElement>(".dp-ui__month-list");
+        if (!list) throw new Error("no month list");
+        Object.defineProperty(list, "scrollTop", {
+          value: 0,
+          writable: true,
+          configurable: true,
+        });
+        list.getBoundingClientRect = () => new DOMRect(0, 0, 300, 568);
+        list.querySelectorAll("table").forEach((table, index) => {
+          table.getBoundingClientRect = () =>
+            new DOMRect(0, index * HEIGHT - list.scrollTop, 300, HEIGHT);
+        });
+        return list;
+      };
+
+      const anchorIndex = (list: HTMLElement): number =>
+        Array.from(list.querySelectorAll("caption")).findIndex((caption) =>
+          caption.textContent.includes("October"),
+        );
+
+      const report = (height: number): void => {
+        if (sizeCallback === null) throw new Error("no observer");
+        sizeCallback([{ contentRect: { height } }]);
+      };
+
+      it("scrolls to the anchor month when the height goes from 0 to 568", () => {
+        const { shell } = build();
+        const list = stubLayout(shell);
+        const index = anchorIndex(list);
+        expect(index).toBeGreaterThan(0);
+
+        report(0);
+        expect(list.scrollTop).toBe(0);
+        report(568);
+
+        expect(list.scrollTop).toBe(index * HEIGHT);
+      });
+
+      it("does not move the list again while it stays visible", () => {
+        const { shell } = build();
+        const list = stubLayout(shell);
+        report(568);
+        const settled = list.scrollTop;
+        list.scrollTop = settled + 37;
+
+        report(500);
+
+        expect(list.scrollTop).toBe(settled + 37);
+      });
     });
   });
 });

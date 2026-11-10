@@ -46,7 +46,7 @@ interface Fixture {
   readonly onEscape: ReturnType<typeof vi.fn>;
 }
 
-const create = (): Fixture => {
+const create = (inside: readonly HTMLElement[] = []): Fixture => {
   const host = document.createElement("div");
   const input = document.createElement("input");
   host.append(input);
@@ -59,7 +59,7 @@ const create = (): Fixture => {
     instanceId: "dp-ui-test",
     rtl: false,
     label: "Choose date",
-    inside: [],
+    inside,
     ignoreOutsideClick: false,
     onOutside,
     onEscape,
@@ -123,6 +123,22 @@ describe("PopoverHost", () => {
 
       expect(onEscape).not.toHaveBeenCalled();
       expect(onOutside).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("outside pointer", () => {
+    it("ignores a pointerdown on an inside element and reports a sibling", async () => {
+      const toggle = document.createElement("span");
+      const sibling = document.createElement("span");
+      document.body.append(toggle, sibling);
+      const { popover, onOutside } = create([toggle]);
+      await popover.open();
+
+      toggle.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true }));
+      expect(onOutside).not.toHaveBeenCalled();
+
+      sibling.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true }));
+      expect(onOutside).toHaveBeenCalledTimes(1);
     });
   });
 

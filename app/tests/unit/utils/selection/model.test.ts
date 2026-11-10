@@ -6,6 +6,7 @@ import {
   isCompleteSelection,
   isDateSelected,
   isEmptySelection,
+  rangeLabelRole,
   rangeRole,
   sameSelection,
   selectedDates,
@@ -24,6 +25,28 @@ const multiple = (...days: number[]): Selection => ({
 const single = (day: number | null): Selection => ({
   mode: "single",
   date: day === null ? null : oct(day),
+});
+
+describe("rangeLabelRole", () => {
+  it("names the start of a start-only range", () => {
+    expect(rangeLabelRole(range(20, null), oct(20))).toBe("start");
+    expect(rangeLabelRole(range(20, null), oct(21))).toBeNull();
+    expect(rangeRole(range(20, null), oct(20))).toBeNull();
+  });
+
+  it("matches rangeRole for a full range", () => {
+    const full = range(20, 24);
+    expect(rangeLabelRole(full, oct(20))).toBe("start");
+    expect(rangeLabelRole(full, oct(22))).toBe("in-range");
+    expect(rangeLabelRole(full, oct(24))).toBe("end");
+    expect(rangeLabelRole(full, oct(26))).toBeNull();
+  });
+
+  it("is null for an empty selection and for other modes", () => {
+    expect(rangeLabelRole(range(null, null), oct(20))).toBeNull();
+    expect(rangeLabelRole(single(20), oct(20))).toBeNull();
+    expect(rangeLabelRole(multiple(20), oct(20))).toBeNull();
+  });
 });
 
 describe("selection model", () => {

@@ -7,6 +7,7 @@ import {
   parseSerialized,
   RANGE_SEPARATOR,
   serializeSelection,
+  splitRangeText,
 } from "@/utils/selection/text";
 import { oct } from "../../../helpers/selection";
 
@@ -160,5 +161,28 @@ describe("serializeSelection / parseSerialized", () => {
     expect(parseSerialized("2026-10", "single", "month")).toEqual(selection);
     expect(parseSerialized("2026-10", "single", "day")).toBeNull();
     expect(parseSerialized("2026", "single", "month")).toBeNull();
+  });
+});
+
+describe("splitRangeText", () => {
+  it.each([
+    ["a – b", ["a", "b"]],
+    ["a—b", ["a", "b"]],
+    ["a - b", ["a", "b"]],
+    ["a–b", ["a", "b"]],
+    ["21.10.2026 – 28.10.2026", ["21.10.2026", "28.10.2026"]],
+  ])("splits %j", (text, expected) => {
+    expect(splitRangeText(text)).toEqual(expected);
+  });
+
+  it.each([["a-b"], ["a – b – c"], ["a"], [""]])(
+    "returns null for %j",
+    (text) => {
+      expect(splitRangeText(text)).toBeNull();
+    },
+  );
+
+  it("splits what the range separator joins", () => {
+    expect(splitRangeText(`x${RANGE_SEPARATOR}y`)).toEqual(["x", "y"]);
   });
 });

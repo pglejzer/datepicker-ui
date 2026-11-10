@@ -23,6 +23,8 @@ const PUBLIC_EVENTS = [
   "navigate",
   "range:start",
   "range:end",
+  "switch:view",
+  "clear",
 ] as const;
 
 interface CountingEmitter {
@@ -229,6 +231,60 @@ describe("Lifecycle edge cases", () => {
     expect(surfaces()).toHaveLength(1);
     expect(surface()).toHaveAttribute("data-theme", "m2");
     expect(update).toHaveBeenCalledTimes(1);
+  });
+
+  it("setOptions({ labels: { title } }) renames an open docked surface", async () => {
+    const p = create();
+    p.open();
+    await flush();
+
+    p.setOptions({ labels: { title: "Pick a day" } });
+    await flush();
+
+    expect(surface()).toHaveAttribute("aria-label", "Pick a day");
+    expect(surface()).not.toHaveAttribute("aria-labelledby");
+  });
+
+  it("setOptions({ labels: { title } }) renames an open modal dialog", async () => {
+    const p = create({ ui: { displayMode: "modal" } });
+    p.open();
+    await flush();
+
+    p.setOptions({ labels: { title: "Pick a day" } });
+    await flush();
+
+    const dialog = document.querySelector("dialog.dp-ui__dialog");
+    expect(dialog).toHaveAttribute("aria-label", "Pick a day");
+    expect(dialog).not.toHaveAttribute("aria-labelledby");
+  });
+
+  it("setOptions({ labels: { title } }) renames an inline surface", async () => {
+    const container = document.createElement("div");
+    container.id = "inline-name-host";
+    document.body.append(container);
+    const p = new DatepickerUI(mountInput(), {
+      ui: { inline: { enabled: true, container: "#inline-name-host" } },
+    });
+    p.create();
+    await flush();
+
+    p.setOptions({ labels: { title: "Pick a day" } });
+    await flush();
+
+    const inline = container.querySelector(".dp-ui__container--inline");
+    expect(inline).toHaveAttribute("aria-label", "Pick a day");
+    expect(inline).not.toHaveAttribute("aria-labelledby");
+  });
+
+  it("setOptions({ labels: { rangeTitle } }) names a range surface, not title", async () => {
+    const p = create({ calendar: { mode: "range" } });
+    p.open();
+    await flush();
+
+    p.setOptions({ labels: { title: "Ignored", rangeTitle: "Pick a stay" } });
+    await flush();
+
+    expect(surface()).toHaveAttribute("aria-label", "Pick a stay");
   });
 
   it("setOptions changing displayMode while open leaves one surface", async () => {

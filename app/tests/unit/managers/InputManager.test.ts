@@ -292,6 +292,16 @@ describe("InputManager", () => {
       expect(input.selectionEnd).toBe(10);
     });
 
+    it("drops a trailing separator after a two-digit year and commits on blur", () => {
+      const { input, onTyped } = setup({
+        ui: { mask: true, format: "dd.MM.yyyy" },
+      });
+      typeAndInput(input, "21.10.26.");
+      expect(input.value).toBe("21.10.26");
+      blur(input);
+      expect(onTyped).toHaveBeenCalledWith(single(oct(21)));
+    });
+
     it("leaves the text alone when ui.mask is false", () => {
       const { input } = setup({ ui: { mask: false } });
       typeAndInput(input, "17102026");

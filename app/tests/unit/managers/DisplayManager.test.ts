@@ -91,6 +91,81 @@ describe("DisplayManager through DatepickerUI", () => {
   });
 });
 
+describe("DisplayManager fits the view right after mounting", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 9, 17, 10));
+    setViewportWidth(1280);
+  });
+
+  afterEach(async () => {
+    DatepickerUI.destroyAll();
+    await flush();
+    cleanupDom();
+    setViewportWidth(1024);
+    vi.useRealTimers();
+  });
+
+  const inlineTarget = (): HTMLElement => {
+    const target = document.createElement("div");
+    target.id = "inline-host";
+    document.body.appendChild(target);
+    return target;
+  };
+
+  it("an inline range container has its chrome right after create()", () => {
+    const target = inlineTarget();
+    const p = new DatepickerUI(mountInput(), {
+      calendar: { mode: "range" },
+      ui: { inline: { enabled: true, container: "#inline-host" } },
+    });
+    p.create();
+
+    const container = target.querySelector(".dp-ui__container--inline");
+    expect(container).not.toBeNull();
+    expect(container).toHaveClass("dp-ui__container--range");
+  });
+
+  it("an inline single picker with two months is multi-month right after create()", () => {
+    const target = inlineTarget();
+    const p = new DatepickerUI(mountInput(), {
+      calendar: { months: 2 },
+      ui: { inline: { enabled: true, container: "#inline-host" } },
+    });
+    p.create();
+
+    const container = target.querySelector<HTMLElement>(
+      ".dp-ui__container--inline",
+    );
+    expect(container).toHaveClass("dp-ui__container--multi-month");
+    expect(container?.style.getPropertyValue("--dp-ui-visible-months")).toBe(
+      "2",
+    );
+  });
+
+  it("a docked range container has its chrome right after open()", () => {
+    const p = new DatepickerUI(mountInput(), {
+      calendar: { mode: "range" },
+      ui: { displayMode: "docked" },
+    });
+    p.create();
+    p.open();
+
+    expect(surface()).toHaveClass("dp-ui__container--range");
+  });
+
+  it("a modal range container has its chrome right after open()", () => {
+    const p = new DatepickerUI(mountInput(), {
+      calendar: { mode: "range" },
+      ui: { displayMode: "modal" },
+    });
+    p.create();
+    p.open();
+
+    expect(surface()).toHaveClass("dp-ui__container--range");
+  });
+});
+
 describe("isFullscreenRange", () => {
   it("is true only for range in a modal below the threshold", () => {
     expect(isFullscreenRange("range", "modal", 400, 600)).toBe(true);
