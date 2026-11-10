@@ -1,4 +1,5 @@
 import type { PlainDate, Weekday } from "../../types/date";
+import type { LayoutOption } from "../../types/internal";
 import type {
   BehaviorOptions,
   CallbacksOptions,
@@ -10,9 +11,10 @@ import type {
   CalendarMode,
   PageBy,
   Precision,
+  Selection,
   SelectionLimits,
 } from "../../types/selection";
-import type { PickerValue } from "../../types/types";
+import type { PickerValue, PickerView } from "../../types/types";
 import type { FormatPattern } from "../../utils/date/format";
 import type { OptionIssue } from "./pick";
 
@@ -30,6 +32,7 @@ export interface ResolvedOptions {
   readonly enabledDates: readonly PlainDate[] | null;
   readonly mode: CalendarMode;
   readonly precision: Precision;
+  readonly defaultValue: (() => Selection | null) | null;
   readonly months: number;
   readonly pageBy: PageBy;
   readonly limits: SelectionLimits;
@@ -40,13 +43,17 @@ export interface ResolvedOptions {
   readonly renderDate: ((date: Date) => string | Node | null) | null;
   readonly validate: ((value: PickerValue | null) => string | null) | null;
   readonly viewSwitch: boolean;
-  readonly initialView: "calendar" | "input";
+  readonly initialView: PickerView;
   readonly mask: boolean;
   readonly startView: Precision;
   readonly displayMode: "auto" | "docked" | "modal";
+  readonly layout: LayoutOption;
   readonly inline: {
     readonly enabled: boolean;
     readonly container: string | HTMLElement | null;
+    readonly headline: boolean;
+    readonly navigation: "menus" | "caption";
+    readonly announceSelection: boolean;
   };
   readonly pattern: FormatPattern;
   readonly theme: ThemeName;

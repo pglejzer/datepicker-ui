@@ -8,24 +8,35 @@ import {
 import type { NavigateSource } from "../../types/internal";
 import type { LifecycleContext } from "./context";
 
+export function clampToLimits(
+  context: LifecycleContext,
+  date: PlainDate,
+): PlainDate {
+  const { core, managers } = context;
+  const { minDate, maxDate } = core.options;
+  const years = managers.validation.yearBounds();
+  const first: PlainDate = { year: years.min, month: 1, day: 1 };
+  const last: PlainDate = { year: years.max, month: 12, day: 31 };
+  const low =
+    minDate !== null && compareDates(minDate, first) > 0 ? minDate : first;
+  const high =
+    maxDate !== null && compareDates(maxDate, last) < 0 ? maxDate : last;
+  if (compareDates(date, low) < 0) {
+    return low;
+  }
+  return compareDates(date, high) > 0 ? high : date;
+}
+
 function dateIn(
   context: LifecycleContext,
   view: YearMonth,
   day: number,
 ): PlainDate {
-  const candidate: PlainDate = {
+  return clampToLimits(context, {
     year: view.year,
     month: view.month,
     day: Math.min(day, daysInMonth(view)),
-  };
-  const { minDate, maxDate } = context.core.options;
-  if (minDate !== null && compareDates(candidate, minDate) < 0) {
-    return minDate;
-  }
-  if (maxDate !== null && compareDates(candidate, maxDate) > 0) {
-    return maxDate;
-  }
-  return candidate;
+  });
 }
 
 export function showMonth(

@@ -8,7 +8,12 @@ import {
   VIEWPORT_GUTTER,
   WEEK_NUMBER_WIDTH,
 } from "../constants/constants";
-import type { Panel, SurfaceMode } from "../types/internal";
+import type {
+  CalendarLayout,
+  LayoutOption,
+  Panel,
+  SurfaceMode,
+} from "../types/internal";
 import type { CalendarMode, Precision } from "../types/selection";
 
 export interface ViewLayout {
@@ -20,20 +25,27 @@ export interface ViewLayoutInput {
   readonly months: number;
   readonly precision: Precision;
   readonly mode: CalendarMode;
-  readonly surface: SurfaceMode;
-  readonly fullscreen: boolean;
+  readonly layout: CalendarLayout;
   readonly width: number;
   readonly weekNumbers: boolean;
   readonly presets: number;
 }
 
+export interface InlineChrome {
+  readonly headline: boolean;
+  readonly navigation: "menus" | "caption";
+  readonly announceSelection: boolean;
+}
+
+const SURFACE_CHROME: InlineChrome = {
+  headline: true,
+  navigation: "menus",
+  announceSelection: true,
+};
+
 export const resolveViewLayout = (input: ViewLayoutInput): ViewLayout => {
   const wantPresets = input.mode === "range" && input.presets > 0;
-  if (
-    input.surface === "modal" ||
-    input.fullscreen ||
-    input.precision !== "day"
-  ) {
+  if (input.layout !== "docked" || input.precision !== "day") {
     return { months: 1, presets: wantPresets ? "row" : "none" };
   }
   const column =
@@ -63,7 +75,7 @@ export const resolveViewLayout = (input: ViewLayoutInput): ViewLayout => {
 
 export const supportsInputView = (
   mode: CalendarMode,
-  surface: SurfaceMode,
+  layout: CalendarLayout,
   precision: Precision,
 ): boolean => {
   if (precision !== "day") {
@@ -71,7 +83,7 @@ export const supportsInputView = (
   }
   switch (mode) {
     case "single":
-      return surface === "modal";
+      return layout !== "docked";
     case "range":
       return true;
     case "multiple":
@@ -92,9 +104,9 @@ export const homePanel = (precision: Precision): Panel => {
 
 export const startPanel = (
   startView: Precision,
-  surface: SurfaceMode,
+  layout: CalendarLayout,
 ): Panel => {
-  const menus = surface !== "modal";
+  const menus = layout === "docked";
   switch (startView) {
     case "day":
       return "days";
@@ -128,3 +140,35 @@ export const isFullscreenRange = (
   fullscreenBelow: number,
 ): boolean =>
   mode === "range" && surface === "modal" && viewportWidth < fullscreenBelow;
+
+export const calendarLayout = (
+  surface: SurfaceMode,
+  options: {
+    readonly mode: CalendarMode;
+    readonly fullscreenBelow: number;
+    readonly layout: LayoutOption;
+  },
+  viewportWidth: number,
+): CalendarLayout => {
+  const { mode, layout } = options;
+  if (layout === "docked") return "docked";
+  if (layout === "fullscreen") {
+    return mode === "range" && surface !== "docked" ? "fullscreen" : "modal";
+  }
+  if (surface === "modal") {
+    return isFullscreenRange(
+      mode,
+      surface,
+      viewportWidth,
+      options.fullscreenBelow,
+    )
+      ? "fullscreen"
+      : "modal";
+  }
+  return layout === "modal" ? "modal" : "docked";
+};
+
+export const inlineChrome = (
+  surface: SurfaceMode,
+  inline: InlineChrome,
+): InlineChrome => (surface === "inline" ? inline : SURFACE_CHROME);

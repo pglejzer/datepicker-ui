@@ -5,6 +5,7 @@ import { createPlainDate, todayDate } from "@/utils/date/plainDate";
 
 const NON_LATIN_DIGITS = /[٠-٩۰-۹]/g;
 const DIRECTIONAL_MARKS = /[‎‏؜]/g;
+export const DIRECTIONAL_MARK = /^[‎‏؜]$/;
 const SEPARATORS = /[\s./-]+/;
 const DIGITS_ONLY = /^\d+$/;
 const COMPACT_DATE = /^\d{8}$/;
@@ -16,6 +17,11 @@ function toAsciiDigit(char: string): string {
   return String(code - zero);
 }
 
+export function normalizeDigit(char: string): string {
+  return char.replace(NON_LATIN_DIGITS, toAsciiDigit);
+}
+
+/** Maps Arabic-Indic and Persian digits to Latin digits, drops bidi marks and trims. */
 export function normalizeDigits(text: string): string {
   return text
     .replace(DIRECTIONAL_MARKS, "")

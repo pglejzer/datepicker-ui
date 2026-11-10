@@ -25,6 +25,8 @@ export class CallbackBridge {
     this.add("range:start", callbacks.onRangeStart);
     this.add("range:end", callbacks.onRangeEnd);
     this.add("navigate", callbacks.onNavigate);
+    this.add("switch:view", callbacks.onSwitchView);
+    this.add("clear", callbacks.onClear);
   }
 
   private add<K extends keyof DatepickerEventMap>(

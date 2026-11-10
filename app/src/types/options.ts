@@ -4,17 +4,21 @@ import type { DateInput } from "./date";
 import type { CalendarMode, PageBy, Precision } from "./selection";
 import type {
   CancelEventData,
+  ClearEventData,
   CloseEventData,
   ConfirmEventData,
   ErrorEventData,
   NavigateEventData,
   OpenEventData,
   PickerValue,
+  PickerValueInput,
+  PickerView,
   RangeEndEventData,
   RangeStartEventData,
   SelectDayEventData,
   SelectMonthEventData,
   SelectYearEventData,
+  SwitchViewEventData,
   UpdateEventData,
 } from "./types";
 
@@ -69,6 +73,15 @@ export interface CalendarOptions {
    */
   mode?: CalendarMode;
   /**
+   * Starting value for an empty input, in the shape of `setValue()`: a date,
+   * `{ start, end }` or an array of dates, matching `calendar.mode`. Any date
+   * can be `"today"`. Text already in the input wins when it is a date (with
+   * `ui.endInput`, the two fields). The value is written to the input and the
+   * form field, and a form reset restores it. Read when `create()` runs.
+   * @default undefined
+   */
+  defaultValue?: PickerValueInput;
+  /**
    * What one selection is: a day, a month or a year. With `"month"` the value
    * is `YYYY-MM` and with `"year"` it is `YYYY`, both standing for the first
    * day of the period. Only used in `single` mode (other modes report an
@@ -79,8 +92,9 @@ export interface CalendarOptions {
   precision?: Precision;
   /**
    * How many months are shown side by side, a positive integer. Applies to
-   * the docked and inline surfaces and to day precision, as many as fit the
-   * width at open (up to this number). A modal shows one month.
+   * the docked look (`ui.layout`) at day precision, as many as fit the width
+   * at open (up to this number). The modal and full-screen looks show one
+   * month.
    * @default 1
    */
   months?: number;
@@ -183,11 +197,47 @@ export interface UIOptions {
    */
   displayMode?: "auto" | "docked" | "modal";
   /**
+   * The look of the calendar on any surface. `"auto"` gives each surface its
+   * own look: docked for the popover and inline, modal for the dialog (full
+   * screen for a range below `ui.fullscreen`). `"docked"` uses the docked
+   * header with month and year menus everywhere. `"modal"` uses the headline,
+   * a month row with arrows on every page, and month and year grids
+   * everywhere. `"fullscreen"` gives a range picker the full-screen layout: in
+   * a dialog at every window width, inline sized to the container. Other
+   * modes, and the popover, treat it as `"modal"`. An inline calendar with the
+   * modal look fits its rows to the month unless `ui.fixedWeeks` is set.
+   * @default "auto"
+   */
+  layout?: "auto" | "docked" | "modal" | "fullscreen";
+  /**
    * Render the calendar permanently into a container instead of opening it.
    * `container` is a selector or an element.
    * @default { enabled: false }
    */
-  inline?: { enabled?: boolean; container?: string | HTMLElement };
+  inline?: {
+    enabled?: boolean;
+    container?: string | HTMLElement;
+    /**
+     * `false` leaves out the headline (the modal title, selected value and
+     * view switch, or the range header), for a host that shows its own. The
+     * full-screen top bar keeps its close and save buttons.
+     * @default true
+     */
+    headline?: boolean;
+    /**
+     * `"caption"` shows the month and year as plain text next to the arrows,
+     * with no month or year menus. Day precision only.
+     * @default "menus"
+     */
+    navigation?: "menus" | "caption";
+    /**
+     * `false` stops the inline calendar from announcing selection changes, for
+     * a host that announces them itself. Month changes and errors are still
+     * announced.
+     * @default true
+     */
+    announceSelection?: boolean;
+  };
   /**
    * `auto` follows the locale's numeric order and separators; otherwise a
    * pattern built from `d dd M MM yy yyyy` and one separator of `/ . - space`.
@@ -215,11 +265,12 @@ export interface UIOptions {
    */
   colorScheme?: "auto" | "light" | "dark";
   /**
-   * Range pickers in a modal open full screen below this window width:
+   * Range pickers in a dialog open full screen below this window width:
    * `true` below 600 px, a number below that many px (for example 840), `false`
    * never. With `displayMode: "auto"` the surface is docked from 600 px, so a
-   * value above 600 only matters with `displayMode: "modal"`. Decided when the
-   * picker opens.
+   * value above 600 only matters with `displayMode: "modal"`. Used with
+   * `ui.layout` `"auto"` and `"modal"`. `"fullscreen"` opens full screen at
+   * every width and `"docked"` never does. Decided when the picker opens.
    * @default true
    */
   fullscreen?: boolean | number;
@@ -297,19 +348,21 @@ export interface UIOptions {
   swipe?: boolean;
   /**
    * Show the button that switches between the calendar and the text input
-   * view, where the mode and surface support it.
+   * view, where the mode and look support it.
    * @default true
    */
   viewSwitch?: boolean;
   /**
-   * View shown when the picker opens, where the mode and surface support the
-   * input view.
+   * View shown when the picker opens, where the input view exists: every
+   * range picker, and a single picker with the modal or full-screen look
+   * (`ui.layout`), at day precision.
    * @default "calendar"
    */
-  initialView?: "calendar" | "input";
+  initialView?: PickerView;
   /**
    * Mask the text typed into the input to `ui.format` (digits only, separators added).
    * Single mode and the split range fields (`ui.endInput`), day precision only.
+   * The fields of the picker's input view are always masked.
    * @default false
    */
   mask?: boolean;
@@ -325,8 +378,9 @@ export interface UIOptions {
   endInput?: string | HTMLElement;
   /**
    * First calendar panel when the picker opens: the day grid, the month list
-   * (docked, inline) or grid (modal), or the year list or grid. `initialView:
-   * "input"` wins; ignored in `range` mode and when `calendar.precision` is not
+   * (docked look) or grid (modal look), or the year list or grid.
+   * `initialView: "input"` wins. Ignored in `range` mode, with
+   * `ui.inline.navigation: "caption"` and when `calendar.precision` is not
    * `"day"`.
    * @default "day"
    */
@@ -440,6 +494,12 @@ export interface LabelsOptions {
    * @default "End"
    */
   rangeEnd?: string;
+  /**
+   * Added to the accessible name of the days between the start and the end of
+   * a range.
+   * @default "In range"
+   */
+  inRange?: string;
   /**
    * Headline in `multiple` mode; `{count}` is the number of selected days.
    * @default "{count} selected"
@@ -591,8 +651,12 @@ export interface CallbacksOptions {
   onRangeStart?: (data: RangeStartEventData) => void;
   /** Called when the range is completed. */
   onRangeEnd?: (data: RangeEndEventData) => void;
-  /** Called when the displayed month changes. */
+  /** Called when the days shown change, and once when the picker is opened or mounted. */
   onNavigate?: (data: NavigateEventData) => void;
+  /** Called when the picker switches between the calendar and the text fields. */
+  onSwitchView?: (data: SwitchViewEventData) => void;
+  /** Called when `clear()` or the Clear button clears the value or the draft. */
+  onClear?: (data: ClearEventData) => void;
 }
 
 /** Options accepted by the `DatepickerUI` constructor and `setOptions()`. */

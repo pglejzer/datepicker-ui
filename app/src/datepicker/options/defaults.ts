@@ -29,6 +29,7 @@ export const DEFAULT_LABELS: Required<LabelsOptions> = {
   rangeTitle: "Select dates",
   rangeStart: "Start",
   rangeEnd: "End",
+  inRange: "In range",
   multipleSelected: "{count} selected",
   save: "Save",
   close: "Close",
@@ -62,6 +63,7 @@ interface DefaultOptions {
     Pick<
       UIOptions,
       | "displayMode"
+      | "layout"
       | "format"
       | "theme"
       | "colorScheme"
@@ -81,7 +83,9 @@ interface DefaultOptions {
       | "startView"
     >
   > & {
-    readonly inline: { readonly enabled: boolean };
+    readonly inline: Required<
+      Omit<NonNullable<UIOptions["inline"]>, "container">
+    >;
     readonly yearRange: { readonly before: number; readonly after: number };
   };
   readonly labels: Required<LabelsOptions>;
@@ -99,7 +103,13 @@ export const DEFAULT_DATEPICKER_OPTIONS: DefaultOptions = {
   },
   ui: {
     displayMode: "auto",
-    inline: { enabled: false },
+    layout: "auto",
+    inline: {
+      enabled: false,
+      headline: true,
+      navigation: "menus",
+      announceSelection: true,
+    },
     format: "auto",
     theme: "basic",
     colorScheme: "auto",

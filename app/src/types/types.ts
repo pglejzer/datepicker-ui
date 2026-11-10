@@ -1,4 +1,3 @@
-import type { CancelReason, NavigateSource } from "./internal";
 import type { DateInput } from "./date";
 import type { DatepickerOptions } from "./options";
 
@@ -27,11 +26,14 @@ export interface RangeValue {
 /** The committed value: a day (`single`), a range (`range`) or the sorted days (`multiple`). */
 export type PickerValue = DateValue | RangeValue | readonly DateValue[];
 
-/** Accepted by `setValue()`; the shape has to match `calendar.mode`. */
+/** Accepted by `setValue()`; the shape has to match `calendar.mode`. Any date can be `"today"`. */
 export type PickerValueInput =
   | DateInput
   | { readonly start: DateInput; readonly end: DateInput }
   | readonly DateInput[];
+
+/** Which view a picker shows: the calendar or the text fields. */
+export type PickerView = "calendar" | "input";
 
 /** Payload of the `open` event. */
 export interface OpenEventData {
@@ -42,9 +44,15 @@ export interface OpenEventData {
 /** Payload of the `close` event. */
 export type CloseEventData = Record<string, never>;
 
+export type CancelReason = "button" | "escape" | "outside" | "toggle";
+
 /** Payload of the `cancel` event. */
 export interface CancelEventData {
-  /** What dismissed the picker without committing. */
+  /**
+   * What dismissed the picker without committing: `"button"` (the Cancel or
+   * close button), `"escape"`, `"outside"` (a click outside a docked picker or
+   * on the modal backdrop) or `"toggle"` (`ui.toggleButton` on an open picker).
+   */
   reason: CancelReason;
 }
 
@@ -102,16 +110,63 @@ export interface SelectYearEventData {
   year: number;
 }
 
+/** The first and last day a picker shows. */
+export interface VisibleRange {
+  /** First day shown, at day precision (`value` is `YYYY-MM-DD`). */
+  readonly from: DateValue;
+  /** Last day shown, at day precision. */
+  readonly to: DateValue;
+}
+
+/** What moved the shown days. */
+export type NavigateSource =
+  | "drag"
+  | "wheel"
+  | "button"
+  | "keyboard"
+  | "menu"
+  | "open"
+  | "api"
+  | "resize"
+  | "scroll";
+
 /** Payload of the `navigate` event. */
 export interface NavigateEventData {
-  /** Year of the first month now displayed. */
+  /** Year of the first month shown. */
   year: number;
-  /** First month now displayed, 1-12 (with `calendar.months` above 1 it is the first of the months shown). */
+  /** First month shown, 1-12. */
   month: number;
-  /** `-1` backwards, `1` forwards, `0` for a jump that keeps the month. */
+  /** `-1` backwards, `1` forwards, `0` when the first month shown stays. */
   direction: -1 | 0 | 1;
-  /** What caused the navigation. `setValue()` and `open()` move the view without this event. */
-  source: Exclude<NavigateSource, "api">;
+  /**
+   * What changed the shown days: a user action (`drag`, `wheel`, `button`,
+   * `keyboard`, `menu`), opening or mounting the picker (`open`), `setValue()`,
+   * `setOptions()`, `goTo()` or a value the picker sets itself, such as a
+   * range preset or a typed date (`api`), a window resize that changes the
+   * months shown (`resize`), or the range month list rendering more months
+   * (`scroll`).
+   */
+  source: NavigateSource;
+  /** First day shown. */
+  from: DateValue;
+  /** Last day shown. */
+  to: DateValue;
+}
+
+/**
+ * Payload of the `clear` event, fired by `clear()` and the Clear button.
+ * `clear()` also fires `input` and `change` on the input. `setValue(null)`
+ * empties the value quietly, without either.
+ */
+export interface ClearEventData {
+  /** The value before clearing, or the draft when only the draft was cleared. */
+  previousValue: PickerValue | null;
+}
+
+/** Payload of the `switch:view` event. */
+export interface SwitchViewEventData {
+  /** The view now shown. */
+  view: PickerView;
 }
 
 /** Why a date cannot be selected, in the order the rules are checked. */
@@ -147,4 +202,6 @@ export interface DatepickerEventMap {
   "range:start": RangeStartEventData;
   "range:end": RangeEndEventData;
   navigate: NavigateEventData;
+  "switch:view": SwitchViewEventData;
+  clear: ClearEventData;
 }

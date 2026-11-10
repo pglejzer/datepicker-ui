@@ -9,6 +9,7 @@ export interface KeyboardDeps {
   readonly actions: PickerActions;
   readonly layout: Layout;
   readonly home: Panel;
+  readonly caption: () => boolean;
   readonly cellAt: (target: EventTarget | null) => DateCell | null;
   readonly isRtl: () => boolean;
 }
@@ -26,6 +27,7 @@ const shortcutPanel = (key: string, layout: Layout): PickerPanel | null => {
 
 const canOpenShortcut = (deps: KeyboardDeps): boolean => {
   const { panel } = deps.core;
+  if (deps.caption()) return false;
   if (deps.layout === "docked") return deps.home === "days" && panel === "days";
   if (deps.layout === "modal") {
     return panel === deps.home && deps.home !== "year-grid";

@@ -24,23 +24,29 @@ export type {
 } from "./types/options";
 export type {
   CancelEventData,
+  CancelReason,
+  ClearEventData,
   CloseEventData,
   ConfirmEventData,
   DatepickerEventMap,
   DateValue,
   ErrorEventData,
   NavigateEventData,
+  NavigateSource,
   OpenEventData,
   PickerValue,
   PickerValueInput,
+  PickerView,
   RangeEndEventData,
   RangeStartEventData,
   RangeValue,
   SelectDayEventData,
   SelectMonthEventData,
   SelectYearEventData,
+  SwitchViewEventData,
   UnavailableReason,
   UpdateEventData,
+  VisibleRange,
 } from "./types/types";
 
 export { DatepickerUI, DEFAULT_DATEPICKER_OPTIONS, EventEmitter };

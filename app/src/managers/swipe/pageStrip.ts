@@ -1,5 +1,4 @@
 import type { YearMonth } from "@/types/date";
-import { addMonths } from "@/utils/date/plainDate";
 
 export const PREVIOUS = 0;
 export const CENTER = 1;
@@ -8,17 +7,17 @@ export const NEXT = 2;
 export type PageIndex = 0 | 1 | 2;
 export type EdgeIndex = 0 | 2;
 
-interface Page {
-  readonly view: YearMonth;
+interface Page<K> {
+  readonly key: K;
   readonly element: HTMLElement;
 }
 
-type Pages = readonly [Page, Page, Page];
+type Pages<K> = readonly [Page<K>, Page<K>, Page<K>];
 
-export interface PageStrip {
-  show(view: YearMonth): void;
-  centerView(): YearMonth | null;
-  reveal(index: EdgeIndex, view: YearMonth): void;
+export interface PageStrip<K> {
+  show(key: K): void;
+  centerKey(): K | null;
+  reveal(index: EdgeIndex, key: K): void;
   recenter(index: EdgeIndex): void;
   clear(): void;
 }
@@ -28,17 +27,18 @@ const PAGE_CLASS = "dp-ui__page";
 export const isSameMonth = (a: YearMonth, b: YearMonth): boolean =>
   a.year === b.year && a.month === b.month;
 
-export const createPageStrip = (
+export const createPageStrip = <K>(
   track: HTMLElement,
-  renderPage: (view: YearMonth) => HTMLElement,
-  step: number,
-): PageStrip => {
-  let pages: Pages | null = null;
+  renderPage: (key: K) => HTMLElement,
+  step: (key: K, direction: -1 | 1) => K,
+  isSame: (a: K, b: K) => boolean,
+): PageStrip<K> => {
+  let pages: Pages<K> | null = null;
 
-  const createPage = (view: YearMonth): Page => {
-    const element = renderPage(view);
+  const createPage = (key: K): Page<K> => {
+    const element = renderPage(key);
     element.classList.add(PAGE_CLASS);
-    return { view, element };
+    return { key, element };
   };
 
   const activate = (index: PageIndex): void => {
@@ -47,10 +47,10 @@ export const createPageStrip = (
     });
   };
 
-  const ensure = (current: Pages, index: EdgeIndex, view: YearMonth): Pages => {
+  const ensure = (current: Pages<K>, index: EdgeIndex, key: K): Pages<K> => {
     const existing = current[index];
-    if (isSameMonth(existing.view, view)) return current;
-    const page = createPage(view);
+    if (isSame(existing.key, key)) return current;
+    const page = createPage(key);
     existing.element.replaceWith(page.element);
     return index === PREVIOUS
       ? [page, current[CENTER], current[NEXT]]
@@ -58,27 +58,27 @@ export const createPageStrip = (
   };
 
   return {
-    show: (view) => {
-      const created: Pages = [
-        createPage(addMonths(view, -step)),
-        createPage(view),
-        createPage(addMonths(view, step)),
+    show: (key) => {
+      const created: Pages<K> = [
+        createPage(step(key, -1)),
+        createPage(key),
+        createPage(step(key, 1)),
       ];
       track.replaceChildren(...created.map((page) => page.element));
       pages = created;
       activate(CENTER);
     },
-    centerView: () => pages?.[CENTER].view ?? null,
-    reveal: (index, view) => {
+    centerKey: () => pages?.[CENTER].key ?? null,
+    reveal: (index, key) => {
       if (!pages) return;
-      pages = ensure(pages, index, view);
+      pages = ensure(pages, index, key);
       activate(index);
     },
     recenter: (index) => {
       if (!pages) return;
       const center = pages[index];
-      const previous = createPage(addMonths(center.view, -step));
-      const next = createPage(addMonths(center.view, step));
+      const previous = createPage(step(center.key, -1));
+      const next = createPage(step(center.key, 1));
       pages.forEach((page, position) => {
         if (position !== index) page.element.remove();
       });

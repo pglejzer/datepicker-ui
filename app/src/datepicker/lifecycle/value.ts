@@ -7,11 +7,18 @@ import type {
 } from "../../types/types";
 import { formatPeriod, periodISO } from "../../utils/date/period";
 import { toDate } from "../../utils/date/plainDate";
-import { anchorDate, sameSelection } from "../../utils/selection/model";
+import { isSelectionAllowed } from "../../utils/selection/constraints";
+import {
+  anchorDate,
+  emptySelection,
+  isEmptySelection,
+  sameSelection,
+} from "../../utils/selection/model";
 import { toPickerValue, toSelection } from "../../utils/selection/value";
 import type { LifecycleContext } from "./context";
 import { moveFocus } from "./navigation";
 import type { SurfaceSession } from "./session";
+import type { VisibleRangeTracker } from "./visible";
 
 const RANGE_ENDS: readonly RangeEnd[] = ["start", "end"];
 
@@ -19,6 +26,7 @@ export class ValueController {
   constructor(
     private readonly context: LifecycleContext,
     private readonly session: SurfaceSession,
+    private readonly visible: VisibleRangeTracker,
   ) {}
 
   readonly describe = (date: PlainDate): DateValue => {
@@ -60,6 +68,55 @@ export class ValueController {
     }
     this.follow();
     this.validate(selection);
+  }
+
+  isSelectable(input: PickerValueInput): boolean {
+    const { core, managers } = this.context;
+    const { mode, precision, limits } = core.options;
+    const single =
+      mode === "single" || typeof input === "string" || input instanceof Date;
+    const selection = toSelection(input, single ? "single" : mode, precision);
+    if (selection === null || isEmptySelection(selection)) {
+      return false;
+    }
+    return isSelectionAllowed(selection, limits, (date) =>
+      managers.validation.isDisabled(date),
+    );
+  }
+
+  clear(): void {
+    const { core, managers, status } = this.context;
+    const previous = this.clearedSelection(true);
+    if (status.destroyed || previous === null) {
+      return;
+    }
+    const empty = emptySelection(core.options.mode);
+    core.setValue(empty);
+    if (this.session.active) {
+      core.setDraft(empty);
+    }
+    managers.input.write(empty);
+    if (status.created) {
+      managers.form.sync();
+      managers.form.dispatchCommit();
+    }
+    this.emitClear(previous);
+    this.validate(empty);
+  }
+
+  clearedSelection(withValue: boolean): Selection | null {
+    const { core } = this.context;
+    if (withValue && !isEmptySelection(core.value)) {
+      return core.value;
+    }
+    const draftShown = this.session.active && !isEmptySelection(core.draft);
+    return draftShown ? core.draft : null;
+  }
+
+  emitClear(previous: Selection): void {
+    this.context.emitter.emit("clear", {
+      previousValue: this.present(previous),
+    });
   }
 
   setActiveEnd(end: RangeEnd): void {
@@ -126,8 +183,11 @@ export class ValueController {
     const value = core.value;
     core.setDraft(value);
     const anchor = anchorDate(value);
-    if (anchor !== null) {
-      moveFocus(this.context, anchor, "api");
+    if (anchor === null) {
+      return;
     }
+    this.visible.hold("api", () => {
+      moveFocus(this.context, anchor, "api");
+    });
   }
 }

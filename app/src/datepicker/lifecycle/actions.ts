@@ -18,7 +18,10 @@ import { DateSelector } from "./selectDate";
 import type { SurfaceSession } from "./session";
 import type { ValueController } from "./value";
 
-export class PickerActionHandler implements PickerActions {
+export class PickerActionHandler implements Omit<
+  PickerActions,
+  "renderedMonths"
+> {
   private readonly selector: DateSelector;
 
   constructor(
@@ -126,9 +129,17 @@ export class PickerActionHandler implements PickerActions {
       return;
     }
     const { core } = this.context;
-    core.setDraft(emptySelection(core.options.mode));
     const { clearButton } = core.options;
-    if (clearButton === false || !clearButton.clearInput) {
+    const clearsInput = clearButton !== false && clearButton.clearInput;
+    const previous = this.values.clearedSelection(clearsInput);
+    if (previous !== null) {
+      this.values.emitClear(previous);
+      if (!this.isOpen()) {
+        return;
+      }
+    }
+    core.setDraft(emptySelection(core.options.mode));
+    if (!clearsInput) {
       return;
     }
     this.values.commit(false);

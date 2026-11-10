@@ -1,5 +1,5 @@
 import { createElement } from "../../utils/dom";
-import { waitForExit } from "./SurfaceHost";
+import { nameSurface, waitForExit } from "./SurfaceHost";
 import type { SurfaceHost } from "./SurfaceHost";
 import {
   applyAnchor,
@@ -34,6 +34,8 @@ export class PopoverHost implements SurfaceHost {
     instanceId: string;
     rtl: boolean;
     label: string;
+    /** Id, or space-separated ids, of a visible title that names the surface. When set, the root gets `aria-labelledby` and no `aria-label`. */
+    labelledBy?: string;
     inside: readonly HTMLElement[];
     ignoreOutsideClick: boolean;
     onOutside(): void;
@@ -48,10 +50,10 @@ export class PopoverHost implements SurfaceHost {
       {
         role: "dialog",
         "aria-modal": "false",
-        "aria-label": options.label,
         "data-placement": "bottom",
       },
     );
+    nameSurface(this.root, options.label, options.labelledBy);
     this.body = this.root;
     this.fallback = createFallbackPositioner(
       this.root,
@@ -114,6 +116,10 @@ export class PopoverHost implements SurfaceHost {
     this.restoreAnchor?.();
     this.restoreAnchor = null;
     this.root.remove();
+  }
+
+  setLabel(label: string, labelledBy?: string): void {
+    nameSurface(this.root, label, labelledBy);
   }
 
   private endTracking(): void {

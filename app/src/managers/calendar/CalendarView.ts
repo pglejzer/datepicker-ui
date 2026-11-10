@@ -10,7 +10,7 @@ import type {
 import { announce, motionMode } from "@/utils/accessibility";
 import { createElement } from "@/utils/dom";
 import { attachRipple } from "@/utils/ripple";
-import { homePanel } from "@/utils/surface";
+import { homePanel, inlineChrome } from "@/utils/surface";
 import { setConfirmEnabled } from "@/managers/renderers/shellActions";
 import { isCompleteSelection } from "@/utils/selection/model";
 import { bindClicks } from "./view/commands";
@@ -22,15 +22,17 @@ import {
   MENU_OPEN_CLASS,
   setVisibleMonths,
 } from "./view/containerChrome";
-import { triggerSelector } from "./view/header";
+import { triggerSelector, usesCaption } from "./view/header";
 import { bindKeyboard } from "./view/keyboard";
 import { buildViewParts, type ViewParts } from "./view/parts";
 import { headlineFor, visibleMonthsText } from "./view/selectionContext";
 import type { DateCell, Layout } from "./view/types";
+import { isUserSource } from "./view/userSource";
 
 export interface CalendarShell {
   readonly element: HTMLElement;
   focusInitial(): void;
+  fit(): void;
   update(): void;
   destroy(): void;
 }
@@ -55,9 +57,16 @@ const RIPPLE_SELECTOR = [
   ".dp-ui__month-selection-item",
 ].join(", ");
 
+const MODAL_CLASS = "dp-ui__calendar--modal";
+const REBUILT_ATTRIBUTE = "data-rebuilt";
+
+const syncModalClass = (element: HTMLElement, layout: Layout): void => {
+  element.classList.toggle(MODAL_CLASS, layout === "modal");
+};
+
 export const createCalendarView = (deps: CalendarViewDeps): CalendarShell => {
   const { core, actions, rules, mode } = deps;
-  const layout: Layout = mode === "modal" ? "modal" : "docked";
+  const layout: Layout = core.calendarLayout === "docked" ? "docked" : "modal";
   const controller = new AbortController();
   const element = createElement("div", VIEW_CLASS);
   let parts: ViewParts;
@@ -94,7 +103,7 @@ export const createCalendarView = (deps: CalendarViewDeps): CalendarShell => {
     const selector = triggerSelector(previous);
     if (selector === null) return null;
     return (
-      parts.header.element.querySelector<HTMLElement>(selector) ??
+      parts.header.element?.querySelector<HTMLElement>(selector) ??
       parts.pages.find(selector)
     );
   };
@@ -113,7 +122,8 @@ export const createCalendarView = (deps: CalendarViewDeps): CalendarShell => {
     }
   };
 
-  const start = (): void => {
+  const start = (rebuilt = false): void => {
+    syncModalClass(element, layout);
     parts = buildViewParts({
       root: element,
       core,
@@ -126,7 +136,8 @@ export const createCalendarView = (deps: CalendarViewDeps): CalendarShell => {
       onSwitched,
     });
     parts.pages.present(core.view, 0);
-    parts.panels.mount(core.panel);
+    parts.panels.mount(core.panel, { rebuilt });
+    if (rebuilt) parts.pages.element.setAttribute(REBUILT_ATTRIBUTE, "");
     syncChrome(core.panel);
     parts.header.modal?.setInputView(core.panel === "input");
     setConfirmEnabled(element, isCompleteSelection(core.draft));
@@ -144,10 +155,15 @@ export const createCalendarView = (deps: CalendarViewDeps): CalendarShell => {
     parts.header.modal?.destroy();
   };
 
-  const focusInitial = (): void => {
+  const fit = (): void => {
     if (controller.signal.aborted) return;
     syncChrome(parts.panels.current());
     parts.pages.refit();
+  };
+
+  const focusInitial = (): void => {
+    if (controller.signal.aborted) return;
+    fit();
     focusTarget(parts.panels.entry());
   };
 
@@ -157,13 +173,13 @@ export const createCalendarView = (deps: CalendarViewDeps): CalendarShell => {
     source: NavigateSource,
   ): void => {
     parts.header.docked?.setView(view);
+    parts.header.caption?.setView(view);
+    const user = isUserSource(source);
     const animated =
-      source !== "api" &&
-      parts.panels.current() === "days" &&
-      parts.panels.settled();
+      user && parts.panels.current() === "days" && parts.panels.settled();
     parts.pages.present(view, animated ? delta : 0);
     parts.panels.rebuild();
-    if (source !== "api") {
+    if (user) {
       announce(parts.liveRegion, visibleMonthsText(core, view));
     }
   };
@@ -187,7 +203,8 @@ export const createCalendarView = (deps: CalendarViewDeps): CalendarShell => {
     parts.panels.rebuild();
     parts.header.modal?.setText(headlineFor(core));
     setConfirmEnabled(element, isCompleteSelection(core.draft));
-    if (parts.panels.current() === home()) {
+    const { announceSelection } = inlineChrome(mode, core.options.inline);
+    if (announceSelection && parts.panels.current() === home()) {
       announce(parts.liveRegion, headlineFor(core));
     }
   };
@@ -221,6 +238,7 @@ export const createCalendarView = (deps: CalendarViewDeps): CalendarShell => {
       actions,
       layout,
       home: home(),
+      caption: () => usesCaption(core, mode),
       cellAt,
       isRtl,
     });
@@ -233,11 +251,12 @@ export const createCalendarView = (deps: CalendarViewDeps): CalendarShell => {
   return {
     element,
     focusInitial,
+    fit,
     update: () => {
       if (controller.signal.aborted) return;
       const hadFocus = element.contains(element.ownerDocument.activeElement);
       teardown();
-      start();
+      start(true);
       if (hadFocus) focusInitial();
     },
     destroy: () => {

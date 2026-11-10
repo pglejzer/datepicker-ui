@@ -1,6 +1,6 @@
 import { lockScroll } from "../../utils/scrollLock";
 import { createElement } from "../../utils/dom";
-import { waitForExit } from "./SurfaceHost";
+import { nameSurface, waitForExit } from "./SurfaceHost";
 import type { SurfaceHost } from "./SurfaceHost";
 
 export class DialogHost implements SurfaceHost {
@@ -18,13 +18,14 @@ export class DialogHost implements SurfaceHost {
   constructor(options: {
     parent: HTMLElement;
     label: string;
+    /** Id, or space-separated ids, of a visible title that names the surface. When set, the root gets `aria-labelledby` and no `aria-label`. */
+    labelledBy?: string;
     allowPageScroll: boolean;
     onCancel(reason: "escape" | "outside"): void;
   }) {
     this.allowPageScroll = options.allowPageScroll;
-    this.dialog = createElement("dialog", "dp-ui__dialog", {
-      "aria-label": options.label,
-    });
+    this.dialog = createElement("dialog", "dp-ui__dialog");
+    nameSurface(this.dialog, options.label, options.labelledBy);
     this.body = createElement(
       "div",
       "dp-ui__container dp-ui__container--modal",
@@ -86,6 +87,10 @@ export class DialogHost implements SurfaceHost {
     this.controller.abort();
     this.unlock();
     this.dialog.remove();
+  }
+
+  setLabel(label: string, labelledBy?: string): void {
+    nameSurface(this.dialog, label, labelledBy);
   }
 
   private unlock(): void {

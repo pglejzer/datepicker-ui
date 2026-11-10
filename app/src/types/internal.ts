@@ -1,13 +1,18 @@
 import type { PlainDate, YearMonth } from "./date";
 import type { RangeEnd, Selection } from "./selection";
-import type { UnavailableReason } from "./types";
+import type { CancelReason, NavigateSource, UnavailableReason } from "./types";
 
 export type Panel =
   "days" | "month-menu" | "year-menu" | "month-grid" | "year-grid" | "input";
 export type SurfaceMode = "docked" | "modal" | "inline";
-export type NavigateSource =
-  "drag" | "wheel" | "button" | "keyboard" | "menu" | "api";
-export type CancelReason = "button" | "escape" | "outside";
+export type CalendarLayout = "docked" | "modal" | "fullscreen";
+export type LayoutOption = "auto" | CalendarLayout;
+export type { CancelReason, NavigateSource };
+
+export interface MonthSpan {
+  readonly first: YearMonth;
+  readonly last: YearMonth;
+}
 
 export interface InternalEventMap {
   "change:draft": { readonly draft: Selection };
@@ -36,6 +41,7 @@ export interface PickerActions {
   cancel(reason: CancelReason): void;
   today(): void;
   clear(): void;
+  renderedMonths(first: YearMonth, last: YearMonth): void;
 }
 
 export interface DateRules {

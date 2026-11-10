@@ -48,6 +48,7 @@ export const buildViewParts = (options: ViewPartsOptions): ViewParts => {
   const pages = createMonthPages({
     core,
     layout,
+    surface: mode,
     rtl: options.rtl,
     gridContext: () => createDaysGridContext(core, rules, layout),
     onCommit: (direction, source) => {
@@ -93,6 +94,11 @@ export const buildViewParts = (options: ViewPartsOptions): ViewParts => {
     "dp-ui__live-region dp-ui__visually-hidden",
     { "aria-live": "polite", "aria-atomic": "true" },
   );
-  root.replaceChildren(header.element, content, footer, liveRegion);
+  root.replaceChildren(
+    ...(header.element === null ? [] : [header.element]),
+    content,
+    footer,
+    liveRegion,
+  );
   return { header, pages, panels, liveRegion };
 };

@@ -85,6 +85,7 @@ const syncContent = (
 const roleLabel = (role: RangeRole | null, ctx: GridContext): string | null => {
   if (role === "start") return ctx.rangeLabels.start;
   if (role === "end") return ctx.rangeLabels.end;
+  if (role === "in-range") return ctx.rangeLabels.inRange;
   return null;
 };
 
@@ -123,7 +124,7 @@ export const applyState = (
     "aria-label",
     cellLabel(
       date,
-      role,
+      ctx.labelRole(date),
       cell.getAttribute(DECORATION_LABEL_ATTRIBUTE),
       cell.getAttribute(CONTENT_LABEL_ATTRIBUTE),
       ctx,

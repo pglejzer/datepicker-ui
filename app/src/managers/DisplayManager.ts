@@ -6,9 +6,8 @@ import { resolveElement } from "../utils/dom";
 import type { EventEmitter } from "../utils/EventEmitter";
 import { watchColorScheme } from "../utils/colorScheme";
 import { applyMotionVariables } from "../utils/motion";
-import { isNode } from "../utils/node";
 import { titleText } from "../utils/selection/headline";
-import { isFullscreenRange } from "../utils/surface";
+import { fitsViewport } from "../utils/viewportFit";
 import { createCalendarView } from "./calendar/CalendarView";
 import type { CalendarShell } from "./calendar/CalendarView";
 import { createRangeView } from "./range/RangeView";
@@ -17,8 +16,6 @@ import { InlineHost } from "./renderers/InlineHost";
 import { PopoverHost } from "./renderers/PopoverHost";
 import type { SurfaceHost } from "./renderers/SurfaceHost";
 import type { ThemeManager } from "./ThemeManager";
-
-export { isFullscreenRange, supportsInputView } from "../utils/surface";
 
 interface Mounted {
   readonly mode: SurfaceMode;
@@ -39,6 +36,8 @@ export class DisplayManager {
       actions: PickerActions;
       rules: DateRules;
       theme: ThemeManager;
+      inside(): readonly HTMLElement[];
+      overflow(): void;
     },
   ) {}
 
@@ -56,18 +55,12 @@ export class DisplayManager {
     const generation = ++this.generation;
     theme.applyTo(host.root);
     applyMotionVariables(host.root, options.animation);
-    const viewportWidth = isNode() ? Infinity : window.innerWidth;
     const viewDeps = {
       core,
       actions,
       rules,
       mode,
-      fullscreen: isFullscreenRange(
-        options.mode,
-        mode,
-        viewportWidth,
-        options.fullscreenBelow,
-      ),
+      fullscreen: core.calendarLayout === "fullscreen",
     };
     const view =
       options.mode === "range"
@@ -86,7 +79,14 @@ export class DisplayManager {
           : () => undefined,
     };
     host.body.append(view.element);
-    await host.open();
+    const opened = host.open();
+    view.fit();
+    if (this.overflows(mode, host)) {
+      this.release();
+      this.deps.overflow();
+      return;
+    }
+    await opened;
     if (generation === this.generation && mode !== "inline") {
       view.focusInitial();
     }
@@ -106,13 +106,27 @@ export class DisplayManager {
     const current = this.mounted;
     if (current === null) return;
     this.deps.theme.applyTo(current.host.root);
+    current.host.setLabel(this.label());
     applyMotionVariables(current.host.root, this.core.options.animation);
     current.view.update();
+  }
+
+  private label(): string {
+    const { labels, mode, precision } = this.core.options;
+    return titleText(labels, mode, precision);
   }
 
   destroy(): void {
     this.generation += 1;
     this.release();
+  }
+
+  private overflows(mode: SurfaceMode, host: SurfaceHost): boolean {
+    return (
+      mode === "docked" &&
+      this.core.options.displayMode === "auto" &&
+      !fitsViewport(host.root, this.core.input)
+    );
   }
 
   private release(): void {
@@ -129,7 +143,7 @@ export class DisplayManager {
     const { core } = this;
     const { options } = core;
     const { actions } = this.deps;
-    const label = titleText(options.labels, options.mode, options.precision);
+    const label = this.label();
     if (mode === "inline") {
       const container = resolveElement(options.inline.container);
       return container === null ? null : new InlineHost({ container, label });
@@ -151,7 +165,10 @@ export class DisplayManager {
       rtl: getComputedStyle(core.input).direction === "rtl",
       label,
       ignoreOutsideClick: options.behavior.ignoreOutsideClick,
-      inside: core.endInput === null ? [] : [core.endInput],
+      inside: [
+        ...(core.endInput === null ? [] : [core.endInput]),
+        ...this.deps.inside(),
+      ],
       onOutside: () => {
         actions.cancel("outside");
       },

@@ -1,3 +1,4 @@
+import type { Selection } from "../../types/selection";
 import { isEmptySelection } from "../../utils/selection/model";
 import type { CallbackBridge } from "./callbacks";
 import type { LifecycleContext } from "./context";
@@ -36,9 +37,7 @@ export class InstanceLifecycle {
     if (endInput !== null) {
       this.restoreEndInput = claimEndInput(endInput);
     }
-    const initial = isEmptySelection(core.value)
-      ? managers.input.readInitial()
-      : core.value;
+    const initial = this.initialSelection();
     core.setValue(initial);
     if (!isEmptySelection(initial)) {
       managers.input.write(initial);
@@ -59,6 +58,18 @@ export class InstanceLifecycle {
       this.session.mountInline();
     }
     reportIssues(this.context, core.options.issues);
+  }
+
+  private initialSelection(): Selection {
+    const { core, managers } = this.context;
+    if (!isEmptySelection(core.value)) {
+      return core.value;
+    }
+    const typed = managers.input.readInitial();
+    if (!isEmptySelection(typed)) {
+      return typed;
+    }
+    return core.options.defaultValue?.() ?? typed;
   }
 
   destroy(keepInputValue: boolean): void {
