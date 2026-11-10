@@ -21,7 +21,7 @@ calling skill passed you. If mode is unclear, default to audit.
 ## Before writing code
 - `.claude/rules/architecture.md` (composition pattern, manager contract, event flow, SSR)
 - `.claude/rules/accessibility.md` (current state and target pattern) and `.claude/rules/calendar.md`
-- `CLAUDE.md` -> "DOM structure"
+- `.claude/rules/dom.md` (what the library renders) and `.claude/rules/code-style.md`
 - What already exists (extend it, don't reinvent): the APG grid, roving `tabindex` and
   `GridKeyboard` in `managers/calendar/`, the live region in `calendar/view/parts.ts`, the
   surface roles / labels in `managers/renderers/` (`PopoverHost`, `DialogHost`, `InlineHost`),

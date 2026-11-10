@@ -12,7 +12,8 @@ meaningful, and mirrored to the source tree.
 - `.claude/rules/architecture.md` (always - so tests assert real contracts, not incidental
   implementation details)
 - `.claude/rules/testing.md`
-- `CLAUDE.md` -> "Testing conventions" and the commands section
+- `CLAUDE.md` -> "Commands", `.claude/rules/dom.md` (what the library renders) and
+  `.claude/rules/code-style.md`
 - The source file under test and any sibling `*.test.ts` / `*.edge.test.ts` - match their
   structure and assertion style
 

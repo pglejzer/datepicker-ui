@@ -12,16 +12,15 @@ breaking the class contract the TypeScript relies on.
 ## Before writing code
 - `.claude/rules/architecture.md` (always)
 - `.claude/rules/styling.md`
-- `CLAUDE.md` -> "CSS and theming" and "Build pipeline" sections
+- `.claude/rules/dom.md` (what the library renders) and `.claude/rules/build-release.md` (the
+  sass build)
 - `app/src/styles/`: `index.scss`, `main.scss`, `base/`, `components/` and `themes/` - read the
   relevant files before editing
 
 ## How you work
-- **Layering of stylesheets:** `index.scss` = `base/` (`_tokens`, `_reset`, `_utilities`) +
-  `components/` (`_container`, `_header`, `_navigation`, `_buttons`, `_grid`, `_pager`, `_menu`,
-  `_year-selection`, `_actions`, `_motion`, `_accessibility`); `main.scss` builds on it; each
-  `themes/theme-*.scss` is standalone (only `basic` is implemented, the rest wait for stage 3).
-  No `@layer`; base resets use `:where()`. Add core rules to the
+- **Layering of stylesheets:** `main.scss` (the core) = `base/` + `components/` (file list in
+  `.claude/rules/styling.md`); `index.scss` = `main` + every `themes/theme-*.scss`, and each
+  theme file is standalone. No `@layer`; base resets use `:where()`. Add core rules to the
   matching component file, theme looks to the theme file - never leak theme color into `base/`
   or `components/`.
 - **Class contract:** block `dp-ui`, elements `dp-ui__*` (`dp-ui__container`, `dp-ui__date`,
@@ -42,10 +41,10 @@ breaking the class contract the TypeScript relies on.
   (then nothing to add); otherwise pick the lightest MD3-consistent affordance (state
   layer, tonal container, indicator, opacity) and never exceed weight 500. Flag any real
   WCAG-vs-design tradeoff with the exact theme + state instead of forcing the look.
-- Keep day states distinct on every theme (today, selected, disabled, outside-month, range
-  (stage 2), hover, focus) and give every focusable control a visible `:focus-visible` ring.
-- Themes: basic, crane, crane-straight, m2, m3-green, dark, glassmorphic, pastel, ai,
-  cyberpunk. `build:css` compiles every file in `themes/` into `dist/css/themes/theme-*.css`;
+- Keep day states distinct on every theme (today, selected, disabled, outside-month, range,
+  hover, focus) and give every focusable control a visible `:focus-visible` ring.
+- Themes: `basic` (in the core tokens) plus one file per theme in `themes/`. `build:css`
+  compiles every file in `themes/` into `dist/css/themes/theme-*.css`;
   flag the root `package.json` `exports` entry for `build-release` and the `ThemeName` union for
   `core-architect`.
 - Vitest does not process CSS - your changes don't break unit tests, but visual regressions are

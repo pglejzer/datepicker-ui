@@ -13,7 +13,8 @@ deliberately and preserve contracts.
 ## Before writing code
 - `.claude/rules/architecture.md` (always - this is the contract you enforce, incl. §6 naming
   target and §7 working agreement)
-- `CLAUDE.md` -> "Public API", "DOM structure" and "Current state - known gaps"
+- `CLAUDE.md` -> "Public API" and "Current state — known gaps"
+- `.claude/rules/code-style.md` and `.claude/rules/dom.md` (what the library renders)
 - The exact files you're touching in `app/src/datepicker/`, `app/src/utils/`,
   `app/src/types/`, `app/src/constants/`, `app/src/managers/*.ts`
 

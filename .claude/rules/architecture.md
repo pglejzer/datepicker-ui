@@ -1,16 +1,17 @@
 # architecture.md - datepicker-ui shared rules
 
 The single source of truth every subagent reads before touching code. Pairs with
-the root `CLAUDE.md` (full repo map + commands). When this file and `CLAUDE.md`
+the root `CLAUDE.md` (HARD RULES, commands, area map, routing). When this file and `CLAUDE.md`
 disagree, `CLAUDE.md` wins - flag the drift instead of silently following one.
 
 `datepicker-ui` is a **zero-dependency, framework-agnostic, SSR-safe** date picker
-(`@pglejzer/datepicker-ui` 1.0.0, stable API). Docked (popover), modal and
-inline display, single, range and multiple selection, typed input (opt-in mask), a calendar /
-input view switch, month / year selection, drag / wheel month paging, light and dark `basic`
-theme plus m3-green, the timepicker-ui themes and blueprint, `colorScheme` detection. It follows the architecture of its sister project
-`timepicker-ui`. The design is in `docs/superpowers/specs/2026-10-17-datepicker-rewrite-design.md`,
-the stage plans in `docs/superpowers/plans/`. **All source/build/test work happens in `app/`.**
+(`@pglejzer/datepicker-ui`, stable API; the version is in the root `package.json`). Docked
+(popover), modal and inline display, single, range and multiple selection, typed input (opt-in
+mask), a calendar / input view switch, month / year selection, drag / wheel month paging, light
+and dark `basic` theme plus m3-green, the timepicker-ui themes and blueprint, `colorScheme`
+detection. It follows the architecture of its sister project
+[`timepicker-ui`](https://github.com/pglejzer/timepicker-ui). **All source/build/test work
+happens in `app/`.**
 
 ## 1. Composition pattern - DatepickerUI
 
@@ -27,13 +28,19 @@ composes three objects around one `CoreState`:
   defaults live in `DEFAULT_DATEPICKER_OPTIONS` in `options/defaults.ts`.
 - **Managers** - creates and owns the managers (§2) and wires their dependencies.
 - **Kit** - `src/kit.ts` is a second public entry (`@pglejzer/datepicker-ui/kit`) for companion
-  packages. It only re-exports existing modules: surface hosts, surface-mode rules, color scheme
-  and date text helpers. Anything it re-exports must stay SSR-safe at import, and changing it is a
-  public API change.
+  packages. It only re-exports existing modules:
+  - surface hosts (with `labelledBy` and `setLabel`), surface-mode rules and `fitsViewport`;
+  - color scheme and `applyTheme`;
+  - the date text, range text and `Intl` week / name helpers;
+  - `createTextButton` and the generic `Pager<K>`.
+
+  Anything it re-exports must stay SSR-safe at import, and changing it is a public API change.
 - **Lifecycle** - thin; implements `PickerActions` and delegates to `datepicker/lifecycle/*`:
   `session` (open / close, surface mounting), `actions` (select, navigate, confirm, cancel,
   today, clear), `value`, `navigation`, `options` (`setOptions`), `instance` (create / destroy),
-  `callbacks` (the `callbacks.on*` bridge), `triggers`, `host` (wrapper element), `context`.
+  `callbacks` (the `callbacks.on*` bridge), `triggers`, `host` (wrapper element), `context`,
+  `view` (`setView` / `getView` / `goTo`, `switch:view`), `visible` (`VisibleRangeTracker`, the
+  only emitter of `navigate`).
 
 Managers talk to `Lifecycle` only through `PickerActions` (`types/internal.ts`) and to each other
 through `CoreState` and events. A module-level registry backs `getById()`, `getAllInstances()`,
@@ -56,7 +63,7 @@ through the constructor; **no manager -> manager references** except what `Manag
 | FormManager | form integration: a hidden ISO-valued input next to the visible one, `change` dispatch on commit, restore on destroy |
 
 Not managers but part of the same layer: `managers/calendar/` (month model, grid renderer, grid
-keyboard, `CalendarView` composing `view/*`), `managers/swipe/` (`MonthPager` + gesture modules),
+keyboard, `CalendarView` composing `view/*`), `managers/swipe/` (generic `Pager<K>` + gesture modules),
 `managers/pickers/` (month / year menus, year grid, date input panel), `managers/range/`
 (`RangeView`, month list), `managers/renderers/` (surface hosts, shells, container transform).
 See `.claude/rules/calendar.md`.
@@ -72,8 +79,12 @@ Two buses, both `EventEmitter` (`app/src/utils/EventEmitter.ts`):
 - **Public** - `EventEmitter<DatepickerEventMap>` (`types/types.ts`), exposed by `picker.on` /
   `once` / `off` (`on` and `once` return an unsubscribe function): `open`, `close`, `cancel`,
   `confirm`, `update`, `error`, `select:day` (`selected: false` when a multiple click removes a
-  date), `select:month`, `select:year`, `navigate`, `range:start`, `range:end`. Payload types
-  live in `types/types.ts` and are exported from `index.ts`.
+  date), `select:month`, `select:year`, `navigate`, `range:start`, `range:end`, `switch:view`,
+  `clear`. Payload types live in `types/types.ts` and are exported from `index.ts`.
+  - `navigate` carries `from` / `to` (the shown days). It fires once per change of them, with
+    the source `open`, `api`, `resize`, `scroll` or a user source. Only `VisibleRangeTracker`
+    emits it.
+  - `cancel` reasons are `button`, `escape`, `outside` and `toggle`.
 
 `CallbackBridge` (`datepicker/lifecycle/callbacks.ts`) wires `callbacks.on*` options to the public
 events. User callbacks go through the bridge - managers never call them directly. A new public
@@ -89,11 +100,18 @@ Grouped, typed with JSDoc in `app/src/types/options.ts`, defaults in
 patch into the raw options and re-resolves:
 
 - `calendar` - locale, weekStart, minDate, maxDate, disabledDates, enabledDates, mode
-  (`single` | `range` | `multiple`), range `{ minLength, maxLength, presets }`, multiple `{ max }`,
+  (`single` | `range` | `multiple`), defaultValue (read at `create()` when the input text is not
+  a date; the shape of `setValue()`, resolved to a thunk so `"today"` is read at `create()`),
+  range `{ minLength, maxLength, presets }`, multiple `{ max }`,
   isDateDisabled, disabledWeekdays, decorateDate, renderDate (per-day content), validate (field
   validity, never blocks: `invalid-value`), precision (`day` | `month` | `year`, single mode only;
-  value `YYYY-MM` / `YYYY`), months (side by side, docked / inline), pageBy (`view` | `month`)
-- `ui` - displayMode (`auto` | `docked` | `modal`), inline `{ enabled, container }`, format, theme,
+  value `YYYY-MM` / `YYYY`), months (side by side, docked look), pageBy (`view` | `month`).
+  Every date in a value (`setValue`, `isSelectable`, `goTo`, presets, defaultValue) may be
+  `"today"` (`toSelection`)
+- `ui` - displayMode (`auto` | `docked` | `modal`), layout (`auto` | `docked` | `modal` |
+  `fullscreen`, the look on any surface, §5), inline `{ enabled, container, headline,
+  navigation (`menus` | `caption`), announceSelection }` (the last three act on inline pickers
+  only), format, theme,
   colorScheme, toggleButton, weekNumbers, outsideDays (`boolean | { selectable }`), fixedWeeks,
   yearRange, todayButton, clearButton, footer, animation, allowPageScroll, cssClass, appendTo,
   swipe, viewSwitch, initialView (`calendar` | `input`), startView (`day` | `month` | `year`),
@@ -102,10 +120,10 @@ patch into the raw options and re-resolves:
   light / dark at open (`utils/colorScheme.ts`: background behind the input, page
   `color-scheme`, OS); inline pickers follow page changes
 - `labels` - every visible and assistive string (title, buttons, month / year navigation,
-  `invalidDate`, `unavailableDate`, ...); month and weekday names come from `Intl`
+  `invalidDate`, `unavailableDate`, `inRange`, ...); month and weekday names come from `Intl`
 - `behavior` - closeOnSelect, closeOnCancel, commitOnChange, ignoreOutsideClick, returnFocus, id
 - `callbacks` - onOpen, onClose, onCancel, onConfirm, onUpdate, onError, onSelectDay / Month /
-  Year, onNavigate, onRangeStart, onRangeEnd
+  Year, onNavigate, onRangeStart, onRangeEnd, onSwitchView, onClear
 
 A new option needs: the type with JSDoc in its group, a default, a `resolve` entry that validates
 it (invalid values report an `error` event with code `invalid-option`), and a consumer. All
@@ -116,7 +134,24 @@ hardcode timeouts.
 
 `DisplayManager` picks the surface with `resolveSurfaceMode`: `ui.displayMode: 'auto'` uses modal
 below 600 px wide (`COMPACT_BREAKPOINT`) or 480 px tall (`COMPACT_HEIGHT_BREAKPOINT`) and docked
-otherwise; `docked` and `modal` force one.
+otherwise; `docked` and `modal` force one. With `auto`, `DisplayManager.mount` also shows the
+popover, calls `view.fit()` and checks `fitsViewport(root, input)`, all synchronously. If the
+popover fits neither entirely below nor entirely above the input where it is now, it releases it
+at once and `session.fallBackToModal()` mounts the dialog in the same task.
+
+**Calendar layout.** `core.calendarLayout` (`docked` | `modal` | `fullscreen`, from
+`calendarLayout()` in `utils/surface.ts`) is decided with the surface, from `ui.layout`:
+- `auto`: docked and inline → `docked`; modal → `fullscreen` for a range picker below
+  `ui.fullscreen`, else `modal`;
+- `docked` → `docked` on every surface;
+- `modal` → `modal`, with the same `ui.fullscreen` rule in a dialog;
+- `fullscreen` → `fullscreen` for a range in a dialog (any width) or inline, else `modal`.
+
+A changed `ui.layout` remounts a shown surface (`refreshSurface`).
+
+The layout drives the look (`dp-ui__calendar--modal`), `supportsInputView`, `startPanel` and
+`resolveViewLayout`. Inline chrome options are read through `inlineChrome(surface, inline)`.
+
 Each surface is a `SurfaceHost` (`managers/renderers/`):
 
 - **docked** - `PopoverHost`: `popover="manual"` inside the `.dp-ui` host, positioned by CSS anchor
@@ -136,15 +171,18 @@ Cancel/OK at the bottom) when the surface is modal below `ui.fullscreen` (600 px
 text fields for range, one for single) replaces the calendar through a ~300 ms container
 transform (`morphContainer`: the container resizes at once while a `dp-ui__ghost` snapshot of
 the old view fades out in 75 ms and the new view fades in over the last 150 ms; leaving full
-screen fades the scrim in, entering it keeps the scrim until covered); it exists for single modal pickers and every range picker
-(`supportsInputView`), opened with the pencil or `ui.initialView: "input"`.
+screen fades the scrim in, entering it keeps the scrim until covered). It exists for every range
+picker and for single pickers whose layout is not `docked` (`supportsInputView`). It opens with
+the pencil, `ui.initialView: "input"` or `setView("input")`.
 
-Layout (stage 5): `session.syncLayout(surface)` decides `core.layout` (`ViewLayout`: months shown,
+View layout: `session.syncLayout(surface)` decides `core.layout` (`ViewLayout`: months shown,
 presets `none` / `column` / `row`) with `resolveViewLayout` in `utils/surface.ts` at open, inline
-mount and `setOptions()` (not on resize), before `clampView`. Several months only in docked /
+mount, `setOptions()` and a window `resize` while open (`session.relayout` rebuilds the view only
+when the layout changes; the surface mode and full screen stay decided at open), before
+`clampView`. Several months only in docked /
 inline (as many as fit the width; `core.view` is the first month shown, `windowFor` moves the
 window); modal and full screen always get one month and a presets chip row. `homePanel(precision)`
-is the calendar's home (`days`, `month-grid`, `year-grid`); `startPanel(startView, surface)` the
+is the calendar's home (`days`, `month-grid`, `year-grid`); `startPanel(startView, layout)` the
 first panel. With `ui.endInput`, or after the public `setActiveEnd()` (both make
 `core.followsActiveEnd` true), `core.activeEnd` (`start` / `end`) says which end the next pick sets.
 Otherwise the end follows from the draft (`nextEnd`).
@@ -156,8 +194,9 @@ Otherwise the end follows from the draft (`nextEnd`).
 `behavior.returnFocus`, no `hide` event, no `OptionTypes`). **Don't reintroduce the old style:**
 `picker.update({ options, create })`, `OptionTypes`, a `hide` event, `ui.mobile`,
 `ui.enableScrollbar`, `ui.appendModalSelector`, `ui.inline.containerId`,
-`behavior.focusInputAfterClose`. When naming something new, check the sister repo:
-`docs-app/lib/renamed-options.tsx` and `docs-app/lib/removed-in-v5.tsx` in `timepicker-ui`.
+`behavior.focusInputAfterClose`. When naming something new, check the sister repo on GitHub:
+[`docs-app/lib/renamed-options.tsx`](https://github.com/pglejzer/timepicker-ui/blob/main/docs-app/lib/renamed-options.tsx)
+and [`docs-app/lib/removed-in-v5.tsx`](https://github.com/pglejzer/timepicker-ui/blob/main/docs-app/lib/removed-in-v5.tsx).
 
 ## 7. Working agreement (applies to every agent)
 

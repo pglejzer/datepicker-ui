@@ -21,8 +21,9 @@ Applies in `app/src/managers/calendar/`, `swipe/`, `pickers/` and `renderers/`. 
     month / year menus and year grid; `renderers/` the surface hosts (`PopoverHost`,
     `DialogHost`, `InlineHost`), the docked / modal headers, footer buttons and positioning.
   - Orchestration: `CalendarView.createCalendarView` composes `view/*` (`commands`, `keyboard`,
-    `monthPages`, `panelSwitcher`) and reacts to `core.events`; `MonthPager` (with `dragGesture`,
-    `wheelGesture`, `pageStrip`, `slideAnimator`) pages months. User intent goes back through
+    `monthPages`, `panelSwitcher`) and reacts to `core.events`; the generic `Pager<K>` (with
+    `dragGesture`, `wheelGesture`, a generic `pageStrip`, `slideAnimator`; exported from the kit)
+    pages months through `step` / `isSame`. User intent goes back through
     `PickerActions`, never straight to state.
 - Cross-layer changes route **through the orchestrator** (`CalendarView`, `DisplayManager`), not
   sideways.
@@ -46,7 +47,7 @@ Applies in `app/src/managers/calendar/`, `swipe/`, `pickers/` and `renderers/`. 
   `ui.swipe` turns drag / wheel paging off.
 - `ui.yearRange` (`before` / `after`) bounds navigation through `ValidationManager.yearBounds` /
   `clampView` and the year menu / grid.
-- Stage 5:
+- Months, ranges and grids:
   - **Months shown.** Render from `core.layout.months`, the months actually shown, decided by
     `session.syncLayout`. Never render from `options.months`.
   - **Several months.** A page is `div.dp-ui__months` with N grids. Each grid has a visible
@@ -64,11 +65,32 @@ Applies in `app/src/managers/calendar/`, `swipe/`, `pickers/` and `renderers/`. 
   - **Mouse drag on the range month list.** `range/dragScroll.ts` (`"y"`) scrolls by increments
     (never an absolute offset: `extendNearEdges` prepends months under the drag) and snaps to a
     month on release; `extendNearEdges` waits while a smooth snap runs. Wheel and touch stay free.
+- Calendar layout, fitting and motion:
+  - **Layout.** Views read `core.calendarLayout`, never the surface, for their look:
+    `"docked"` stays docked, while `"modal"` and `"fullscreen"` map to the modal view layout.
+    Inline chrome comes from `inlineChrome(surface, core.options.inline)`.
+  - **Caption row.** `navigation: "caption"` (day precision) renders `CaptionShell` instead of
+    the docked header or the year-grid button, and Shift+M / Shift+Y open nothing.
+  - **No headline.** `headline: false` gives `Header.element === null`, which `parts` skips.
+  - **Grids.**
+    - `fixedWeeks` and outside days come from `dayGridShape` (`utils/date/visibleRange.ts`).
+    - The docked look and inline pickers fit their height (`fitHeight`).
+    - The modal look outside inline (dialog or popover) keeps six rows. `dayGridShape` and
+      `monthPages` key this on `surface === "inline"`, everything else on `core.calendarLayout`.
+  - **`fit()`.** It applies chrome, pager height and list position without moving focus.
+    `DisplayManager.mount` calls it synchronously after `host.open()`. ResizeObservers on the
+    pager (width) and on the range month list (0 → visible) fit a calendar mounted while hidden.
+  - **Month list.** It reports its rendered span through `actions.renderedMonths` (`navigate`
+    `"scroll"`).
+  - **Motion.** Views animate and announce months only for user sources (`isUserSource`).
+  - **Rebuilds.** `CalendarView.update()` marks the rebuilt pager and panels `data-rebuilt`. The
+    switcher drops it when it reveals the days again.
 - Docked positioning: anchor positioning first (`anchorPositioning`), `fallbackPositioner` +
   `positionTracking` otherwise, and also when the anchored popover would stick out sideways
   (`overflowsInline`; the fallback keeps it inside the window); both set `data-positioning` and
-  `data-placement`. The popover
-  can still overflow the viewport when neither side fits.
+  `data-placement`. A forced `docked` popover can still overflow the viewport when neither side
+  fits. Under `auto`, a popover that fits neither below nor above the input falls back to the
+  dialog (`fitsViewport`).
 - SSR-safe: guard DOM access (`isNode` / `isDocument`); nothing at module top level.
 - Structural/logic changes here are `calendar-engine-dev`'s scope; a11y semantics flow through the
   `accessibility` concern; CSS through `styling-themes`; `CoreState` shape and new events through
