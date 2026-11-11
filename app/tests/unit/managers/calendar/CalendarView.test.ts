@@ -55,6 +55,7 @@ const mount = (
     today: vi.fn(),
     clear: vi.fn(),
     typeDraft: vi.fn(),
+    submitDraft: vi.fn(),
     renderedMonths: vi.fn(),
   };
   const shell = createCalendarView({
@@ -519,6 +520,43 @@ describe("createCalendarView", () => {
 
       expect(container).toHaveClass("dp-ui__container--multi-month");
       expect(document.activeElement).toHaveClass("dp-ui__date");
+    });
+
+    it("sets the measured pager height with the height transition off", () => {
+      const container = inContainer();
+      const { shell } = mount("docked", {}, container, false);
+      const pager = query(shell, ".dp-ui__pager");
+      const before = pager.style.getPropertyValue("--dp-ui-pager-height");
+      const sized = (height: number) => (): DOMRect =>
+        new DOMRect(0, 0, 336, height);
+      const reads: string[] = [];
+      const spies = [
+        vi
+          .spyOn(HTMLTableSectionElement.prototype, "getBoundingClientRect")
+          .mockImplementation(sized(40)),
+        vi
+          .spyOn(HTMLTableRowElement.prototype, "getBoundingClientRect")
+          .mockImplementation(sized(64)),
+        vi.spyOn(pager, "getBoundingClientRect").mockImplementation(() => {
+          reads.push(
+            `${pager.style.transition}|${pager.style.getPropertyValue("--dp-ui-pager-height")}`,
+          );
+          return new DOMRect();
+        }),
+      ];
+
+      try {
+        shell.fit();
+      } finally {
+        spies.forEach((spy) => {
+          spy.mockRestore();
+        });
+      }
+
+      const after = pager.style.getPropertyValue("--dp-ui-pager-height");
+      expect(after).not.toBe(before);
+      expect(reads).toContain(`none|${after}`);
+      expect(pager.style.transition).toBe("");
     });
   });
 });

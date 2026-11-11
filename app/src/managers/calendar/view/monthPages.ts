@@ -55,6 +55,13 @@ const IN_MONTH_CELL_SELECTOR =
   "td.dp-ui__date[data-date]:not(.dp-ui__date--outside-month)";
 const FALLBACK_ROW_HEIGHT = 48;
 
+const withoutTransition = (target: HTMLElement, apply: () => void): void => {
+  target.style.setProperty("transition", "none");
+  apply();
+  target.getBoundingClientRect();
+  target.style.removeProperty("transition");
+};
+
 export const createMonthPages = (options: MonthPagesOptions): MonthPages => {
   const { core, layout, surface, gridContext } = options;
   const { months } = core.layout;
@@ -202,7 +209,9 @@ export const createMonthPages = (options: MonthPagesOptions): MonthPages => {
       return;
     }
     keepingFocus(() => {
-      pager.show(core.view);
+      withoutTransition(element, () => {
+        pager.show(core.view);
+      });
     });
   };
 

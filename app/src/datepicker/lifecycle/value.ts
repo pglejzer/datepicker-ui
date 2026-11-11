@@ -136,9 +136,12 @@ export class ValueController {
   applyTyped(selection: Selection): void {
     const { core, emitter, managers } = this.context;
     const changed = !sameSelection(core.value, selection);
+    const shown = sameSelection(core.draft, selection);
     core.setValue(selection);
     managers.form.sync();
-    this.follow();
+    if (changed || !shown) {
+      this.follow();
+    }
     if (changed) {
       emitter.emit("confirm", {
         value: this.present(selection),

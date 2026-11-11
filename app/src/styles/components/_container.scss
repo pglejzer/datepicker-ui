@@ -157,6 +157,10 @@
   overscroll-behavior: contain;
 }
 
+.dp-ui__container--docked[data-positioning="fallback"] {
+  max-inline-size: calc(100% - 2 * var(--dp-ui-popover-edge-margin));
+}
+
 @supports (position-area: block-end) {
   .dp-ui__container--docked[popover]:not([data-positioning="fallback"]) {
     inset-block-start: auto;
@@ -166,6 +170,7 @@
     position-try-fallbacks: --dp-ui-flip;
     position-try-order: most-height;
     margin-block: var(--dp-ui-popover-gap);
+    max-inline-size: none;
     max-block-size: none;
   }
 }

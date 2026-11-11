@@ -17,7 +17,6 @@ export class PopoverHost implements SurfaceHost {
   readonly body: HTMLElement;
   private readonly anchor: HTMLElement;
   private readonly anchorName: string;
-  private readonly rtl: boolean;
   private readonly fallback: { enable(): void; layout(): void };
   private readonly controller = new AbortController();
   private stopTracking: (() => void) | null = null;
@@ -42,7 +41,6 @@ export class PopoverHost implements SurfaceHost {
     onEscape(): void;
   }) {
     this.anchor = options.anchor;
-    this.rtl = options.rtl;
     this.anchorName = createAnchorName(options.instanceId);
     this.root = createElement(
       "div",
@@ -169,7 +167,7 @@ export class PopoverHost implements SurfaceHost {
   }
 
   private update(): void {
-    if (this.anchored && overflowsInline(this.root, this.anchor, this.rtl)) {
+    if (this.anchored && overflowsInline(this.root)) {
       this.enableFallback();
     }
     if (this.anchored) {
