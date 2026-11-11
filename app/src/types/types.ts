@@ -73,7 +73,7 @@ export interface UpdateEventData {
 /** Payload of the `select:day` event. */
 export interface SelectDayEventData {
   /**
-   * The day the user picked (not yet committed in modal flow). With
+   * The day the user picked or typed (not yet committed in modal flow). With
    * `calendar.precision` `"month"` or `"year"` it is the picked month or year,
    * as its first day (`value.value` is `YYYY-MM` or `YYYY`).
    */
@@ -84,7 +84,7 @@ export interface SelectDayEventData {
 
 /** Payload of the `range:start` event. */
 export interface RangeStartEventData {
-  /** The first day of the range that was just picked. */
+  /** The first day of the range that was just picked or typed. */
   value: DateValue;
 }
 

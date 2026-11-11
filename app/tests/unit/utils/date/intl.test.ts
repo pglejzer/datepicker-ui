@@ -79,6 +79,17 @@ describe("intl helpers", () => {
     expect(new Set(weekdayNames("zh-CN", "narrow")).size).toBe(7);
   });
 
+  it("leaves the year out of the full date on request", () => {
+    const date = { year: 2026, month: 10, day: 21 };
+    expect(formatFullDate(date, "en-US", { year: false })).toBe(
+      "Wednesday, October 21",
+    );
+    const polish = formatFullDate(date, "pl-PL", { year: false });
+    expect(polish).toContain("21 października");
+    expect(polish).not.toContain("2026");
+    expect(formatFullDate(date, "en-US")).toBe("Wednesday, October 21, 2026");
+  });
+
   it("formats headline, full date and month-year", () => {
     expect(formatHeadline({ year: 2026, month: 10, day: 17 }, "en-US")).toBe(
       "Sat, Oct 17",

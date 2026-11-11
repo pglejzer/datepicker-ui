@@ -172,3 +172,8 @@ export const inlineChrome = (
   surface: SurfaceMode,
   inline: InlineChrome,
 ): InlineChrome => (surface === "inline" ? inline : SURFACE_CHROME);
+
+export const showsFooter = (
+  footerExplicit: boolean | null,
+  surface: SurfaceMode | null,
+): boolean => footerExplicit ?? surface !== "inline";

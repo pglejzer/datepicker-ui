@@ -641,13 +641,13 @@ export interface CallbacksOptions {
   onUpdate?: (data: UpdateEventData) => void;
   /** Called for invalid typed dates and rejected options. */
   onError?: (data: ErrorEventData) => void;
-  /** Called when a day is picked. */
+  /** Called when a day is picked, or typed in the text fields. */
   onSelectDay?: (data: SelectDayEventData) => void;
   /** Called when a month is chosen in the month menu. */
   onSelectMonth?: (data: SelectMonthEventData) => void;
   /** Called when a year is chosen. */
   onSelectYear?: (data: SelectYearEventData) => void;
-  /** Called when the first day of a range is picked. */
+  /** Called when the first day of a range is picked or typed. */
   onRangeStart?: (data: RangeStartEventData) => void;
   /** Called when the range is completed. */
   onRangeEnd?: (data: RangeEndEventData) => void;

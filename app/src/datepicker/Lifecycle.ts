@@ -160,6 +160,10 @@ export class Lifecycle implements PickerActions {
     this.actions.typeDraft(selection);
   }
 
+  submitDraft(): void {
+    this.actions.submitDraft();
+  }
+
   focusDate(date: PlainDate): void {
     this.actions.focusDate(date);
   }

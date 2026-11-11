@@ -1,6 +1,7 @@
 import type { CoreState } from "@/datepicker/CoreState";
 import type { Panel, PickerActions } from "@/types/internal";
 import { isDateSelected } from "@/utils/selection/model";
+import { showsFooter } from "@/utils/surface";
 import { nextFocusDate } from "../GridKeyboard";
 import type { DateCell, Layout, PickerPanel } from "./types";
 
@@ -62,6 +63,7 @@ const commitDate = (
     event.key === "Enter" &&
     deps.layout === "modal" &&
     deps.core.options.mode === "single" &&
+    showsFooter(deps.core.options.footerExplicit, deps.core.mode) &&
     isDateSelected(deps.core.draft, cell.date);
   if (confirms) {
     deps.actions.confirm();

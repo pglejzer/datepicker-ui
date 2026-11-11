@@ -24,8 +24,16 @@ export {
   resolveWeekStart,
   weekdayNames,
 } from "./utils/date/intl";
-export type { DatePart, WeekStartOption } from "./utils/date/intl";
-export { leadingDateLength, maskDateText } from "./utils/date/mask";
+export type {
+  DatePart,
+  FullDateOptions,
+  WeekStartOption,
+} from "./utils/date/intl";
+export {
+  isDateTextComplete,
+  leadingDateLength,
+  maskDateText,
+} from "./utils/date/mask";
 export { normalizeDigits, parseDate } from "./utils/date/parse";
 export { RANGE_SEPARATOR, splitRangeText } from "./utils/selection/text";
 export type { PlainDate, Weekday, YearMonth } from "./types/date";

@@ -48,6 +48,10 @@ export class PickerActionHandler implements Omit<
     this.selector.typeDraft(selection);
   }
 
+  submitDraft(): void {
+    this.selector.submitDraft();
+  }
+
   focusDate(date: PlainDate): void {
     if (this.session.active) {
       moveFocus(this.context, date, "keyboard");

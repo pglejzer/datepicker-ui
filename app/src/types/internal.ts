@@ -32,6 +32,7 @@ export interface PickerActions {
   select(date: PlainDate): void;
   selectRange(start: PlainDate, end: PlainDate): void;
   typeDraft(selection: Selection): void;
+  submitDraft(): void;
   focusDate(date: PlainDate): void;
   navigate(delta: number, source: NavigateSource): void;
   page(direction: -1 | 1, source: NavigateSource): void;

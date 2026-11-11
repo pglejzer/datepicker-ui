@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { resolvePattern } from "@/utils/date/format";
-import { leadingDateLength, maskDateText } from "@/utils/date/mask";
+import {
+  isDateTextComplete,
+  leadingDateLength,
+  maskDateText,
+} from "@/utils/date/mask";
 
 const dmy = resolvePattern("dd/MM/yyyy", "en-US");
 const iso = resolvePattern("yyyy-MM-dd", "en-US");
@@ -101,5 +105,36 @@ describe("leadingDateLength", () => {
     it("measures a partial date", () => {
       expect(leadingDateLength("2026-10", iso)).toBe(7);
     });
+  });
+});
+
+const short = resolvePattern("dd.MM.yy", "en-US");
+
+describe("isDateTextComplete", () => {
+  it.each([
+    ["21.10.2026", true],
+    ["21.10.202", false],
+    ["1.5.2026", true],
+    ["21102026", true],
+    ["21.10.2026 14:30", true],
+    ["21.10.", false],
+    ["21.10.26", false],
+    ["", false],
+  ])("dd.MM.yyyy %j is %s", (text, expected) => {
+    expect(isDateTextComplete(text, dotted)).toBe(expected);
+  });
+
+  it.each([
+    ["2026-10-05", true],
+    ["2026-10-5", false],
+  ])("yyyy-MM-dd %j is %s", (text, expected) => {
+    expect(isDateTextComplete(text, iso)).toBe(expected);
+  });
+
+  it.each([
+    ["21.10.26", true],
+    ["21.10.2", false],
+  ])("dd.MM.yy %j is %s", (text, expected) => {
+    expect(isDateTextComplete(text, short)).toBe(expected);
   });
 });

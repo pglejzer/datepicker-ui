@@ -38,6 +38,10 @@ class LifecycleRelay implements PickerActions {
     this.target?.typeDraft(selection);
   };
 
+  readonly submitDraft = (): void => {
+    this.target?.submitDraft();
+  };
+
   readonly focusDate = (date: PlainDate): void => {
     this.target?.focusDate(date);
   };

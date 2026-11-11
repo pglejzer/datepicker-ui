@@ -5,7 +5,12 @@ import {
   isSelectionAllowed,
   selectionIssue,
 } from "../../utils/selection/constraints";
-import { anchorDate, isDateSelected } from "../../utils/selection/model";
+import {
+  anchorDate,
+  isCompleteSelection,
+  isDateSelected,
+  sameSelection,
+} from "../../utils/selection/model";
 import { draftForEnd, nextEnd, pickDate } from "../../utils/selection/pick";
 import type { LifecycleContext } from "./context";
 import { moveFocus } from "./navigation";
@@ -66,6 +71,30 @@ export class DateSelector {
   }
 
   typeDraft(selection: Selection): void {
+    if (!this.acceptTyped(selection)) {
+      return;
+    }
+    const { commitOnChange } = this.context.core.options.behavior;
+    if (commitOnChange && isCompleteSelection(selection)) {
+      this.values.commit(true);
+    }
+  }
+
+  submitDraft(): void {
+    const { core } = this.context;
+    const draft = core.draft;
+    const closes =
+      core.options.behavior.closeOnSelect && draft.mode !== "multiple";
+    if (!this.session.active || !closes || !isCompleteSelection(draft)) {
+      return;
+    }
+    if (!sameSelection(core.value, draft)) {
+      this.values.commit(true);
+    }
+    void this.session.close();
+  }
+
+  private acceptTyped(selection: Selection): boolean {
     const { core, managers } = this.context;
     const { mode, limits } = core.options;
     const allowed =
@@ -73,14 +102,42 @@ export class DateSelector {
       isSelectionAllowed(selection, limits, (date) =>
         managers.validation.isDisabled(date),
       );
-    if (!this.session.active || !allowed) {
-      return;
+    if (
+      !this.session.active ||
+      !allowed ||
+      sameSelection(core.draft, selection)
+    ) {
+      return false;
     }
     core.setDraft(selection);
     const anchor = anchorDate(selection);
     if (anchor !== null) {
       moveFocus(this.context, anchor, "api");
     }
+    this.announceTyped(selection);
+    return true;
+  }
+
+  private announceTyped(selection: Selection): void {
+    const { emitter } = this.context;
+    const { describe } = this.values;
+    if (selection.mode === "single") {
+      if (selection.date !== null) {
+        emitter.emit("select:day", {
+          value: describe(selection.date),
+          selected: true,
+        });
+      }
+      return;
+    }
+    if (selection.mode !== "range" || selection.start === null) {
+      return;
+    }
+    if (selection.end === null) {
+      emitter.emit("range:start", { value: describe(selection.start) });
+      return;
+    }
+    this.emitRangeEnd(selection.start, selection.end);
   }
 
   private announce(next: Selection, date: PlainDate): void {

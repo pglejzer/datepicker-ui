@@ -64,6 +64,28 @@ export function leadingDateLength(
   return scanDateText(text, pattern).end;
 }
 
+/**
+ * Whether `text` starts with a whole date: every group `pattern` expects is
+ * there and the last one has all its digits. A separator closes an earlier
+ * group, so `1.5.2026` is complete. Text after the date is ignored.
+ */
+export function isDateTextComplete(
+  text: string,
+  pattern: FormatPattern,
+): boolean {
+  const { groups } = scanDateText(text, pattern);
+  const lastPart = pattern.order.at(-1);
+  const lastGroup = groups.at(-1);
+  if (
+    lastPart === undefined ||
+    lastGroup === undefined ||
+    groups.length !== pattern.order.length
+  ) {
+    return false;
+  }
+  return lastGroup.length === groupWidth(lastPart, pattern);
+}
+
 export function maskInput(
   input: HTMLInputElement,
   pattern: FormatPattern,

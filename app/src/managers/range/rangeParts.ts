@@ -25,7 +25,7 @@ import type {
 } from "@/types/internal";
 import type { MotionMode } from "@/utils/accessibility";
 import { createElement } from "@/utils/dom";
-import { inlineChrome } from "@/utils/surface";
+import { inlineChrome, showsFooter } from "@/utils/surface";
 import { monthBounds } from "./monthBounds";
 import { createMonthList } from "./monthList";
 import { createMonthRow, createMonthsNavigation } from "./monthRow";
@@ -71,9 +71,6 @@ export const RANGE_CONTAINER_CLASSES: readonly string[] = [
   FULLSCREEN_CLASS,
   INPUT_CLASS,
 ];
-
-const footerVisible = (core: CoreState, mode: SurfaceMode): boolean =>
-  core.options.footerExplicit ?? mode !== "inline";
 
 const buildDays = (
   options: RangePartsOptions,
@@ -127,7 +124,7 @@ export const buildRangeParts = (options: RangePartsOptions): RangeParts => {
   });
   const footer = createActions({
     labels: resolved.labels,
-    visible: footerVisible(core, mode),
+    visible: showsFooter(core.options.footerExplicit, mode),
     todayButton: resolved.todayButton,
     clearButton: resolved.clearButton !== false,
   });

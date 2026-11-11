@@ -920,6 +920,7 @@ describe("RangeView", () => {
         today: vi.fn(),
         clear: vi.fn(),
         typeDraft: vi.fn(),
+        submitDraft: vi.fn(),
         renderedMonths: vi.fn(),
       };
       const shell = createRangeView({

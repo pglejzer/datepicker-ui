@@ -23,6 +23,7 @@ describe("@/kit", () => {
       "fitsViewport",
       "applyTheme",
       "leadingDateLength",
+      "isDateTextComplete",
       "normalizeDigits",
       "formatFullDate",
       "formatMonthYear",
@@ -49,6 +50,17 @@ describe("@/kit", () => {
     expect(kit.formatMonthYear({ year: 2026, month: 10 }, "en-US")).toBe(
       "October 2026",
     );
+  });
+
+  it("tells a complete typed date and formats a date without the year", () => {
+    const p = kit.resolvePattern("dd.MM.yyyy", "en-US");
+    expect(kit.isDateTextComplete("21.10.2026", p)).toBe(true);
+    expect(kit.isDateTextComplete("21.10.20", p)).toBe(false);
+    expect(
+      kit.formatFullDate({ year: 2026, month: 10, day: 21 }, "en-US", {
+        year: false,
+      }),
+    ).toBe("Wednesday, October 21");
   });
 
   it("createTextButton builds a modifier class button", () => {
