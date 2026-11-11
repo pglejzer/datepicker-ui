@@ -54,10 +54,10 @@ Applies to build/tool configs and the package manifests. Pairs with `.claude/rul
   SemVer: breaking changes need a major, new features a minor, fixes a patch.
 - No new runtime dependencies (zero-dependency promise); dev/build deps must be justified and
   installed by the user.
-- Never run `npm publish` or git write ops - propose the version, tag (`vX.Y.Z`), and commit
+- Never run `npm publish` or git write ops - propose the version, tag (`X.Y.Z`), and commit
   message; the user executes.
 - **Publishing runs on GitHub** (`.github/workflows/publish.yml`, npm trusted publishing, no
-  token). A published GitHub release whose tag equals `v` + the root `version` runs every check,
+  token). A published GitHub release whose tag is the root `version` (`1.1.0` or `v1.1.0`) runs every check,
   builds and publishes; a version with a hyphen goes to the `next` dist-tag. A manual run is a
   dry run. The file name is part of the npm trusted-publisher setup - don't rename it. Full release flow (README + CHANGELOG) is the `/release` skill /
   `build-release` agent.

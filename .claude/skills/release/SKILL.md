@@ -73,7 +73,7 @@ It edits root `package.json`, README and `CHANGELOG.md`, bumping only current-ve
 - Summarize: new version, every file changed, and confirmation that `exports` / `sideEffects` /
   entry points / zero-dependency are intact.
 - **Propose the release steps for the user to run** — git is theirs: a commit message, the push,
-  and a GitHub release with the tag `vX.Y.Z`. Publishing the release runs
+  and a GitHub release with the tag `X.Y.Z` (`vX.Y.Z` also works). Publishing the release runs
   `.github/workflows/publish.yml`, which checks, builds and publishes to npm; a manual run of it
   is a dry run. Do NOT run `git add/commit/tag/push`, `gh release` or `npm publish` yourself.
 

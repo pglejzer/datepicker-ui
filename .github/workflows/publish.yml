@@ -45,8 +45,8 @@ jobs:
           TAG_NAME: ${{ github.event.release.tag_name }}
         run: |
           version="$(node -p "require('./package.json').version")"
-          if [ "$TAG_NAME" != "v$version" ]; then
-            echo "::error::Release tag '$TAG_NAME' does not match package.json version 'v$version'"
+          if [ "${TAG_NAME#v}" != "$version" ]; then
+            echo "::error::Release tag '$TAG_NAME' does not match package.json version '$version' (use '$version' or 'v$version')"
             exit 1
           fi
 

@@ -97,5 +97,5 @@ and keep the README current.
   other publishing / deploy command.
 - Listing new files for CRLF conversion and confirming the zero-dependency guarantee holds.
 - Leaving the actual release execution to the user: **never** run `git add/commit/tag/push` or
-  `npm publish`. Propose the version, the tag name (e.g. `v0.1.0`), and a commit message, and
+  `npm publish`. Propose the version, the tag name (e.g. `0.1.0`), and a commit message, and
   let the user run them.
