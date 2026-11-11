@@ -50,7 +50,7 @@ From a CDN, the UMD build exposes the class as the global `DatepickerUI`. More i
 ```
 
 ```js
-import DatepickerUI from "@pglejzer/datepicker-ui";
+import { DatepickerUI } from "@pglejzer/datepicker-ui";
 import "@pglejzer/datepicker-ui/index.css";
 
 const picker = new DatepickerUI("#date", {
@@ -63,6 +63,8 @@ const picker = new DatepickerUI("#date", {
 
 picker.create();
 ```
+
+`DatepickerUI` is a named export, and also the default export, so `import DatepickerUI from "@pglejzer/datepicker-ui"` works too.
 
 The first argument is a selector, an `<input>` or an element that contains an `<input>`. The options argument is optional. Step by step: [quick start](https://timepicker-ui.vercel.app/datepicker/quick-start) and [getting started example](https://timepicker-ui.vercel.app/datepicker/examples/basic/getting-started).
 
@@ -185,7 +187,7 @@ React:
 
 ```tsx
 import { useEffect, useRef } from "react";
-import DatepickerUI from "@pglejzer/datepicker-ui";
+import { DatepickerUI } from "@pglejzer/datepicker-ui";
 import "@pglejzer/datepicker-ui/index.css";
 
 function DateField() {
@@ -213,8 +215,8 @@ Also exported:
 - `fitsViewport(root, anchor)` tells whether a docked surface fits the window entirely below or entirely above its anchor.
 - `Pager` and `PagerOptions` give the month paging with its drag and wheel gestures.
 - `RANGE_SEPARATOR` and `splitRangeText` write and split range text.
-- `leadingDateLength` and `normalizeDigits` help with typed dates.
-- `resolveWeekStart`, `weekdayNames`, `formatMonthYear` and `formatFullDate` are the calendar's week and name helpers.
+- `leadingDateLength`, `isDateTextComplete` and `normalizeDigits` help with typed dates.
+- `resolveWeekStart`, `weekdayNames`, `formatMonthYear` and `formatFullDate` are the calendar's week and name helpers. `formatFullDate(date, locale, { year: false })` leaves the year out.
 - The hosts accept a `labelledBy` option, the id of a visible title that names the surface. `setLabel(label, labelledBy?)` renames a shown surface by the same rule.
 
 ```js
