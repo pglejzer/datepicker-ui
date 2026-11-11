@@ -30,7 +30,14 @@ Applies when working in `app/src/styles/`. Pairs with `.claude/rules/architectur
   (a companion package). Rules for the modal surface key on
   `.dp-ui__container--modal > .dp-ui__calendar > …`. Rules for the modal look key on
   `.dp-ui__calendar--modal > …`. Never use a bare descendant selector from a surface container.
-- **Fluid cells.** `.dp-ui__container` has `max-inline-size: 100%`.
+- **No visible scrollbar on the popover or the dialog** (`architecture.md` §7). Never give a
+  surface a capped height with `overflow: auto` to make it fit. Scrolling parts hide their
+  scrollbar, except the `thin-scrollbar` menus, year grid and presets column.
+- **Fluid cells.** `.dp-ui__container` has `max-inline-size: 100%`. An anchored popover lifts it
+  (`none`): `position-area` would cap it to the room right of the field. Uncapped, the browser
+  shifts it into the window, and `PopoverHost` switches to the fallback only when it still
+  sticks out. The fallback keeps the edge margin on both sides
+  (`[data-positioning="fallback"]`).
   - Only a container that holds a calendar view is `container-type: inline-size`:
     `.dp-ui__container:has(> .dp-ui__calendar)`.
   - `.dp-ui__calendar` is `display: contents`, so it cannot be the container itself.

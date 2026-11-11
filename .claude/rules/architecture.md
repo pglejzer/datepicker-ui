@@ -231,5 +231,12 @@ and [`docs-app/lib/removed-in-v5.tsx`](https://github.com/pglejzer/timepicker-ui
 - **Don't break a theme's visual identity / Material Design 3.** No `font-weight: 700` or
   strikethrough as state cues - MD3 uses state layers / tonal containers / opacity (see
   the `styling-themes` agent for detail).
+- **No visible scrollbar on a picker surface** (owner rule, 2026-11-11). The docked popover and
+  the dialog never show a scrollbar. A surface that does not fit gets fewer months, a shift into
+  the window or, under `auto`, the dialog. It never gets a capped height that scrolls. Content
+  that scrolls by design (the range month list, the preset chip row) hides its scrollbar with
+  `scrollbar-width: none` plus `::-webkit-scrollbar`. Only the month and year menus, the year
+  grid and the presets column keep the themed `thin-scrollbar`. A fix that makes a surface
+  scroll is a regression, even when it makes the surface fit.
 - Stay in your declared scope (see each agent's `description`). If a change needs to
   cross into another agent's territory, say so rather than reaching over.

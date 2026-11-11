@@ -86,11 +86,13 @@ Applies in `app/src/managers/calendar/`, `swipe/`, `pickers/` and `renderers/`. 
   - **Rebuilds.** `CalendarView.update()` marks the rebuilt pager and panels `data-rebuilt`. The
     switcher drops it when it reveals the days again.
 - Docked positioning: anchor positioning first (`anchorPositioning`), `fallbackPositioner` +
-  `positionTracking` otherwise, and also when the anchored popover would stick out sideways
-  (`overflowsInline`; the fallback keeps it inside the window); both set `data-positioning` and
-  `data-placement`. A forced `docked` popover can still overflow the viewport when neither side
-  fits. Under `auto`, a popover that fits neither below nor above the input falls back to the
-  dialog (`fitsViewport`).
+  `positionTracking` otherwise, and also when the anchored popover still sticks out sideways
+  after the browser placed it (`overflowsInline` measures the popover's own rect; the fallback
+  keeps it inside the window); both set `data-positioning` and `data-placement`. A forced
+  `docked` popover can still overflow the viewport when neither side fits. Never fix that with a
+  capped height that scrolls: no visible scrollbar on a surface (`architecture.md` §7). Under
+  `auto`, a popover that fits neither below nor above the input falls back to the dialog
+  (`fitsViewport`).
 - SSR-safe: guard DOM access (`isNode` / `isDocument`); nothing at module top level.
 - Structural/logic changes here are `calendar-engine-dev`'s scope; a11y semantics flow through the
   `accessibility` concern; CSS through `styling-themes`; `CoreState` shape and new events through

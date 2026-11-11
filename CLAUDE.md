@@ -115,6 +115,9 @@ Agents must not assume these work; fixing them is a separate task the user start
 
 - A forced `ui.displayMode: "docked"` popover is not capped. When neither side of the input has
   room, it opens on the side with more room and overflows. (`auto` opens the dialog in that case.)
+  Don't fix it with a capped height that scrolls: no visible scrollbar on a surface
+  (`architecture.md` §7). The JS fallback (browsers without CSS anchor positioning) still caps
+  the height with a visible scrollbar in that case. That breaks the rule and is open.
 
 ## Where things live
 
