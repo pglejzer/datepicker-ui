@@ -15,6 +15,23 @@
   padding-inline: var(--dp-ui-container-side-padding);
 }
 
+.dp-ui__calendar > .dp-ui__navigation--caption {
+  box-sizing: border-box;
+  block-size: var(--dp-ui-header-height-docked);
+  padding-inline: var(--dp-ui-container-side-padding);
+}
+
+.dp-ui__navigation--caption {
+  justify-content: flex-end;
+}
+
+.dp-ui__caption {
+  margin-inline-end: auto;
+  padding-inline-start: 12px;
+  color: var(--dp-ui-menu-button-label-text-color);
+  @include typescale(label-large);
+}
+
 .dp-ui__menu-button--year-grid,
 .dp-ui__navigation--month-grid > .dp-ui__menu-button {
   margin-inline-end: auto;

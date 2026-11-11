@@ -13,6 +13,7 @@ import {
   visibleMonthsText,
 } from "@/managers/calendar/view/selectionContext";
 import type { DateCell } from "@/managers/calendar/view/types";
+import { isUserSource } from "@/managers/calendar/view/userSource";
 import { morphContainer } from "@/managers/renderers/containerTransform";
 import { setConfirmEnabled } from "@/managers/renderers/shellActions";
 import type { YearMonth } from "@/types/date";
@@ -22,6 +23,7 @@ import { fromISO } from "@/utils/date/plainDate";
 import { createElement } from "@/utils/dom";
 import { attachRipple } from "@/utils/ripple";
 import { isCompleteSelection, isEmptySelection } from "@/utils/selection/model";
+import { inlineChrome } from "@/utils/surface";
 import { anchorMonth } from "./monthBounds";
 import {
   buildRangeParts,
@@ -38,11 +40,18 @@ const RIPPLE_SELECTOR = [
   ".dp-ui__date:not(.dp-ui__date--disabled) .dp-ui__date-indicator",
 ].join(", ");
 
+const MODAL_CLASS = "dp-ui__calendar--modal";
+
+const syncModalClass = (element: HTMLElement, modal: boolean): void => {
+  element.classList.toggle(MODAL_CLASS, modal);
+};
+
 const viewPanel = (panel: Panel): Panel =>
   panel === "input" ? "input" : "days";
 
 export const createRangeView = (deps: CalendarViewDeps): CalendarShell => {
   const { core, actions, rules, mode, fullscreen } = deps;
+  const modal = core.calendarLayout !== "docked";
   const controller = new AbortController();
   const element = createElement("div", VIEW_CLASS);
   let parts: RangeParts;
@@ -101,6 +110,7 @@ export const createRangeView = (deps: CalendarViewDeps): CalendarShell => {
   };
 
   const start = (): void => {
+    syncModalClass(element, modal);
     parts = buildRangeParts({
       root: element,
       core,
@@ -111,6 +121,7 @@ export const createRangeView = (deps: CalendarViewDeps): CalendarShell => {
       rtl: isRtl(),
       signal: controller.signal,
       motion,
+      reveal,
       swap,
       onSwitched,
     });
@@ -134,17 +145,22 @@ export const createRangeView = (deps: CalendarViewDeps): CalendarShell => {
     parts.header.destroy();
   };
 
+  const fit = (): void => {
+    if (controller.signal.aborted) return;
+    const panel = parts.panels.current();
+    parts.applyChrome(panel);
+    if (panel === "days") reveal();
+  };
+
   const focusInitial = (): void => {
     if (controller.signal.aborted) return;
     cancelAnimationFrame(frame);
     frame = 0;
-    const panel = parts.panels.current();
-    parts.applyChrome(panel);
-    if (panel === "input") {
+    fit();
+    if (parts.panels.current() === "input") {
       parts.panels.entry()?.focus({ preventScroll: true });
       return;
     }
-    reveal();
     parts.days.focusCell(core.focus);
   };
 
@@ -153,7 +169,8 @@ export const createRangeView = (deps: CalendarViewDeps): CalendarShell => {
     parts.refreshPresets();
     parts.header.setText(headlineFor(core));
     syncConfirm();
-    if (parts.panels.current() === "days") {
+    const { announceSelection } = inlineChrome(mode, core.options.inline);
+    if (announceSelection && parts.panels.current() === "days") {
       announce(parts.liveRegion, headlineFor(core));
     }
   };
@@ -172,7 +189,7 @@ export const createRangeView = (deps: CalendarViewDeps): CalendarShell => {
     const animated =
       parts.panels.current() === "days" && parts.panels.settled();
     parts.days.present(view, animated ? delta : 0, source);
-    if (source !== "api" && core.layout.months > 1) {
+    if (isUserSource(source) && core.layout.months > 1) {
       announce(parts.liveRegion, visibleMonthsText(core, view));
     }
   };
@@ -214,6 +231,7 @@ export const createRangeView = (deps: CalendarViewDeps): CalendarShell => {
       actions,
       layout: "range",
       home: "days",
+      caption: () => false,
       cellAt,
       isRtl,
     });
@@ -226,6 +244,7 @@ export const createRangeView = (deps: CalendarViewDeps): CalendarShell => {
   return {
     element,
     focusInitial,
+    fit,
     update: () => {
       if (controller.signal.aborted) return;
       const hadFocus = element.contains(element.ownerDocument.activeElement);

@@ -1,5 +1,7 @@
 import type { DateInput, PlainDate } from "../../types/date";
+import type { CalendarMode, Precision, Selection } from "../../types/selection";
 import { toPlainDate } from "../../utils/date/plainDate";
+import { toSelection } from "../../utils/selection/value";
 import type { OptionIssue } from "./pick";
 
 function toDateInput(value: unknown, allowToday: boolean): DateInput | null {
@@ -20,6 +22,20 @@ export function resolveDate(
   const date = input === null ? null : toPlainDate(input);
   if (date === null) issues.push({ option, value });
   return date;
+}
+
+export function resolveDefaultValue(
+  value: unknown,
+  mode: CalendarMode,
+  precision: Precision,
+  issues: OptionIssue[],
+): (() => Selection | null) | null {
+  if (value === undefined || value === null) return null;
+  if (toSelection(value, mode, precision) === null) {
+    issues.push({ option: "calendar.defaultValue", value });
+    return null;
+  }
+  return () => toSelection(value, mode, precision);
 }
 
 export function resolveDateList(

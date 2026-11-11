@@ -2,7 +2,7 @@ import type DatepickerUI from "../../src/index";
 import type { DatepickerOptions } from "../../src/index";
 
 const INPUT =
-  "w-64 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors";
+  "w-full max-w-64 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors";
 const ACTIVE_FIELD =
   "[&.dp-ui\\_\\_input--active]:ring-2 [&.dp-ui\\_\\_input--active]:ring-violet-500 [&.dp-ui\\_\\_input--active]:border-violet-500";
 const BUTTON =

@@ -26,6 +26,16 @@ describe("resolvePreset", () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.useRealTimers();
+  });
+
+  it("reads today in a preset value", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 10, 9, 10));
+    expect(resolvePreset(preset({ start: "today", end: "today" }))).toEqual({
+      start: d(2026, 11, 9),
+      end: d(2026, 11, 9),
+    });
   });
 
   it("resolves an object value of dates and ISO strings", () => {

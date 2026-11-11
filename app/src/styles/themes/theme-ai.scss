@@ -1,6 +1,9 @@
 /* AI theme for DatepickerUI, ported from timepicker-ui */
-:is(.dp-ui, .dp-ui__dialog, .dp-ui__container)[data-theme="ai"] {
+:is(.dp-ui__dialog, .dp-ui__container)[data-theme="ai"] {
   color-scheme: light;
+}
+
+:is(.dp-ui, .dp-ui__dialog, .dp-ui__container)[data-theme="ai"] {
   --dp-ui-sys-color-surface-container-high: #f3f4f6;
   --dp-ui-sys-color-surface-variant: #e5e7eb;
   --dp-ui-sys-color-on-surface: #111827;

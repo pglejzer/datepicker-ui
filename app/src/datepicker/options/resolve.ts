@@ -6,6 +6,8 @@ import {
   COLOR_SCHEMES,
   DISPLAY_MODES,
   INITIAL_VIEWS,
+  INLINE_NAVIGATIONS,
+  LAYOUTS,
   THEMES,
   isFormatFor,
   resolveClearButton,
@@ -52,6 +54,7 @@ export function resolveOptions(
       defaults.ui.displayMode,
       "ui.displayMode",
     ),
+    layout: read(ui?.layout, LAYOUTS, defaults.ui.layout, "ui.layout"),
     inline: {
       enabled: read(
         ui?.inline?.enabled,
@@ -64,6 +67,24 @@ export function resolveOptions(
         isTarget,
         null,
         "ui.inline.container",
+      ),
+      headline: read(
+        ui?.inline?.headline,
+        isBoolean,
+        defaults.ui.inline.headline,
+        "ui.inline.headline",
+      ),
+      navigation: read(
+        ui?.inline?.navigation,
+        INLINE_NAVIGATIONS,
+        defaults.ui.inline.navigation,
+        "ui.inline.navigation",
+      ),
+      announceSelection: read(
+        ui?.inline?.announceSelection,
+        isBoolean,
+        defaults.ui.inline.announceSelection,
+        "ui.inline.announceSelection",
       ),
     },
     pattern: resolvePattern(format, locale, precision),

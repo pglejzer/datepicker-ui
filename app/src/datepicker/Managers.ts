@@ -20,6 +20,7 @@ import type { OpenSource } from "./lifecycle/session";
 export type LifecycleTarget = PickerActions & {
   open(source: OpenSource, end?: RangeEnd): void;
   applyTyped(selection: Selection): void;
+  fallBackToModal(): void;
 };
 
 class LifecycleRelay implements PickerActions {
@@ -35,6 +36,10 @@ class LifecycleRelay implements PickerActions {
 
   readonly typeDraft = (selection: Selection): void => {
     this.target?.typeDraft(selection);
+  };
+
+  readonly submitDraft = (): void => {
+    this.target?.submitDraft();
   };
 
   readonly focusDate = (date: PlainDate): void => {
@@ -73,12 +78,20 @@ class LifecycleRelay implements PickerActions {
     this.target?.clear();
   };
 
+  readonly renderedMonths = (first: YearMonth, last: YearMonth): void => {
+    this.target?.renderedMonths(first, last);
+  };
+
   readonly open = (source: OpenSource, end?: RangeEnd): void => {
     this.target?.open(source, end);
   };
 
   readonly typed = (selection: Selection): void => {
     this.target?.applyTyped(selection);
+  };
+
+  readonly overflow = (): void => {
+    this.target?.fallBackToModal();
   };
 
   connect(target: LifecycleTarget | null): void {
@@ -102,6 +115,11 @@ export class Managers {
       actions: this.relay,
       rules: this.validation,
       theme: this.theme,
+      inside: () => {
+        const toggle = this.triggers.toggleElement;
+        return toggle === null ? [] : [toggle];
+      },
+      overflow: this.relay.overflow,
     });
     this.input = new InputManager(core, emitter, {
       rules: this.validation,
@@ -109,6 +127,9 @@ export class Managers {
     });
     this.triggers = new TriggerManager(core, emitter, {
       open: this.relay.open,
+      dismiss: () => {
+        this.relay.cancel("toggle");
+      },
     });
     this.form = new FormManager(core);
   }

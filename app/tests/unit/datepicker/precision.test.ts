@@ -93,6 +93,17 @@ describe("calendar.precision", () => {
       ).not.toHaveAttribute("hidden");
     });
 
+    it("keeps the month grid when the untouched input loses focus", async () => {
+      const { picker, input } = create(options);
+      await open(picker);
+      const october = monthItems()[9];
+
+      input.dispatchEvent(new FocusEvent("blur"));
+
+      expect(october.isConnected).toBe(true);
+      expect(picker.getValue()).toBeNull();
+    });
+
     it("marks the current month and has no selection before a pick", async () => {
       const { picker } = create(options);
       await open(picker);

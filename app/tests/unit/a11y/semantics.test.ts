@@ -245,6 +245,68 @@ describe("accessibility semantics", () => {
     });
   });
 
+  describe("range day labels", () => {
+    const openRange = async (
+      labels: { inRange?: string } = {},
+    ): Promise<DatepickerUI> => {
+      const p = new DatepickerUI(mountInput(), {
+        ui: { displayMode: "docked" },
+        calendar: { locale: "en-US", mode: "range" },
+        labels,
+      });
+      p.create();
+      p.open();
+      await flush();
+      return p;
+    };
+
+    const labelOf = (iso: string): string =>
+      query(`td.dp-ui__date[data-date="${iso}"]`).getAttribute("aria-label") ??
+      "";
+
+    it("names start, in-range and end days of a full range", async () => {
+      const p = await openRange();
+      query('td.dp-ui__date[data-date="2026-10-20"]').click();
+      query('td.dp-ui__date[data-date="2026-10-24"]').click();
+      await flush();
+
+      expect(labelOf("2026-10-20")).toMatch(/, Start$/);
+      expect(labelOf("2026-10-22")).toBe(
+        "Thursday, October 22, 2026, In range",
+      );
+      expect(labelOf("2026-10-24")).toMatch(/, End$/);
+      expect(labelOf("2026-10-26")).not.toMatch(/Start|End|In range/);
+      p.destroy();
+    });
+
+    it("names the start of a range that has no end yet", async () => {
+      const p = await openRange();
+      query('td.dp-ui__date[data-date="2026-10-20"]').click();
+      await flush();
+
+      expect(labelOf("2026-10-20")).toBe("Tuesday, October 20, 2026, Start");
+      expect(labelOf("2026-10-21")).not.toMatch(/In range|Start|End/);
+      p.destroy();
+    });
+
+    it("uses labels.inRange", async () => {
+      const p = await openRange({ inRange: "W zakresie" });
+      query('td.dp-ui__date[data-date="2026-10-20"]').click();
+      query('td.dp-ui__date[data-date="2026-10-24"]').click();
+      await flush();
+
+      expect(labelOf("2026-10-22")).toMatch(/, W zakresie$/);
+      p.destroy();
+    });
+
+    it("adds no In range label for a single picker", async () => {
+      await openPicker("docked");
+
+      expect(labelOf("2026-10-20")).not.toMatch(/Start|End|In range/);
+      expect(surface()?.innerHTML).not.toContain("In range");
+    });
+  });
+
   describe("modal dialog", () => {
     it("is labelled Select date and opened with showModal", async () => {
       await openPicker("modal");

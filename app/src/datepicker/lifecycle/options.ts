@@ -101,7 +101,7 @@ export class OptionUpdates {
   }
 
   private refreshSurface(previous: ResolvedOptions): void {
-    const { core, managers } = this.context;
+    const { core } = this.context;
     const next = core.options;
     if (
       next.inline.enabled !== previous.inline.enabled ||
@@ -121,12 +121,14 @@ export class OptionUpdates {
     const keepMode =
       mode === "inline" || next.displayMode === previous.displayMode;
     const target = keepMode ? mode : this.session.pickMode();
-    this.session.syncLayout(target);
-    this.session.clampView();
-    if (target === mode && next.mode === previous.mode) {
-      managers.display.update();
+    const remount =
+      target !== mode ||
+      next.mode !== previous.mode ||
+      next.layout !== previous.layout;
+    if (remount) {
+      this.session.remount(target);
       return;
     }
-    this.session.remount(target);
+    this.session.refresh(target, "api");
   }
 }

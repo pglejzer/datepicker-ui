@@ -1,4 +1,3 @@
-import type { YearMonth } from "@/types/date";
 import { createElement } from "@/utils/dom";
 import {
   createDragGesture,
@@ -8,7 +7,6 @@ import {
 import {
   CENTER,
   createPageStrip,
-  isSameMonth,
   NEXT,
   PREVIOUS,
   type PageIndex,
@@ -20,14 +18,24 @@ import { createWheelGesture, type WheelGesture } from "./wheelGesture";
 
 export { resolveDragCommit };
 
-export interface MonthPagerOptions {
+export interface PagerOptions<K> {
+  /** Right-to-left: dragging left goes back. */
   readonly rtl: boolean;
+  /** Drag and wheel paging. */
   readonly swipe: boolean;
+  /** Slide animation. Reduced motion turns it into a fade. */
   readonly animate: boolean;
-  readonly fitHeight: boolean;
-  readonly step?: number;
-  renderPage(view: YearMonth): HTMLElement;
-  pageHeight(view: YearMonth): number;
+  /** Sets the pager height to the shown page through `pageHeight`. Default `false`. */
+  readonly fitHeight?: boolean;
+  /** Builds the page for `key`. */
+  renderPage(key: K): HTMLElement;
+  /** Height of the page for `key`, used with `fitHeight`. */
+  pageHeight?(key: K): number;
+  /** The key one page before (`-1`) or after (`1`) `key`. */
+  step(key: K, direction: -1 | 1): K;
+  /** Whether two keys name the same page. */
+  isSame(a: K, b: K): boolean;
+  /** A drag or wheel gesture finished on a neighbour page. Call `slide()` to show it. */
   onCommit(direction: -1 | 1, source: "drag" | "wheel"): void;
 }
 
@@ -37,62 +45,68 @@ const SWIPE_CLASS = "dp-ui__pager--swipe";
 const HEIGHT_PROPERTY = "--dp-ui-pager-height";
 const FALLBACK_PAGE_WIDTH = 360;
 
-export class MonthPager {
+export class Pager<K> {
   private readonly viewport: HTMLElement;
-  private readonly options: MonthPagerOptions;
+  private readonly options: PagerOptions<K>;
   private readonly track: HTMLElement;
   private readonly controller = new AbortController();
   private readonly previousTouchAction: string;
-  private readonly strip: PageStrip;
+  private readonly strip: PageStrip<K>;
   private readonly animator: SlideAnimator;
   private drag: DragGesture | null = null;
   private wheel: WheelGesture | null = null;
+  private resizeObserver: ResizeObserver | null = null;
+  private observedWidth = -1;
   private offset = 0;
   private revision = 0;
 
-  constructor(viewport: HTMLElement, options: MonthPagerOptions) {
+  constructor(viewport: HTMLElement, options: PagerOptions<K>) {
     this.viewport = viewport;
     this.options = options;
     this.previousTouchAction = viewport.style.touchAction;
     this.track = createElement("div", TRACK_CLASS);
-    this.strip = createPageStrip(
+    this.strip = createPageStrip<K>(
       this.track,
-      (view) => options.renderPage(view),
-      options.step ?? 1,
+      (key) => options.renderPage(key),
+      (key, direction) => options.step(key, direction),
+      (a, b) => options.isSame(a, b),
     );
     this.animator = createSlideAnimator(this.track, options.animate);
     viewport.classList.add(PAGER_CLASS);
     viewport.append(this.track);
     if (options.swipe) this.enableSwipe();
+    this.observeWidth();
   }
 
-  show(view: YearMonth): void {
+  /** Shows `key` without animation. */
+  show(key: K): void {
     if (this.destroyed) return;
     this.revision += 1;
     this.animator.cancel();
     this.cancelGestures();
-    this.strip.show(view);
+    this.strip.show(key);
     this.rest();
-    this.fitHeight(view);
+    this.fitHeight(key);
   }
 
-  slide(view: YearMonth, direction: -1 | 1): void {
+  /** Slides to `key` in `direction`. */
+  slide(key: K, direction: -1 | 1): void {
     if (this.destroyed) return;
     this.finish();
     this.cancelGestures();
-    const center = this.strip.centerView();
-    if (!center) {
-      this.show(view);
+    const center = this.strip.centerKey();
+    if (center === null) {
+      this.show(key);
       return;
     }
     this.revision += 1;
-    if (isSameMonth(center, view)) {
+    if (this.options.isSame(center, key)) {
       this.settle();
       return;
     }
     const index = direction === 1 ? NEXT : PREVIOUS;
-    this.strip.reveal(index, view);
-    this.fitHeight(view);
+    this.strip.reveal(index, key);
+    this.fitHeight(key);
     const width = this.pageWidth();
     const from = this.transformFor(CENTER, this.offset, width);
     this.offset = 0;
@@ -102,6 +116,7 @@ export class MonthPager {
     });
   }
 
+  /** Ends a running slide at once. */
   finish(): void {
     this.animator.finish();
   }
@@ -109,6 +124,8 @@ export class MonthPager {
   destroy(): void {
     if (this.destroyed) return;
     this.controller.abort();
+    this.resizeObserver?.disconnect();
+    this.resizeObserver = null;
     this.cancelGestures();
     this.drag?.dispose();
     this.animator.cancel();
@@ -166,6 +183,25 @@ export class MonthPager {
     });
   }
 
+  private observeWidth(): void {
+    if (
+      this.options.fitHeight !== true ||
+      typeof ResizeObserver === "undefined"
+    ) {
+      return;
+    }
+    this.resizeObserver = new ResizeObserver((entries) => {
+      const entry = entries.at(-1);
+      if (entry === undefined || this.destroyed) return;
+      const width = entry.contentRect.width;
+      if (width === this.observedWidth) return;
+      this.observedWidth = width;
+      const shown = this.strip.centerKey();
+      if (shown !== null) this.fitHeight(shown);
+    });
+    this.resizeObserver.observe(this.viewport);
+  }
+
   private cancelGestures(): void {
     this.drag?.cancel();
     this.wheel?.cancel();
@@ -191,12 +227,11 @@ export class MonthPager {
     });
   }
 
-  private fitHeight(view: YearMonth): void {
-    if (!this.options.fitHeight || this.viewport.hidden) return;
-    this.viewport.style.setProperty(
-      HEIGHT_PROPERTY,
-      `${String(this.options.pageHeight(view))}px`,
-    );
+  private fitHeight(key: K): void {
+    if (this.options.fitHeight !== true || this.viewport.hidden) return;
+    const height = this.options.pageHeight?.(key);
+    if (height === undefined) return;
+    this.viewport.style.setProperty(HEIGHT_PROPERTY, `${String(height)}px`);
   }
 
   private rest(): void {

@@ -4,6 +4,8 @@ import type {
   DatepickerEventMap,
   PickerValue,
   PickerValueInput,
+  PickerView,
+  VisibleRange,
 } from "../types/types";
 import { EventEmitter } from "../utils/EventEmitter";
 import type { Handler } from "../utils/EventEmitter";
@@ -70,6 +72,30 @@ export default class DatepickerUI {
 
   setActiveEnd(end: RangeEnd): void {
     this.lifecycle.setActiveEnd(end);
+  }
+
+  setView(view: PickerView): void {
+    this.lifecycle.setView(view);
+  }
+
+  getView(): PickerView {
+    return this.lifecycle.getView();
+  }
+
+  getVisibleRange(): VisibleRange | null {
+    return this.lifecycle.getVisibleRange();
+  }
+
+  goTo(date: Date | string): void {
+    this.lifecycle.goTo(date);
+  }
+
+  isSelectable(value: PickerValueInput): boolean {
+    return this.lifecycle.isSelectable(value);
+  }
+
+  clear(): void {
+    this.lifecycle.clearValue();
   }
 
   setOptions(options: DatepickerOptions): void {

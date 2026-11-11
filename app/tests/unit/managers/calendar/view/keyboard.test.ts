@@ -27,6 +27,9 @@ const setup = (
     draft?: Selection;
     rtl?: boolean;
     home?: Panel;
+    caption?: boolean;
+    surface?: "docked" | "modal" | "inline";
+    footer?: boolean | null;
   } = {},
 ): Setup => {
   const root = document.createElement("div");
@@ -36,7 +39,11 @@ const setup = (
   const dateCell: DateCell = { element: cell, date: oct(17) };
   const core = {
     panel: config.panel ?? "days",
-    options: { mode: config.mode ?? "single" },
+    mode: config.surface ?? "modal",
+    options: {
+      mode: config.mode ?? "single",
+      footerExplicit: config.footer ?? null,
+    },
     draft: config.draft ?? { mode: "single", date: null },
   } as unknown as CoreState;
   const actions = {
@@ -52,12 +59,15 @@ const setup = (
     today: vi.fn(),
     clear: vi.fn(),
     typeDraft: vi.fn(),
+    submitDraft: vi.fn(),
+    renderedMonths: vi.fn(),
   };
   const deps: KeyboardDeps = {
     core,
     actions,
     layout: config.layout ?? "docked",
     home: config.home ?? "days",
+    caption: () => config.caption ?? false,
     cellAt: (target) => (target === cell ? dateCell : null),
     isRtl: () => config.rtl ?? false,
   };
@@ -186,6 +196,30 @@ describe("bindKeyboard", () => {
       expect(m.defaultPrevented).toBe(false);
       expect(y.defaultPrevented).toBe(false);
       expect(actions.showPanel).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("caption navigation", () => {
+    it.each(["docked", "modal"] as const)(
+      "opens nothing for Shift+M and Shift+Y in the %s layout",
+      (layout) => {
+        const { press, actions } = setup({ layout, caption: true });
+
+        const m = press("M", { shiftKey: true });
+        const y = press("Y", { shiftKey: true });
+
+        expect(m.defaultPrevented).toBe(false);
+        expect(y.defaultPrevented).toBe(false);
+        expect(actions.showPanel).not.toHaveBeenCalled();
+      },
+    );
+
+    it("keeps the arrow keys working", () => {
+      const { press, actions } = setup({ caption: true });
+
+      press("ArrowRight");
+
+      expect(actions.focusDate).toHaveBeenCalledWith(oct(18));
     });
   });
 
@@ -354,6 +388,47 @@ describe("bindKeyboard", () => {
       expect(actions.select).not.toHaveBeenCalled();
     });
 
+    it("selects on Enter over the selected date in an inline modal single without a footer", () => {
+      const { press, actions } = setup({
+        layout: "modal",
+        surface: "inline",
+        draft: { mode: "single", date: oct(17) },
+      });
+
+      press("Enter");
+
+      expect(actions.confirm).not.toHaveBeenCalled();
+      expect(actions.select).toHaveBeenCalledWith(oct(17));
+    });
+
+    it("confirms on Enter over the selected date in an inline modal single with ui.footer", () => {
+      const { press, actions } = setup({
+        layout: "modal",
+        surface: "inline",
+        footer: true,
+        draft: { mode: "single", date: oct(17) },
+      });
+
+      press("Enter");
+
+      expect(actions.confirm).toHaveBeenCalledTimes(1);
+      expect(actions.select).not.toHaveBeenCalled();
+    });
+
+    it("selects on Enter over the selected date in a dialog with ui.footer false", () => {
+      const { press, actions } = setup({
+        layout: "modal",
+        surface: "modal",
+        footer: false,
+        draft: { mode: "single", date: oct(17) },
+      });
+
+      press("Enter");
+
+      expect(actions.confirm).not.toHaveBeenCalled();
+      expect(actions.select).toHaveBeenCalledWith(oct(17));
+    });
+
     it("selects on Space even over the selected date in modal single", () => {
       const { press, actions } = setup({
         layout: "modal",
@@ -442,6 +517,7 @@ describe("bindKeyboard", () => {
       actions: { focusDate } as unknown as PickerActions,
       layout: "docked",
       home: "days",
+      caption: () => false,
       cellAt: () => ({ element: cell, date: oct(17) }),
       isRtl: () => false,
     });

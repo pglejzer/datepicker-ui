@@ -2,7 +2,7 @@ import type { PlainDate } from "@/types/date";
 import type { CalendarMode, Precision, Selection } from "@/types/selection";
 import type { DateValue, PickerValue } from "@/types/types";
 import { normalizePeriod, parsePeriodISO } from "@/utils/date/period";
-import { compareDates, toPlainDate } from "@/utils/date/plainDate";
+import { compareDates, todayDate, toPlainDate } from "@/utils/date/plainDate";
 import {
   emptySelection,
   isEmptySelection,
@@ -31,6 +31,9 @@ export function toPickerValue(
 }
 
 function resolveInput(value: unknown, precision: Precision): PlainDate | null {
+  if (value === "today") {
+    return normalizePeriod(todayDate(), precision);
+  }
   if (typeof value === "string") {
     return parsePeriodISO(value, precision);
   }

@@ -62,6 +62,10 @@
   padding-inline: 64px 12px;
 }
 
+.dp-ui__header--range:not(:has(> .dp-ui__header-text)) {
+  padding-block-end: 0;
+}
+
 .dp-ui__range {
   display: flex;
   flex: 1;

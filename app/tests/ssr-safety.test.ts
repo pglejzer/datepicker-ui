@@ -24,5 +24,11 @@ describe("SSR safety", () => {
 
     expect(typeof kit.resolvePattern).toBe("function");
     expect(typeof kit.PopoverHost).toBe("function");
+    expect(typeof kit.Pager).toBe("function");
+    expect(typeof kit.fitsViewport).toBe("function");
+    expect(typeof kit.applyTheme).toBe("function");
+    expect(typeof kit.createTextButton).toBe("function");
+    expect(typeof kit.splitRangeText).toBe("function");
+    expect(typeof kit.leadingDateLength).toBe("function");
   });
 });

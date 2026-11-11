@@ -8,6 +8,7 @@ import "../src/styles/index.scss";
 import "./theme-custom.css";
 import { STAGE5_DEMOS, initStage5 } from "./sections/stage5";
 import { COMBINATION_DEMOS, initCombinations } from "./sections/combinations";
+import { COMPANION_DEMOS, initCompanion } from "./sections/companion";
 
 const EVENTS: readonly (keyof DatepickerEventMap)[] = [
   "open",
@@ -22,10 +23,12 @@ const EVENTS: readonly (keyof DatepickerEventMap)[] = [
   "navigate",
   "range:start",
   "range:end",
+  "switch:view",
+  "clear",
 ];
 
 const INPUT =
-  "w-64 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors";
+  "w-full max-w-64 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors";
 const BUTTON =
   "px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium";
 const SELECT =
@@ -105,7 +108,7 @@ const DEMOS: readonly Demo[] = [
     id: "inline",
     title: "Inline",
     description: "Always visible, no footer unless ui.footer is true.",
-    html: `<div class="grid gap-4 justify-items-center">${field("dp-inline")}<div id="inline-container"></div></div>`,
+    html: `<div class="grid gap-4 justify-items-center">${field("dp-inline")}<div id="inline-container" class="flex w-full min-w-0 justify-center"></div></div>`,
     pickers: [
       {
         target: "#dp-inline",
@@ -271,7 +274,7 @@ const DEMOS: readonly Demo[] = [
     id: "range-inline",
     title: "Range, inline",
     description: "Always visible range list.",
-    html: `<div class="grid gap-4 justify-items-center">${field("dp-range-inline", "Start – End")}<div id="range-inline-container"></div></div>`,
+    html: `<div class="grid gap-4 justify-items-center">${field("dp-range-inline", "Start – End")}<div id="range-inline-container" class="flex w-full min-w-0 justify-center"></div></div>`,
     pickers: [
       {
         target: "#dp-range-inline",
@@ -545,7 +548,12 @@ const mount = (
   if (!fixedScheme) followPage.add(target);
 };
 
-for (const demo of [...DEMOS, ...STAGE5_DEMOS, ...COMBINATION_DEMOS]) {
+for (const demo of [
+  ...DEMOS,
+  ...STAGE5_DEMOS,
+  ...COMBINATION_DEMOS,
+  ...COMPANION_DEMOS,
+]) {
   container?.append(renderSection(demo));
   for (const { target, options } of demo.pickers) {
     mount(target, options, demo.fixedScheme ?? false);
@@ -554,6 +562,7 @@ for (const demo of [...DEMOS, ...STAGE5_DEMOS, ...COMBINATION_DEMOS]) {
 
 initStage5(pickers);
 initCombinations(pickers);
+initCompanion(pickers);
 
 document.getElementById("dark-mode-toggle")?.addEventListener("click", () => {
   const dark = document.documentElement.classList.toggle("dark");

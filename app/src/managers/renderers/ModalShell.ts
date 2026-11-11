@@ -3,6 +3,7 @@ import type { ResolvedOptions } from "@/datepicker/options/types";
 import type { YearMonth } from "@/types/date";
 import { formatMonthYear, formatNumber } from "@/utils/date/intl";
 import { createElement } from "@/utils/dom";
+import { createCaptionHeader } from "./CaptionShell";
 import { createHeadline } from "./headline";
 import {
   createIconButton,
@@ -60,7 +61,16 @@ export const createPageNavigation = (
   locale: string,
   labels: Labels,
   instanceId: string,
+  caption: boolean,
 ): HTMLDivElement => {
+  if (caption) {
+    return createCaptionHeader({
+      locale,
+      labels,
+      view,
+      arrowsOnly: false,
+    }).element;
+  }
   const keys = shortcuts(labels);
   const row = createElement("div", "dp-ui__navigation");
   row.append(

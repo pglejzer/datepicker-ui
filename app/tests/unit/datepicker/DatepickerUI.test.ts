@@ -15,6 +15,7 @@ import {
   surface,
   surfaces,
 } from "../../helpers/picker";
+import { setViewportWidth } from "../../helpers/viewport";
 
 const monthLabel = (): string | null =>
   document.querySelector(".dp-ui__menu-button--month .dp-ui__menu-button-label")
@@ -290,6 +291,74 @@ describe("DatepickerUI", () => {
       a.toggle.click();
       await flush();
       expect(a.host.querySelector(".dp-ui__container")).toBeNull();
+    });
+  });
+
+  describe("toggle button closes an open docked picker", () => {
+    const build = (behavior: Record<string, boolean> = {}) => {
+      const host = document.createElement("div");
+      const input = document.createElement("input");
+      const toggle = document.createElement("span");
+      host.append(input, toggle);
+      document.body.appendChild(host);
+      const picker = new DatepickerUI(host, {
+        ui: { displayMode: "docked", toggleButton: toggle },
+        calendar: { locale: "en-US" },
+        behavior,
+      });
+      picker.create();
+      const open = vi.fn();
+      const close = vi.fn();
+      const cancel = vi.fn();
+      picker.on("open", open);
+      picker.on("close", close);
+      picker.on("cancel", cancel);
+      return { picker, toggle, open, close, cancel };
+    };
+
+    const pressToggle = (toggle: HTMLElement): void => {
+      toggle.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true }));
+      toggle.click();
+    };
+
+    it.each([
+      ["default behavior", {}],
+      ["ignoreOutsideClick", { ignoreOutsideClick: true }],
+      ["closeOnCancel false", { closeOnCancel: false }],
+    ])("cancels with reason toggle once (%s)", async (_name, behavior) => {
+      setViewportWidth(1280);
+      const { picker, toggle, open, close, cancel } = build(behavior);
+
+      toggle.click();
+      await flush();
+      expect(surfaces()).toHaveLength(1);
+      expect(toggle).toHaveAttribute("aria-expanded", "true");
+      clickDate("2026-10-15");
+
+      pressToggle(toggle);
+      await flush();
+
+      expect(cancel).toHaveBeenCalledTimes(1);
+      expect(cancel).toHaveBeenCalledWith(
+        expect.objectContaining({ reason: "toggle" }),
+      );
+      expect(close).toHaveBeenCalledTimes(1);
+      expect(open).toHaveBeenCalledTimes(1);
+      expect(picker.getValue()).toBeNull();
+      expect(surfaces()).toHaveLength(0);
+      expect(toggle).toHaveAttribute("aria-expanded", "false");
+    });
+
+    it("opens a closed picker on a toggle press", async () => {
+      setViewportWidth(1280);
+      const { toggle, open, cancel } = build();
+
+      pressToggle(toggle);
+      await flush();
+
+      expect(open).toHaveBeenCalledTimes(1);
+      expect(cancel).not.toHaveBeenCalled();
+      expect(surfaces()).toHaveLength(1);
     });
   });
 

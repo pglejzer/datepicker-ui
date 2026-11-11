@@ -1,8 +1,11 @@
 import type { CoreState } from "@/datepicker/CoreState";
 import { createPageNavigation } from "@/managers/renderers/ModalShell";
-import { MonthPager } from "@/managers/swipe/MonthPager";
+import { Pager } from "@/managers/swipe/Pager";
+import { isSameMonth } from "@/managers/swipe/pageStrip";
 import type { YearMonth } from "@/types/date";
+import type { SurfaceMode } from "@/types/internal";
 import { addMonths, fromISO } from "@/utils/date/plainDate";
+import { dayGridShape } from "@/utils/date/visibleRange";
 import { createElement } from "@/utils/dom";
 import {
   renderMonthGrid,
@@ -12,11 +15,13 @@ import {
 import { OUTSIDE_CLASS } from "../gridCell";
 import { buildMonth, type MonthModel } from "../MonthModel";
 import { commandClassOf } from "./commands";
+import { usesCaption } from "./header";
 import type { DateCell, Layout } from "./types";
 
 export interface MonthPagesOptions {
   readonly core: CoreState;
   readonly layout: Layout;
+  readonly surface?: SurfaceMode;
   readonly rtl: boolean;
   readonly gridContext: () => GridContext;
   readonly onCommit: (direction: -1 | 1, source: "drag" | "wheel") => void;
@@ -43,20 +48,40 @@ const PAGER_HEIGHT_PROPERTY = "--dp-ui-pager-height";
 const MONTHS_CLASS = "dp-ui__months";
 const ACTIVE_PAGE_SELECTOR = ".dp-ui__page:not([inert])";
 const GRID_SELECTOR = "table.dp-ui__month-grid";
+const NAVIGATION_SELECTOR = ".dp-ui__navigation";
 const DATE_CELL_SELECTOR = "td.dp-ui__date[data-date]";
 const ROVING_CELL_SELECTOR = 'td.dp-ui__date[tabindex="0"]';
 const IN_MONTH_CELL_SELECTOR =
   "td.dp-ui__date[data-date]:not(.dp-ui__date--outside-month)";
 const FALLBACK_ROW_HEIGHT = 48;
 
+const withoutTransition = (target: HTMLElement, apply: () => void): void => {
+  target.style.setProperty("transition", "none");
+  apply();
+  target.getBoundingClientRect();
+  target.style.removeProperty("transition");
+};
+
 export const createMonthPages = (options: MonthPagesOptions): MonthPages => {
-  const { core, layout, gridContext } = options;
+  const { core, layout, surface, gridContext } = options;
   const { months } = core.layout;
-  const { showOutside, outsideSelectable, headingVisible } = gridContext();
-  const fixedWeeks =
-    layout === "modal" || showOutside || core.options.fixedWeeks;
-  const fitHeight = layout === "docked";
+  const { outsideSelectable, headingVisible } = gridContext();
+  const inline = surface === "inline";
+  const { fixedWeeks } = dayGridShape({
+    layout: layout === "modal" ? "modal" : "docked",
+    inline,
+    months,
+    outsideDays: core.options.outsideDays !== false,
+    fixedWeeks: core.options.fixedWeeks,
+  });
+  const fitHeight = layout === "docked" || inline;
+  const caption = surface !== undefined && usesCaption(core, surface);
   const element = createElement("div", undefined, { "data-panel": "days" });
+
+  const find = (selector: string): HTMLElement | null =>
+    element
+      .querySelector<HTMLElement>(ACTIVE_PAGE_SELECTOR)
+      ?.querySelector<HTMLElement>(selector) ?? null;
 
   const modelOf = (view: YearMonth): MonthModel =>
     buildMonth(view, core.options.weekStart, fixedWeeks);
@@ -80,7 +105,9 @@ export const createMonthPages = (options: MonthPagesOptions): MonthPages => {
     const page = createElement("div");
     if (layout === "modal") {
       const { locale, labels } = core.options;
-      page.append(createPageNavigation(view, locale, labels, core.instanceId));
+      page.append(
+        createPageNavigation(view, locale, labels, core.instanceId, caption),
+      );
     }
     page.append(renderGrids(view));
     return page;
@@ -91,24 +118,29 @@ export const createMonthPages = (options: MonthPagesOptions): MonthPages => {
 
   const pageHeight = (view: YearMonth): number => {
     const weeks = pageWeeks(view);
+    const navigation =
+      find(NAVIGATION_SELECTOR)?.getBoundingClientRect().height ?? 0;
     const table = element.querySelector<HTMLTableElement>(GRID_SELECTOR);
     const head = table?.tHead?.getBoundingClientRect().height ?? 0;
     const firstRow = table?.tBodies.item(0)?.rows.item(0);
     const row = firstRow?.getBoundingClientRect().height ?? 0;
-    const caption = headingVisible
+    const heading = headingVisible
       ? (table?.caption?.getBoundingClientRect().height ?? 0)
       : 0;
-    if (head > 0 && row > 0) return caption + head + row * weeks;
+    if (head > 0 && row > 0) return navigation + heading + head + row * weeks;
     const headRows = headingVisible ? 2 : 1;
-    return (weeks + headRows) * FALLBACK_ROW_HEIGHT;
+    return navigation + (weeks + headRows) * FALLBACK_ROW_HEIGHT;
   };
 
-  const pager = new MonthPager(element, {
+  const pageStep = core.options.pageBy === "view" ? months : 1;
+
+  const pager = new Pager<YearMonth>(element, {
     rtl: options.rtl,
     swipe: core.options.swipe,
     animate: core.options.animation,
     fitHeight,
-    step: core.options.pageBy === "view" ? months : 1,
+    step: (view, direction) => addMonths(view, direction * pageStep),
+    isSame: isSameMonth,
     renderPage,
     pageHeight,
     onCommit: (direction, source) => {
@@ -131,11 +163,6 @@ export const createMonthPages = (options: MonthPagesOptions): MonthPages => {
   };
 
   const cellHasFocus = (): boolean => cellAt(activeElement()) !== null;
-
-  const find = (selector: string): HTMLElement | null =>
-    element
-      .querySelector<HTMLElement>(ACTIVE_PAGE_SELECTOR)
-      ?.querySelector<HTMLElement>(selector) ?? null;
 
   const rovingCell = (fallback: boolean): HTMLElement | null => {
     const roving = find(ROVING_CELL_SELECTOR);
@@ -182,7 +209,9 @@ export const createMonthPages = (options: MonthPagesOptions): MonthPages => {
       return;
     }
     keepingFocus(() => {
-      pager.show(core.view);
+      withoutTransition(element, () => {
+        pager.show(core.view);
+      });
     });
   };
 

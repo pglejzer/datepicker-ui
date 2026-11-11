@@ -21,11 +21,12 @@ Applies when working in `app/tests/` and `app/vitest.config.ts`. Pairs with
   `TouchEvent`, `scrollIntoView`, `scrollTo`. Don't re-polyfill these inside a spec.
 - **Helpers** in `tests/helpers/`: `picker.ts` (`mountInput`, `cleanupDom`, `flush`, `surface`,
   `surfaces`, `selectedCell`, `clickDate`, `clickSelector`, `clickConfirm`, `clickCancel`) and
-  `viewport.ts` (`setViewportWidth`, for `auto` mode below / above 600 px). Reuse them; add shared
+  `viewport.ts` (`setViewportWidth` for `auto` mode below / above 600 px, `setViewportHeight` and
+  `setViewportSize` for the docked-to-dialog fallback). Reuse them; add shared
   helpers there.
 - `tsconfig.json` has `types: []`: use `globalThis`, not Node's `global`, in tests.
 - **Mirror the source tree** under `tests/unit/`: `src/managers/DisplayManager.ts` ->
-  `tests/unit/managers/DisplayManager.test.ts` (64 spec files today, `tests/ssr-safety.test.ts`
+  `tests/unit/managers/DisplayManager.test.ts` (including `tests/ssr-safety.test.ts`
   and `tests/unit/a11y/semantics.test.ts` included). Edge-case-heavy suites use `.edge.test.ts`. Import
   with the `@/` alias (`@/` -> `app/src/`).
 - **Test through the public surface and the manager contract.** Drive behavior through

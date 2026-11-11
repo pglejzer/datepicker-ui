@@ -51,11 +51,13 @@ export const createSelectionGridContext = (
     rangeLabels: {
       start: options.labels.rangeStart,
       end: options.labels.rangeEnd,
+      inRange: options.labels.inRange,
     },
     headingVisible: false,
     weekdaysVisible: true,
     multiselectable: core.draft.mode !== "single",
     rangeRole: () => null,
+    labelRole: () => null,
     decorate: decoratorOf(core),
     content: contentOf(core),
     isSelected: (date) => isDateSelected(core.draft, date),

@@ -58,26 +58,28 @@
   @include typescale(label-large);
 }
 
-.dp-ui__icon-button:hover,
-.dp-ui__menu-button:hover {
-  @include state-layer(
-    var(--dp-ui-menu-button-label-text-color),
-    --dp-ui-sys-state-layer-hover-opacity
-  );
-}
+@include hover-only {
+  .dp-ui__icon-button:hover,
+  .dp-ui__menu-button:hover {
+    @include state-layer(
+      var(--dp-ui-menu-button-label-text-color),
+      --dp-ui-sys-state-layer-hover-opacity
+    );
+  }
 
-.dp-ui__icon-button:hover {
-  @include state-layer(
-    var(--dp-ui-icon-button-icon-color),
-    --dp-ui-sys-state-layer-hover-opacity
-  );
-}
+  .dp-ui__icon-button:hover {
+    @include state-layer(
+      var(--dp-ui-icon-button-icon-color),
+      --dp-ui-sys-state-layer-hover-opacity
+    );
+  }
 
-.dp-ui__text-button:hover {
-  @include state-layer(
-    var(--dp-ui-text-button-label-text-color),
-    --dp-ui-sys-state-layer-hover-opacity
-  );
+  .dp-ui__text-button:hover {
+    @include state-layer(
+      var(--dp-ui-text-button-label-text-color),
+      --dp-ui-sys-state-layer-hover-opacity
+    );
+  }
 }
 
 .dp-ui__icon-button#{$focus-visible},
@@ -132,6 +134,10 @@
   transform: scaleX(-1);
 }
 
-.dp-ui__container--modal .dp-ui__text-button {
+.dp-ui__calendar--modal > .dp-ui__actions > * > .dp-ui__text-button,
+.dp-ui__calendar--modal
+  > .dp-ui__header
+  > .dp-ui__top-bar
+  > .dp-ui__text-button {
   block-size: 40px;
 }

@@ -4,7 +4,7 @@ import type { DateRules } from "../../types/internal";
 import type { RangeEnd, Selection } from "../../types/selection";
 import type { DatepickerEventMap, UnavailableReason } from "../../types/types";
 import type { EventEmitter } from "../../utils/EventEmitter";
-import { maskDateText } from "../../utils/date/mask";
+import { maskInput } from "../../utils/date/mask";
 import { formatPeriod } from "../../utils/date/period";
 import { compareDates } from "../../utils/date/plainDate";
 import { selectionIssue } from "../../utils/selection/constraints";
@@ -123,10 +123,7 @@ export class SplitFields {
   private applyMask(field: HTMLInputElement): void {
     const { options } = this.core;
     if (!options.mask) return;
-    const masked = maskDateText(field.value, options.pattern);
-    if (masked === field.value) return;
-    field.value = masked;
-    field.setSelectionRange(masked.length, masked.length);
+    maskInput(field, options.pattern);
   }
 
   private commit(): void {

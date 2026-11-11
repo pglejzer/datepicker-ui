@@ -314,4 +314,151 @@ describe("surface hosts", () => {
       expect(container.querySelector(".dp-ui__container")).toBeNull();
     });
   });
+
+  describe("labelledBy", () => {
+    const popoverRoot = (labelledBy?: string): HTMLElement => {
+      const fixture = createFixture();
+      return track(
+        new PopoverHost({
+          host: fixture.host,
+          anchor: fixture.input,
+          instanceId: "dp-ui-test",
+          rtl: false,
+          label: "Choose date",
+          labelledBy,
+          inside: [],
+          ignoreOutsideClick: false,
+          onOutside: vi.fn(),
+          onEscape: vi.fn(),
+        }),
+      ).root;
+    };
+
+    const dialogRoot = (labelledBy?: string): HTMLElement => {
+      const fixture = createFixture();
+      return track(
+        new DialogHost({
+          parent: fixture.host,
+          label: "Select date",
+          labelledBy,
+          allowPageScroll: false,
+          onCancel: vi.fn(),
+        }),
+      ).root;
+    };
+
+    const inlineRoot = (labelledBy?: string): HTMLElement => {
+      const container = document.createElement("div");
+      document.body.append(container);
+      return track(new InlineHost({ container, label: "Date", labelledBy }))
+        .root;
+    };
+
+    const cases = [
+      ["PopoverHost", popoverRoot, "Choose date"],
+      ["DialogHost", dialogRoot, "Select date"],
+      ["InlineHost", inlineRoot, "Date"],
+    ] as const;
+
+    it.each(cases)("%s uses aria-labelledby and no aria-label", (_n, make) => {
+      const root = make("t");
+      expect(root).toHaveAttribute("aria-labelledby", "t");
+      expect(root).not.toHaveAttribute("aria-label");
+    });
+
+    it.each(cases)(
+      "%s keeps aria-label without labelledBy",
+      (_n, make, label) => {
+        const root = make();
+        expect(root).toHaveAttribute("aria-label", label);
+        expect(root).not.toHaveAttribute("aria-labelledby");
+      },
+    );
+
+    it.each(cases)("%s ignores an empty labelledBy", (_n, make, label) => {
+      const root = make("");
+      expect(root).toHaveAttribute("aria-label", label);
+      expect(root).not.toHaveAttribute("aria-labelledby");
+    });
+  });
+
+  describe("setLabel", () => {
+    const makePopover = (labelledBy?: string): SurfaceHost => {
+      const fixture = createFixture();
+      return track(
+        new PopoverHost({
+          host: fixture.host,
+          anchor: fixture.input,
+          instanceId: "dp-ui-test",
+          rtl: false,
+          label: "Choose date",
+          labelledBy,
+          inside: [],
+          ignoreOutsideClick: false,
+          onOutside: vi.fn(),
+          onEscape: vi.fn(),
+        }),
+      );
+    };
+
+    const makeDialog = (labelledBy?: string): SurfaceHost => {
+      const fixture = createFixture();
+      return track(
+        new DialogHost({
+          parent: fixture.host,
+          label: "Select date",
+          labelledBy,
+          allowPageScroll: false,
+          onCancel: vi.fn(),
+        }),
+      );
+    };
+
+    const makeInline = (labelledBy?: string): SurfaceHost => {
+      const container = document.createElement("div");
+      document.body.append(container);
+      return track(new InlineHost({ container, label: "Date", labelledBy }));
+    };
+
+    const factories = [
+      ["PopoverHost", makePopover],
+      ["DialogHost", makeDialog],
+      ["InlineHost", makeInline],
+    ] as const;
+
+    it.each(factories)("%s replaces the aria-label", (_n, make) => {
+      const host = make();
+      host.setLabel("New");
+      expect(host.root).toHaveAttribute("aria-label", "New");
+      expect(host.root).not.toHaveAttribute("aria-labelledby");
+    });
+
+    it.each(factories)(
+      "%s drops a previous aria-labelledby for the new label",
+      (_n, make) => {
+        const host = make("t");
+        expect(host.root).toHaveAttribute("aria-labelledby", "t");
+        host.setLabel("New");
+        expect(host.root).toHaveAttribute("aria-label", "New");
+        expect(host.root).not.toHaveAttribute("aria-labelledby");
+      },
+    );
+
+    it.each(factories)(
+      "%s switches to aria-labelledby when one is given",
+      (_n, make) => {
+        const host = make();
+        host.setLabel("x", "t2");
+        expect(host.root).toHaveAttribute("aria-labelledby", "t2");
+        expect(host.root).not.toHaveAttribute("aria-label");
+      },
+    );
+
+    it.each(factories)("%s ignores an empty labelledBy", (_n, make) => {
+      const host = make("t");
+      host.setLabel("x", "");
+      expect(host.root).toHaveAttribute("aria-label", "x");
+      expect(host.root).not.toHaveAttribute("aria-labelledby");
+    });
+  });
 });

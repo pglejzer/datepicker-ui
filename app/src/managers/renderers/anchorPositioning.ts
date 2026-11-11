@@ -29,15 +29,10 @@ export const applyAnchor = (
   };
 };
 
-export const overflowsInline = (
-  root: HTMLElement,
-  anchor: HTMLElement,
-  rtl: boolean,
-): boolean => {
-  const rect = anchor.getBoundingClientRect();
-  const width = root.offsetWidth;
-  if (rtl) return rect.right - width < 0;
-  return rect.left + width > root.ownerDocument.documentElement.clientWidth;
+export const overflowsInline = (root: HTMLElement): boolean => {
+  const { left, right } = root.getBoundingClientRect();
+  const width = root.ownerDocument.documentElement.clientWidth;
+  return left < -0.5 || right > width + 0.5;
 };
 
 export const resolveAnchoredPlacement = (

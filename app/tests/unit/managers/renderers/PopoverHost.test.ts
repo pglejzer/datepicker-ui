@@ -46,7 +46,7 @@ interface Fixture {
   readonly onEscape: ReturnType<typeof vi.fn>;
 }
 
-const create = (): Fixture => {
+const create = (inside: readonly HTMLElement[] = []): Fixture => {
   const host = document.createElement("div");
   const input = document.createElement("input");
   host.append(input);
@@ -59,7 +59,7 @@ const create = (): Fixture => {
     instanceId: "dp-ui-test",
     rtl: false,
     label: "Choose date",
-    inside: [],
+    inside,
     ignoreOutsideClick: false,
     onOutside,
     onEscape,
@@ -123,6 +123,22 @@ describe("PopoverHost", () => {
 
       expect(onEscape).not.toHaveBeenCalled();
       expect(onOutside).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("outside pointer", () => {
+    it("ignores a pointerdown on an inside element and reports a sibling", async () => {
+      const toggle = document.createElement("span");
+      const sibling = document.createElement("span");
+      document.body.append(toggle, sibling);
+      const { popover, onOutside } = create([toggle]);
+      await popover.open();
+
+      toggle.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true }));
+      expect(onOutside).not.toHaveBeenCalled();
+
+      sibling.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true }));
+      expect(onOutside).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -240,7 +256,10 @@ describe("PopoverHost", () => {
         right: 336,
         width: 256,
       } as DOMRect);
-      vi.spyOn(popover.root, "offsetWidth", "get").mockReturnValue(360);
+      vi.spyOn(popover.root, "getBoundingClientRect").mockReturnValue({
+        left: 80,
+        right: 440,
+      } as DOMRect);
       vi.spyOn(document.documentElement, "clientWidth", "get").mockReturnValue(
         415,
       );
@@ -260,7 +279,33 @@ describe("PopoverHost", () => {
         right: 296,
         width: 256,
       } as DOMRect);
-      vi.spyOn(popover.root, "offsetWidth", "get").mockReturnValue(360);
+      vi.spyOn(popover.root, "getBoundingClientRect").mockReturnValue({
+        left: 40,
+        right: 400,
+      } as DOMRect);
+      vi.spyOn(document.documentElement, "clientWidth", "get").mockReturnValue(
+        415,
+      );
+
+      await popover.open();
+
+      expect(popover.root).toHaveAttribute("data-positioning", "anchor");
+    });
+
+    it("stays anchored when the browser shifts a wide popover into the window", async () => {
+      restores.push(setCssSupports(true));
+      const { popover, input } = create();
+      vi.spyOn(input, "getBoundingClientRect").mockReturnValue({
+        top: 100,
+        bottom: 140,
+        left: 80,
+        right: 336,
+        width: 256,
+      } as DOMRect);
+      vi.spyOn(popover.root, "getBoundingClientRect").mockReturnValue({
+        left: 55,
+        right: 415,
+      } as DOMRect);
       vi.spyOn(document.documentElement, "clientWidth", "get").mockReturnValue(
         415,
       );

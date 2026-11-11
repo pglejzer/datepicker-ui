@@ -3,7 +3,7 @@ import type { DateRules } from "../types/internal";
 import type { Selection } from "../types/selection";
 import type { DatepickerEventMap, UnavailableReason } from "../types/types";
 import type { EventEmitter } from "../utils/EventEmitter";
-import { maskDateText } from "../utils/date/mask";
+import { maskInput } from "../utils/date/mask";
 import { hintLetters } from "../utils/date/format";
 import { periodHint } from "../utils/date/period";
 import { selectionIssue } from "../utils/selection/constraints";
@@ -175,10 +175,7 @@ export class InputManager {
     const { input, options } = this.core;
     if (!options.mask || options.mode !== "single") return;
     if (options.precision !== "day") return;
-    const masked = maskDateText(input.value, options.pattern);
-    if (masked === input.value) return;
-    input.value = masked;
-    input.setSelectionRange(masked.length, masked.length);
+    maskInput(input, options.pattern);
   }
 
   private commit(): void {

@@ -25,6 +25,7 @@ import type {
 } from "@/types/internal";
 import type { MotionMode } from "@/utils/accessibility";
 import { createElement } from "@/utils/dom";
+import { inlineChrome, showsFooter } from "@/utils/surface";
 import { monthBounds } from "./monthBounds";
 import { createMonthList } from "./monthList";
 import { createMonthRow, createMonthsNavigation } from "./monthRow";
@@ -51,6 +52,7 @@ export interface RangePartsOptions {
   readonly rtl: boolean;
   readonly signal: AbortSignal;
   readonly motion: () => MotionMode;
+  readonly reveal: () => void;
   readonly swap: (apply: () => void, panel: Panel) => void;
   readonly onSwitched: (
     panel: Panel,
@@ -70,9 +72,6 @@ export const RANGE_CONTAINER_CLASSES: readonly string[] = [
   INPUT_CLASS,
 ];
 
-const footerVisible = (core: CoreState, mode: SurfaceMode): boolean =>
-  core.options.footerExplicit ?? mode !== "inline";
-
 const buildDays = (
   options: RangePartsOptions,
   range: HTMLElement,
@@ -89,6 +88,10 @@ const buildDays = (
     rules,
     render: (view) => renderRangeMonth(core, rules, view),
     bounds: () => monthBounds(core, rules),
+    onRendered: (first, last) => {
+      actions.renderedMonths(first, last);
+    },
+    onShown: options.reveal,
   });
   range.append(createWeekdaysBar(locale, weekStart), list.element);
   return list;
@@ -102,6 +105,7 @@ export const buildRangeParts = (options: RangePartsOptions): RangeParts => {
     animate: resolved.animation,
     text: headlineFor(core),
     fullscreen,
+    headline: inlineChrome(mode, resolved.inline).headline,
     switchView: resolved.viewSwitch
       ? { panelId: panelId(core.instanceId, "input") }
       : null,
@@ -120,7 +124,7 @@ export const buildRangeParts = (options: RangePartsOptions): RangeParts => {
   });
   const footer = createActions({
     labels: resolved.labels,
-    visible: footerVisible(core, mode),
+    visible: showsFooter(core.options.footerExplicit, mode),
     todayButton: resolved.todayButton,
     clearButton: resolved.clearButton !== false,
   });
@@ -129,13 +133,13 @@ export const buildRangeParts = (options: RangePartsOptions): RangeParts => {
     "dp-ui__live-region dp-ui__visually-hidden",
     { "aria-live": "polite", "aria-atomic": "true" },
   );
+  const column = core.layout.presets === "column";
   const presets =
     core.layout.presets === "none"
       ? null
-      : createPresets({ core, actions, rules, signal });
-  const column = core.layout.presets === "column";
+      : createPresets({ core, actions, rules, signal, column });
   root.replaceChildren(
-    header.element,
+    ...(header.element === null ? [] : [header.element]),
     ...(presets === null ? [] : [presets.element]),
     range,
     footer,

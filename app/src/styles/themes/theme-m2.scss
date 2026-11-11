@@ -1,6 +1,9 @@
 /* M2 theme for DatepickerUI, ported from timepicker-ui */
-:is(.dp-ui, .dp-ui__dialog, .dp-ui__container)[data-theme="m2"] {
+:is(.dp-ui__dialog, .dp-ui__container)[data-theme="m2"] {
   color-scheme: light;
+}
+
+:is(.dp-ui, .dp-ui__dialog, .dp-ui__container)[data-theme="m2"] {
   --dp-ui-sys-color-surface-container-high: #ffffff;
   --dp-ui-sys-color-surface-variant: #e0e0e0;
   --dp-ui-sys-color-on-surface: #000000;

@@ -12,6 +12,7 @@ export interface PresetsOptions {
   readonly actions: PickerActions;
   readonly rules: DateRules;
   readonly signal: AbortSignal;
+  readonly column: boolean;
 }
 
 export interface Presets {
@@ -23,9 +24,12 @@ export interface Presets {
 const BUTTON_SELECTOR = "button.dp-ui__preset";
 
 export const createPresets = (options: PresetsOptions): Presets => {
-  const { core, actions, rules, signal } = options;
+  const { core, actions, rules, signal, column } = options;
   const { presets, labels, limits } = core.options;
-  const element = createElement("div", "dp-ui__presets", {
+  const classes = column
+    ? "dp-ui__presets dp-ui__presets--column"
+    : "dp-ui__presets";
+  const element = createElement("div", classes, {
     role: "group",
     "aria-label": labels.presets,
   });

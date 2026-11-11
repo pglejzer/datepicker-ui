@@ -62,6 +62,12 @@
   outline-offset: $offset;
 }
 
+@mixin hover-only {
+  @media (hover: hover) {
+    @content;
+  }
+}
+
 $focus-visible: ":focus-visible:not(:where(.dp-ui--pointer *))";
 
 .dp-ui__visually-hidden,

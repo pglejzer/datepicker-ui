@@ -13,7 +13,7 @@ surface hosts and shells.
 ## Before writing code
 - `.claude/rules/architecture.md` (always - composition, manager contract, events)
 - `.claude/rules/calendar.md` (data vs DOM, dates, validation, timing)
-- `CLAUDE.md` -> "DOM structure" and "Timing constants"
+- `.claude/rules/dom.md` (what the library renders) and `.claude/rules/code-style.md`
 - The existing files in `app/src/managers/calendar/`, `swipe/`, `pickers/`, `renderers/` -
   match their layering and idioms
 
@@ -22,7 +22,7 @@ surface hosts and shells.
   `utils/popoverLayout` are **data only** - never query or create DOM there.
   `GridRenderer` is the only place that builds the day grid DOM; `calendar/view/*` build the
   header, pages, panels and live region; `pickers/*` the menus and year grid; `renderers/` the
-  surface hosts, shells and positioning. `CalendarView` (composing `view/*`), `MonthPager` and
+  surface hosts, shells and positioning. `CalendarView` (composing `view/*`), `Pager<K>` and
   `DisplayManager` orchestrate. Keep a change inside one layer when you can; if it spans layers, route through
   the orchestrator, not sideways.
 - Communicate through `CoreState` (month, year, selection, options, DOM refs) and the

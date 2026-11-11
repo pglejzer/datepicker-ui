@@ -23,6 +23,10 @@ interface Harness {
   list: MonthList;
   core: CoreState;
   render: ReturnType<typeof vi.fn<(view: YearMonth) => HTMLTableElement>>;
+  onRendered: ReturnType<
+    typeof vi.fn<(first: YearMonth, last: YearMonth) => void>
+  >;
+  onShown: ReturnType<typeof vi.fn<() => void>>;
 }
 
 const mount = (
@@ -52,14 +56,18 @@ const mount = (
     }
     return table;
   });
+  const onRendered = vi.fn<(first: YearMonth, last: YearMonth) => void>();
+  const onShown = vi.fn<() => void>();
   const list = createMonthList({
     core,
     rules,
     render,
     bounds: () => bounds,
+    onRendered,
+    onShown,
   });
   document.body.appendChild(list.element);
-  return { list, core, render };
+  return { list, core, render, onRendered, onShown };
 };
 
 const months = (list: MonthList): string[] =>
@@ -108,6 +116,47 @@ describe("createMonthList", () => {
     expect(rendered[0]).toBe("2026-8");
     expect(rendered[11]).toBe("2027-7");
     expect(rendered).toContain("2026-10");
+  });
+
+  describe("onRendered", () => {
+    it("reports the initial span once", () => {
+      const { onRendered } = mount();
+      expect(onRendered).toHaveBeenCalledTimes(1);
+      expect(onRendered).toHaveBeenCalledWith(ym(2026, 8), ym(2027, 7));
+    });
+
+    it("reports the clamped initial span", () => {
+      const { onRendered } = mount({ first: ym(2026, 10), last: ym(2026, 12) });
+      expect(onRendered).toHaveBeenCalledWith(ym(2026, 10), ym(2026, 12));
+    });
+
+    it("reports the grown span after an append", () => {
+      const { list, onRendered } = mount();
+      list.ensureMonth(ym(2028, 6));
+      expect(onRendered).toHaveBeenCalledTimes(2);
+      expect(onRendered).toHaveBeenLastCalledWith(ym(2026, 8), ym(2028, 6));
+    });
+
+    it("reports the grown span after a prepend", () => {
+      const { list, onRendered } = mount();
+      list.ensureMonth(ym(2025, 11));
+      expect(onRendered).toHaveBeenCalledTimes(2);
+      expect(onRendered).toHaveBeenLastCalledWith(ym(2025, 11), ym(2027, 7));
+    });
+
+    it("reports after growth through a scroll near the bottom", () => {
+      const { list, onRendered } = mount();
+      defineScroll(list, 850);
+      scrollAndFlush(list);
+      expect(onRendered).toHaveBeenCalledTimes(2);
+      expect(onRendered).toHaveBeenLastCalledWith(ym(2026, 8), ym(2028, 1));
+    });
+
+    it("stays silent when nothing is added", () => {
+      const { list, onRendered } = mount();
+      list.ensureMonth(ym(2026, 10));
+      expect(onRendered).toHaveBeenCalledTimes(1);
+    });
   });
 
   it("clamps the initial render to bounds()", () => {
@@ -301,6 +350,85 @@ describe("createMonthList", () => {
       dragFrom(list, 0.3, "up");
       expect(scrollTo).not.toHaveBeenCalled();
       expect(list.element.scrollTop).toBeCloseTo(BASE + HEIGHT, 5);
+    });
+  });
+
+  describe("size observer", () => {
+    type SizeCallback = (
+      entries: { contentRect: { height: number } }[],
+    ) => void;
+
+    const original = globalThis.ResizeObserver;
+    let callback: SizeCallback | null;
+    let observe: ReturnType<typeof vi.fn>;
+    let disconnect: ReturnType<typeof vi.fn>;
+
+    const report = (height: number): void => {
+      if (callback === null) throw new Error("no observer");
+      callback([{ contentRect: { height } }]);
+    };
+
+    beforeEach(() => {
+      callback = null;
+      observe = vi.fn();
+      disconnect = vi.fn();
+      class StubObserver {
+        constructor(cb: SizeCallback) {
+          callback = cb;
+        }
+        observe = observe;
+        unobserve = vi.fn();
+        disconnect = disconnect;
+      }
+      globalThis.ResizeObserver =
+        StubObserver as unknown as typeof ResizeObserver;
+    });
+
+    afterEach(() => {
+      globalThis.ResizeObserver = original;
+    });
+
+    it("observes the list element", () => {
+      const { list } = mount();
+      expect(observe).toHaveBeenCalledWith(list.element);
+    });
+
+    it("calls onShown when the height goes from 0 to a real height", () => {
+      const { onShown } = mount();
+      report(0);
+      expect(onShown).not.toHaveBeenCalled();
+      report(568);
+      expect(onShown).toHaveBeenCalledTimes(1);
+    });
+
+    it("calls onShown for a first callback that already has a height", () => {
+      const { onShown } = mount();
+      report(568);
+      expect(onShown).toHaveBeenCalledTimes(1);
+    });
+
+    it("stays silent while the height only changes between real values", () => {
+      const { onShown } = mount();
+      report(568);
+      report(400);
+      report(568);
+      expect(onShown).toHaveBeenCalledTimes(1);
+    });
+
+    it("fires again after the list was hidden and shown", () => {
+      const { onShown } = mount();
+      report(568);
+      report(0);
+      report(568);
+      expect(onShown).toHaveBeenCalledTimes(2);
+    });
+
+    it("disconnects on destroy and ignores later reports", () => {
+      const { list, onShown } = mount();
+      list.destroy();
+      expect(disconnect).toHaveBeenCalled();
+      report(568);
+      expect(onShown).not.toHaveBeenCalled();
     });
   });
 

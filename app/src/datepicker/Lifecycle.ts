@@ -1,10 +1,12 @@
-import type { PlainDate, YearMonth } from "../types/date";
+import type { DateInput, PlainDate, YearMonth } from "../types/date";
 import type { DatepickerOptions } from "../types/options";
 import type { RangeEnd, Selection } from "../types/selection";
 import type {
   DatepickerEventMap,
   PickerValue,
   PickerValueInput,
+  PickerView,
+  VisibleRange,
 } from "../types/types";
 import type { EventEmitter } from "../utils/EventEmitter";
 import type { CoreState } from "./CoreState";
@@ -23,6 +25,8 @@ import { SurfaceSession } from "./lifecycle/session";
 import type { OpenSource } from "./lifecycle/session";
 import { TriggerBinding } from "./lifecycle/triggers";
 import { ValueController } from "./lifecycle/value";
+import { ViewControls } from "./lifecycle/view";
+import { VisibleRangeTracker } from "./lifecycle/visible";
 import type { Managers } from "./Managers";
 
 export class Lifecycle implements PickerActions {
@@ -30,6 +34,8 @@ export class Lifecycle implements PickerActions {
     created: false,
     destroyed: false,
   };
+  private readonly visible: VisibleRangeTracker;
+  private readonly views: ViewControls;
   private readonly session: SurfaceSession;
   private readonly values: ValueController;
   private readonly actions: PickerActionHandler;
@@ -49,8 +55,11 @@ export class Lifecycle implements PickerActions {
     };
     const callbacks = new CallbackBridge(context);
     const triggers = new TriggerBinding(context);
-    this.session = new SurfaceSession(context);
-    this.values = new ValueController(context, this.session);
+    const isShown = (): boolean => this.session.active;
+    this.visible = new VisibleRangeTracker(context, isShown);
+    this.views = new ViewControls(context, isShown, this.visible);
+    this.session = new SurfaceSession(context, this.views, this.visible);
+    this.values = new ValueController(context, this.session, this.visible);
     this.actions = new PickerActionHandler(context, this.session, this.values);
     this.instance = new InstanceLifecycle(
       context,
@@ -107,8 +116,36 @@ export class Lifecycle implements PickerActions {
     this.values.setActiveEnd(end);
   }
 
+  setView(view: PickerView): void {
+    this.views.set(view);
+  }
+
+  getView(): PickerView {
+    return this.views.get();
+  }
+
+  getVisibleRange(): VisibleRange | null {
+    return this.visible.current();
+  }
+
+  goTo(date: DateInput): void {
+    this.views.goTo(date);
+  }
+
+  isSelectable(value: PickerValueInput): boolean {
+    return this.values.isSelectable(value);
+  }
+
+  clearValue(): void {
+    this.values.clear();
+  }
+
   applyTyped(selection: Selection): void {
     this.values.applyTyped(selection);
+  }
+
+  fallBackToModal(): void {
+    this.session.fallBackToModal();
   }
 
   select(date: PlainDate): void {
@@ -121,6 +158,10 @@ export class Lifecycle implements PickerActions {
 
   typeDraft(selection: Selection): void {
     this.actions.typeDraft(selection);
+  }
+
+  submitDraft(): void {
+    this.actions.submitDraft();
   }
 
   focusDate(date: PlainDate): void {
@@ -157,5 +198,9 @@ export class Lifecycle implements PickerActions {
 
   clear(): void {
     this.actions.clear();
+  }
+
+  renderedMonths(first: YearMonth, last: YearMonth): void {
+    this.visible.renderedMonths(first, last);
   }
 }

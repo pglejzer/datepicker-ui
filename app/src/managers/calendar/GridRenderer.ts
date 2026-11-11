@@ -14,13 +14,18 @@ export interface GridContext {
   readonly showOutside: boolean;
   readonly outsideSelectable: boolean;
   readonly labels: { readonly weekNumber: string };
-  readonly rangeLabels: { readonly start: string; readonly end: string };
+  readonly rangeLabels: {
+    readonly start: string;
+    readonly end: string;
+    readonly inRange: string;
+  };
   readonly headingVisible: boolean;
   readonly weekdaysVisible: boolean;
   readonly multiselectable?: boolean;
   isSelected(date: PlainDate): boolean;
   isDisabled(date: PlainDate): boolean;
   rangeRole(date: PlainDate): RangeRole | null;
+  labelRole(date: PlainDate): RangeRole | null;
   decorate(date: PlainDate): DateDecoration | null;
   content(date: PlainDate): string | Node | null;
   readonly today: PlainDate;

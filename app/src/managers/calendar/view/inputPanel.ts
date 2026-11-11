@@ -2,6 +2,7 @@ import type { CoreState } from "@/datepicker/CoreState";
 import { createDateInputPanel } from "@/managers/pickers/DateInputPanel";
 import type { DateRules, PickerActions } from "@/types/internal";
 import { unavailableMessage } from "@/utils/selection/messages";
+import { showsFooter } from "@/utils/surface";
 
 export interface InputPanelContext {
   readonly core: CoreState;
@@ -27,7 +28,11 @@ export const createInputPanelParts = (
         actions.typeDraft(selection);
       },
       onSubmit: () => {
-        actions.confirm();
+        if (showsFooter(core.options.footerExplicit, core.mode)) {
+          actions.confirm();
+        } else {
+          actions.submitDraft();
+        }
       },
     }),
   ];

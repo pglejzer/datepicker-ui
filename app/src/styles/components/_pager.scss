@@ -32,12 +32,19 @@
 }
 
 .dp-ui__container:is(.dp-ui__container--docked, .dp-ui__container--inline)
-  .dp-ui__pager {
+  .dp-ui__pager,
+.dp-ui__container--modal
+  > .dp-ui__calendar:not(.dp-ui__calendar--modal)
+  > .dp-ui__content
+  > .dp-ui__pager {
   block-size: var(--dp-ui-pager-height, auto);
   transition: block-size var(--dp-ui-motion-docked-height, 300ms)
     var(--dp-ui-easing-emphasized, cubic-bezier(0.2, 0, 0, 1));
 }
 
-.dp-ui__container--modal .dp-ui__pager {
+.dp-ui__container:not(.dp-ui__container--inline)
+  > .dp-ui__calendar--modal
+  > .dp-ui__content
+  > .dp-ui__pager {
   min-block-size: calc(56px + var(--dp-ui-date-container-size) * 7);
 }

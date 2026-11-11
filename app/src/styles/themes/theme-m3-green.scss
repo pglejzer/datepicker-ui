@@ -1,7 +1,10 @@
 /* Material 3 green theme (light only) */
 
-:is(.dp-ui, .dp-ui__dialog, .dp-ui__container)[data-theme="m3-green"] {
+:is(.dp-ui__dialog, .dp-ui__container)[data-theme="m3-green"] {
   color-scheme: light;
+}
+
+:is(.dp-ui, .dp-ui__dialog, .dp-ui__container)[data-theme="m3-green"] {
   --dp-ui-sys-color-surface-container-high: #e5eadc;
   --dp-ui-sys-color-surface-variant: #e0e4d6;
   --dp-ui-sys-color-on-surface: #1a1c18;

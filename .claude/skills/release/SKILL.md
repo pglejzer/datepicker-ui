@@ -72,9 +72,10 @@ It edits root `package.json`, README and `CHANGELOG.md`, bumping only current-ve
 - Convert files the subagent created to CRLF.
 - Summarize: new version, every file changed, and confirmation that `exports` / `sideEffects` /
   entry points / zero-dependency are intact.
-- **Propose the release commands for the user to run** — git is theirs: a commit message, the
-  tag (`vX.Y.Z`), and the publish step (`npm publish --access public` from the repo root, after
-  `npm run build`). Do NOT run `git add/commit/tag/push` or `npm publish` yourself.
+- **Propose the release steps for the user to run** — git is theirs: a commit message, the push,
+  and a GitHub release with the tag `vX.Y.Z`. Publishing the release runs
+  `.github/workflows/publish.yml`, which checks, builds and publishes to npm; a manual run of it
+  is a dry run. Do NOT run `git add/commit/tag/push`, `gh release` or `npm publish` yourself.
 
 ## Guardrails
 - One source of truth for the version (root `package.json`); never touch `app/package.json`'s

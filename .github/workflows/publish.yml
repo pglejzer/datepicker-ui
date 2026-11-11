@@ -1,0 +1,87 @@
+name: Publish
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Check and publish to npm
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    defaults:
+      run:
+        working-directory: app
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          registry-url: https://registry.npmjs.org
+
+      - name: Print tool versions
+        run: |
+          node --version
+          npm --version
+
+      - name: Verify release tag
+        if: github.event_name == 'release'
+        working-directory: .
+        env:
+          TAG_NAME: ${{ github.event.release.tag_name }}
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          if [ "$TAG_NAME" != "v$version" ]; then
+            echo "::error::Release tag '$TAG_NAME' does not match package.json version 'v$version'"
+            exit 1
+          fi
+
+      - name: Install dependencies
+        run: npm install --ignore-scripts
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Format
+        run: npm run format:check
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: Check package
+        run: npm run check:package
+
+      - name: Publish package
+        working-directory: .
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          args=()
+          case "$version" in
+            *-*) args+=(--tag next) ;;
+          esac
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            args+=(--dry-run)
+          fi
+          npm publish "${args[@]}"

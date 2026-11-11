@@ -69,6 +69,65 @@ describe("resolveOptions", () => {
     expect(resolveOptions({ ui: { footer: true } }).footerExplicit).toBe(true);
   });
 
+  describe("ui.inline chrome options", () => {
+    it("defaults to the auto layout and the full chrome", () => {
+      const r = resolveOptions(undefined);
+      expect(r.layout).toBe("auto");
+      expect(r.inline).toEqual({
+        enabled: false,
+        container: null,
+        headline: true,
+        navigation: "menus",
+        announceSelection: true,
+      });
+      expect(r.issues).toEqual([]);
+    });
+
+    it("keeps valid values", () => {
+      const r = resolveOptions({
+        ui: {
+          inline: {
+            headline: false,
+            navigation: "caption",
+            announceSelection: false,
+          },
+        },
+      });
+      expect(r.inline.headline).toBe(false);
+      expect(r.inline.navigation).toBe("caption");
+      expect(r.inline.announceSelection).toBe(false);
+      expect(r.issues).toEqual([]);
+    });
+
+    it("reports an unknown navigation once and uses menus", () => {
+      const r = resolveOptions({
+        ui: { inline: { navigation: "tabs" as never } },
+      });
+      expect(r.inline.navigation).toBe("menus");
+      expect(r.issues).toEqual([
+        { option: "ui.inline.navigation", value: "tabs" },
+      ]);
+    });
+
+    it("reports a non-boolean headline once and uses true", () => {
+      const r = resolveOptions({
+        ui: { inline: { headline: "no" as never } },
+      });
+      expect(r.inline.headline).toBe(true);
+      expect(r.issues).toEqual([{ option: "ui.inline.headline", value: "no" }]);
+    });
+
+    it("reports a non-boolean announceSelection once and uses true", () => {
+      const r = resolveOptions({
+        ui: { inline: { announceSelection: 0 as never } },
+      });
+      expect(r.inline.announceSelection).toBe(true);
+      expect(r.issues).toEqual([
+        { option: "ui.inline.announceSelection", value: 0 },
+      ]);
+    });
+  });
+
   describe("ui.fullscreen", () => {
     it("defaults to 600", () => {
       const r = resolveOptions(undefined);
@@ -593,6 +652,101 @@ describe("resolveOptions", () => {
   });
 });
 
+describe("ui.layout", () => {
+  it.each(["auto", "docked", "modal", "fullscreen"] as const)(
+    "keeps %s",
+    (layout) => {
+      const r = resolveOptions({ ui: { layout } });
+      expect(r.layout).toBe(layout);
+      expect(r.issues).toEqual([]);
+    },
+  );
+
+  it("reports an unknown layout once and uses auto", () => {
+    const r = resolveOptions({ ui: { layout: "sheet" as never } });
+    expect(r.layout).toBe("auto");
+    expect(r.issues).toEqual([{ option: "ui.layout", value: "sheet" }]);
+  });
+});
+
+describe("calendar.defaultValue", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 10, 9, 10));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("is null when unset or null, without an issue", () => {
+    expect(resolveOptions(undefined).defaultValue).toBeNull();
+    const r = resolveOptions({ calendar: { defaultValue: null as never } });
+    expect(r.defaultValue).toBeNull();
+    expect(r.issues).toEqual([]);
+  });
+
+  it("keeps a single date", () => {
+    const r = resolveOptions({ calendar: { defaultValue: "2026-03-14" } });
+    expect(r.defaultValue?.()).toEqual({
+      mode: "single",
+      date: { year: 2026, month: 3, day: 14 },
+    });
+    expect(r.issues).toEqual([]);
+  });
+
+  it("evaluates today when it is read, not when it is resolved", () => {
+    const r = resolveOptions({ calendar: { defaultValue: "today" } });
+    vi.setSystemTime(new Date(2026, 11, 1, 10));
+    expect(r.defaultValue?.()).toEqual({
+      mode: "single",
+      date: { year: 2026, month: 12, day: 1 },
+    });
+  });
+
+  it("accepts a range and a list in their modes", () => {
+    const range = resolveOptions({
+      calendar: {
+        mode: "range",
+        defaultValue: { start: "today", end: "2026-11-20" },
+      },
+    });
+    expect(range.defaultValue?.()).toEqual({
+      mode: "range",
+      start: { year: 2026, month: 11, day: 9 },
+      end: { year: 2026, month: 11, day: 20 },
+    });
+    const multiple = resolveOptions({
+      calendar: { mode: "multiple", defaultValue: ["2026-11-12", "today"] },
+    });
+    expect(multiple.defaultValue?.()).toEqual({
+      mode: "multiple",
+      dates: [
+        { year: 2026, month: 11, day: 9 },
+        { year: 2026, month: 11, day: 12 },
+      ],
+    });
+  });
+
+  it("reports a shape that does not match the mode and drops it", () => {
+    const r = resolveOptions({
+      calendar: { mode: "range", defaultValue: "2026-11-09" },
+    });
+    expect(r.defaultValue).toBeNull();
+    expect(r.issues).toEqual([
+      { option: "calendar.defaultValue", value: "2026-11-09" },
+    ]);
+  });
+
+  it("reports a text that is not a date", () => {
+    const r = resolveOptions({ calendar: { defaultValue: "soon" } });
+    expect(r.defaultValue).toBeNull();
+    expect(r.issues).toEqual([
+      { option: "calendar.defaultValue", value: "soon" },
+    ]);
+  });
+});
+
 describe("DEFAULT_LABELS", () => {
   it("matches the C5 contract exactly", () => {
     expect(DEFAULT_LABELS).toEqual({
@@ -617,6 +771,7 @@ describe("DEFAULT_LABELS", () => {
       rangeTitle: "Select dates",
       rangeStart: "Start",
       rangeEnd: "End",
+      inRange: "In range",
       multipleSelected: "{count} selected",
       save: "Save",
       close: "Close",

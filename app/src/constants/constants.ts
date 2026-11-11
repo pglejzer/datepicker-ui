@@ -7,3 +7,4 @@ export const CONTAINER_SIDE_PADDING = 12;
 export const WEEK_NUMBER_WIDTH = 48;
 export const PRESETS_COLUMN_WIDTH = 168;
 export const VIEWPORT_GUTTER = 16;
+export const DOCKED_VIEWPORT_MARGIN = 8;

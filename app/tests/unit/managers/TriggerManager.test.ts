@@ -22,14 +22,15 @@ const setup = (
     calendar: { locale: "en-US", ...options.calendar },
   });
   const open = vi.fn<(source: Source) => void>();
+  const dismiss = vi.fn<() => void>();
   const manager = new TriggerManager(
     core,
     new EventEmitter<DatepickerEventMap>(),
-    { open },
+    { open, dismiss },
   );
   const controller = new AbortController();
   manager.bind(controller.signal);
-  return { core, host, input, manager, open, controller };
+  return { core, host, input, manager, open, dismiss, controller };
 };
 
 const press = (
@@ -128,7 +129,7 @@ describe("TriggerManager", () => {
       const manager = new TriggerManager(
         core,
         new EventEmitter<DatepickerEventMap>(),
-        { open },
+        { open, dismiss: vi.fn() },
       );
       manager.bind(new AbortController().signal);
       toggle.click();
@@ -138,6 +139,56 @@ describe("TriggerManager", () => {
       expect(toggle).toHaveAttribute("aria-expanded", "true");
       manager.setExpanded(false);
       expect(toggle).toHaveAttribute("aria-expanded", "false");
+    });
+
+    it("dismisses instead of opening on click while expanded", () => {
+      const toggle = document.createElement("button");
+      const { manager, open, dismiss } = setup({
+        ui: { toggleButton: toggle },
+      });
+      manager.setExpanded(true);
+      toggle.click();
+      expect(dismiss).toHaveBeenCalledTimes(1);
+      expect(open).not.toHaveBeenCalled();
+    });
+
+    it("dismisses on Enter and Space of a span toggle while expanded", () => {
+      const toggle = document.createElement("span");
+      const { manager, open, dismiss } = setup({
+        ui: { toggleButton: toggle },
+      });
+      manager.setExpanded(true);
+      press(toggle, "Enter");
+      press(toggle, " ");
+      expect(dismiss).toHaveBeenCalledTimes(2);
+      expect(open).not.toHaveBeenCalled();
+    });
+
+    it("opens again once setExpanded(false) is called", () => {
+      const toggle = document.createElement("span");
+      const { manager, open, dismiss } = setup({
+        ui: { toggleButton: toggle },
+      });
+      manager.setExpanded(true);
+      manager.setExpanded(false);
+      toggle.click();
+      press(toggle, " ");
+      expect(open).toHaveBeenCalledTimes(2);
+      expect(open).toHaveBeenCalledWith("toggle", "start");
+      expect(dismiss).not.toHaveBeenCalled();
+    });
+
+    it("exposes the bound toggle through toggleElement", () => {
+      const toggle = document.createElement("button");
+      const { manager, controller } = setup({ ui: { toggleButton: toggle } });
+      expect(manager.toggleElement).toBe(toggle);
+      controller.abort();
+      expect(manager.toggleElement).toBeNull();
+    });
+
+    it("has no toggleElement without a toggle button", () => {
+      const { manager } = setup();
+      expect(manager.toggleElement).toBeNull();
     });
 
     it("adds the date to the label after a value is set", () => {
@@ -154,7 +205,7 @@ describe("TriggerManager", () => {
       const manager = new TriggerManager(
         core,
         new EventEmitter<DatepickerEventMap>(),
-        { open: vi.fn() },
+        { open: vi.fn(), dismiss: vi.fn() },
       );
       manager.bind(new AbortController().signal);
       core.setValue({
@@ -187,7 +238,7 @@ describe("TriggerManager", () => {
         const manager = new TriggerManager(
           core,
           new EventEmitter<DatepickerEventMap>(),
-          { open },
+          { open, dismiss: vi.fn() },
         );
         const controller = new AbortController();
         manager.bind(controller.signal);
@@ -223,7 +274,7 @@ describe("TriggerManager", () => {
       const manager = new TriggerManager(
         core,
         new EventEmitter<DatepickerEventMap>(),
-        { open: vi.fn() },
+        { open: vi.fn(), dismiss: vi.fn() },
       );
       const controller = new AbortController();
       manager.bind(controller.signal);
@@ -255,7 +306,7 @@ describe("TriggerManager", () => {
       const manager = new TriggerManager(
         core,
         new EventEmitter<DatepickerEventMap>(),
-        { open: vi.fn() },
+        { open: vi.fn(), dismiss: vi.fn() },
       );
       manager.bind(new AbortController().signal);
       manager.destroy();

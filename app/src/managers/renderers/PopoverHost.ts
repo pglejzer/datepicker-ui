@@ -1,5 +1,5 @@
 import { createElement } from "../../utils/dom";
-import { waitForExit } from "./SurfaceHost";
+import { nameSurface, waitForExit } from "./SurfaceHost";
 import type { SurfaceHost } from "./SurfaceHost";
 import {
   applyAnchor,
@@ -17,7 +17,6 @@ export class PopoverHost implements SurfaceHost {
   readonly body: HTMLElement;
   private readonly anchor: HTMLElement;
   private readonly anchorName: string;
-  private readonly rtl: boolean;
   private readonly fallback: { enable(): void; layout(): void };
   private readonly controller = new AbortController();
   private stopTracking: (() => void) | null = null;
@@ -34,13 +33,14 @@ export class PopoverHost implements SurfaceHost {
     instanceId: string;
     rtl: boolean;
     label: string;
+    /** Id, or space-separated ids, of a visible title that names the surface. When set, the root gets `aria-labelledby` and no `aria-label`. */
+    labelledBy?: string;
     inside: readonly HTMLElement[];
     ignoreOutsideClick: boolean;
     onOutside(): void;
     onEscape(): void;
   }) {
     this.anchor = options.anchor;
-    this.rtl = options.rtl;
     this.anchorName = createAnchorName(options.instanceId);
     this.root = createElement(
       "div",
@@ -48,10 +48,10 @@ export class PopoverHost implements SurfaceHost {
       {
         role: "dialog",
         "aria-modal": "false",
-        "aria-label": options.label,
         "data-placement": "bottom",
       },
     );
+    nameSurface(this.root, options.label, options.labelledBy);
     this.body = this.root;
     this.fallback = createFallbackPositioner(
       this.root,
@@ -116,6 +116,10 @@ export class PopoverHost implements SurfaceHost {
     this.root.remove();
   }
 
+  setLabel(label: string, labelledBy?: string): void {
+    nameSurface(this.root, label, labelledBy);
+  }
+
   private endTracking(): void {
     this.stopTracking?.();
     this.stopTracking = null;
@@ -163,7 +167,7 @@ export class PopoverHost implements SurfaceHost {
   }
 
   private update(): void {
-    if (this.anchored && overflowsInline(this.root, this.anchor, this.rtl)) {
+    if (this.anchored && overflowsInline(this.root)) {
       this.enableFallback();
     }
     if (this.anchored) {

@@ -20,6 +20,20 @@ const MULTIPLE_SEPARATOR = ", ";
 const RANGE_SPLIT = /\s*[–—]\s*|\s+-\s+/;
 const MULTIPLE_SPLIT = /[,;]/;
 
+/**
+ * Splits range text into its start and end text the way the picker does:
+ * at an en or em dash with optional spaces, or at a hyphen with spaces
+ * around it. Returns `null` unless the text splits into exactly two parts.
+ */
+export function splitRangeText(text: string): readonly [string, string] | null {
+  const parts = text.split(RANGE_SPLIT);
+  if (parts.length !== 2) {
+    return null;
+  }
+  const [start, end] = parts;
+  return [start, end];
+}
+
 export function formatSelection(
   s: Selection,
   pattern: FormatPattern,
@@ -61,7 +75,7 @@ function parseMode(
   text: string,
   mode: CalendarMode,
   parse: (part: string) => PlainDate | null,
-  rangeSplit: RegExp,
+  splitRange: (text: string) => readonly string[] | null,
   multipleSplit: RegExp,
 ): Selection | null {
   switch (mode) {
@@ -69,8 +83,10 @@ function parseMode(
       const date = parse(text);
       return date === null ? null : { mode, date };
     }
-    case "range":
-      return rangeFrom(parseList(text.split(rangeSplit), parse));
+    case "range": {
+      const parts = splitRange(text);
+      return parts === null ? null : rangeFrom(parseList(parts, parse));
+    }
     default: {
       const parts = text
         .split(multipleSplit)
@@ -95,7 +111,7 @@ export function parseSelection(
     trimmed,
     mode,
     (part) => parsePeriod(part.trim(), pattern, precision),
-    RANGE_SPLIT,
+    splitRangeText,
     MULTIPLE_SPLIT,
   );
 }
@@ -125,7 +141,7 @@ export function parseSerialized(
     trimmed,
     mode,
     (part) => parsePeriodISO(part.trim(), precision),
-    /\//,
+    (value) => value.split("/"),
     /,/,
   );
 }

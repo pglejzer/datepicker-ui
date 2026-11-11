@@ -1,38 +1,36 @@
 import { resolveElement } from "../../utils/dom";
 import {
-  homePanel,
-  isFullscreenRange,
+  calendarLayout,
   resolveSurfaceMode,
   resolveViewLayout,
-  startPanel,
-  supportsInputView,
 } from "../../utils/surface";
 import { TaskQueue } from "../../utils/taskQueue";
-import type { InternalEventMap, SurfaceMode } from "../../types/internal";
+import type { NavigateSource, SurfaceMode } from "../../types/internal";
 import type { RangeEnd } from "../../types/selection";
 import type { LifecycleContext } from "./context";
 import { showMonth } from "./navigation";
+import type { ViewControls } from "./view";
+import type { VisibleRangeTracker } from "./visible";
 
 export type OpenSource = "api" | "pointer" | "toggle" | "keyboard";
 
 type Phase = "closed" | "open" | "closing";
-
-function directionOf(delta: number): -1 | 0 | 1 {
-  if (delta < 0) {
-    return -1;
-  }
-  return delta > 0 ? 1 : 0;
-}
 
 export class SurfaceSession {
   private readonly queue = new TaskQueue();
   private controller: AbortController | null = null;
   private phase: Phase = "closed";
   private sessionId = 0;
+  private mounts = 0;
   private closing: Promise<void> = Promise.resolve();
   private openedFrom: RangeEnd = "start";
+  private mountSource: NavigateSource = "open";
 
-  constructor(private readonly context: LifecycleContext) {}
+  constructor(
+    private readonly context: LifecycleContext,
+    private readonly views: ViewControls,
+    private readonly visible: VisibleRangeTracker,
+  ) {}
 
   get active(): boolean {
     return this.phase === "open";
@@ -58,7 +56,17 @@ export class SurfaceSession {
     core.setActiveEnd(end);
     this.begin(mode);
     managers.triggers.setExpanded(true);
-    emitter.emit("open", { mode });
+    emitter.emit("open", { mode: core.mode ?? mode });
+  }
+
+  fallBackToModal(): void {
+    if (!this.active || this.context.core.mode !== "docked") {
+      return;
+    }
+    this.stopListening();
+    this.adoptMode("modal");
+    this.listen();
+    this.mount("modal", this.mountSource);
   }
 
   mountInline(): void {
@@ -94,6 +102,7 @@ export class SurfaceSession {
     const id = this.sessionId;
     this.phase = "closing";
     this.stopListening();
+    this.visible.reset();
     managers.triggers.setExpanded(false);
     const closing = this.queue
       .run(() => managers.display.unmount())
@@ -118,13 +127,7 @@ export class SurfaceSession {
         months: options.months,
         precision: options.precision,
         mode: options.mode,
-        surface,
-        fullscreen: isFullscreenRange(
-          options.mode,
-          surface,
-          window.innerWidth,
-          options.fullscreenBelow,
-        ),
+        layout: core.calendarLayout,
         width,
         weekNumbers: options.weekNumbers,
         presets: options.presets.length,
@@ -134,17 +137,24 @@ export class SurfaceSession {
 
   remount(mode: SurfaceMode): void {
     const { core, managers } = this.context;
+    this.visible.pause();
+    this.decideLayout(mode);
     this.syncLayout(mode);
+    this.clampView();
     core.setMode(mode);
-    const { mode: calendarMode, precision } = core.options;
-    if (
-      core.panel === "input" &&
-      !supportsInputView(calendarMode, mode, precision)
-    ) {
-      core.setPanel(homePanel(precision));
-    }
+    this.views.dropUnsupported();
     void this.queue.run(() => managers.display.unmount());
-    void this.queue.run(() => managers.display.mount(mode));
+    this.mount(mode, "api");
+  }
+
+  refresh(mode: SurfaceMode, source: NavigateSource): void {
+    const { core, managers } = this.context;
+    this.visible.hold(source, () => {
+      this.syncLayout(mode);
+      this.clampView();
+      core.setListSpan(null);
+      managers.display.update();
+    });
   }
 
   pickMode(): SurfaceMode {
@@ -164,46 +174,81 @@ export class SurfaceSession {
   teardown(): void {
     this.phase = "closed";
     this.stopListening();
+    this.visible.reset();
     this.queue.stop();
   }
 
   private begin(mode: SurfaceMode): void {
-    const { core, managers } = this.context;
     this.stopListening();
-    const controller = new AbortController();
-    this.controller = controller;
     this.sessionId += 1;
     this.phase = "open";
-    core.resetSession();
-    const {
-      initialView,
-      mode: calendarMode,
-      precision,
-      startView,
-    } = core.options;
-    if (
-      initialView === "input" &&
-      supportsInputView(calendarMode, mode, precision)
-    ) {
-      core.setPanel("input");
-    } else if (
-      precision === "day" &&
-      calendarMode !== "range" &&
-      startView !== "day"
-    ) {
-      core.setPanel(startPanel(startView, mode));
-    }
+    this.visible.reset();
+    this.context.core.resetSession();
+    this.adoptMode(mode);
+    this.listen();
+    this.mount(mode, "open");
+  }
+
+  private adoptMode(mode: SurfaceMode): void {
+    const { core } = this.context;
+    this.decideLayout(mode);
+    core.setPanel(this.views.opening(mode));
     this.syncLayout(mode);
     this.clampView();
     core.setMode(mode);
-    core.events.on(
-      "change:view",
-      (change) => {
-        this.forwardNavigation(change);
+  }
+
+  private listen(): void {
+    const controller = new AbortController();
+    this.controller = controller;
+    this.views.bind(controller.signal);
+    this.visible.bind(controller.signal);
+    window.addEventListener(
+      "resize",
+      () => {
+        this.relayout();
       },
-      controller.signal,
+      { signal: controller.signal },
     );
-    void this.queue.run(() => managers.display.mount(mode));
+  }
+
+  private mount(mode: SurfaceMode, source: NavigateSource): void {
+    const { core, managers } = this.context;
+    this.mounts += 1;
+    this.mountSource = source;
+    const ticket = this.mounts;
+    void this.queue
+      .run(() => {
+        core.setListSpan(null);
+        return managers.display.mount(mode);
+      })
+      .then(() => {
+        if (ticket === this.mounts && this.active) {
+          this.visible.resume(source);
+        }
+      });
+  }
+
+  private decideLayout(mode: SurfaceMode): void {
+    const { core } = this.context;
+    core.setCalendarLayout(
+      calendarLayout(mode, core.options, window.innerWidth),
+    );
+  }
+
+  private relayout(): void {
+    const { core } = this.context;
+    const mode = core.mode;
+    if (mode === null) {
+      return;
+    }
+    const previous = core.layout;
+    this.syncLayout(mode);
+    const next = core.layout;
+    if (next.months === previous.months && next.presets === previous.presets) {
+      return;
+    }
+    this.refresh(mode, "resize");
   }
 
   private stopListening(): void {
@@ -230,17 +275,5 @@ export class SurfaceSession {
       const endInput = this.openedFrom === "end" ? core.endInput : null;
       (endInput ?? core.input).focus({ preventScroll: true });
     }
-  }
-
-  private forwardNavigation(change: InternalEventMap["change:view"]): void {
-    if (change.source === "api") {
-      return;
-    }
-    this.context.emitter.emit("navigate", {
-      year: change.view.year,
-      month: change.view.month,
-      direction: directionOf(change.delta),
-      source: change.source,
-    });
   }
 }

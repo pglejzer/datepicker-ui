@@ -10,6 +10,7 @@ import {
   hintLetters,
   type FormatPattern,
 } from "@/utils/date/format";
+import { maskInput } from "@/utils/date/mask";
 import { parseDate } from "@/utils/date/parse";
 import { compareDates } from "@/utils/date/plainDate";
 import { createElement } from "@/utils/dom";
@@ -123,6 +124,9 @@ export function createDateInputPanel(
   };
 
   fields.forEach((field) => {
+    field.input.addEventListener("input", () => {
+      maskInput(field.input, pattern);
+    });
     field.input.addEventListener("change", () => {
       const selection = validate();
       if (selection && isAllowed(selection)) options.onDraft(selection);

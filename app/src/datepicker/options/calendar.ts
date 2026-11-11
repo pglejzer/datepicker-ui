@@ -13,7 +13,7 @@ import {
   resolveWeekStart,
 } from "../../utils/date/intl";
 import { DEFAULT_DATEPICKER_OPTIONS } from "./defaults";
-import { resolveDate, resolveDateList } from "./dates";
+import { resolveDate, resolveDateList, resolveDefaultValue } from "./dates";
 import { CALENDAR_MODES, PAGE_BYS, PRECISIONS, WEEK_STARTS } from "./fields";
 import { isFunction, isPositiveInteger, isValueFunction, pick } from "./pick";
 import type { OptionIssue } from "./pick";
@@ -30,6 +30,7 @@ export type ResolvedCalendarOptions = Pick<
   | "enabledDates"
   | "mode"
   | "precision"
+  | "defaultValue"
   | "months"
   | "pageBy"
   | "limits"
@@ -227,6 +228,7 @@ export function resolveCalendarOptions(
     "calendar.mode",
     issues,
   );
+  const precision = resolvePrecision(calendar?.precision, mode, issues);
   return {
     locale,
     weekStart: resolveWeekStart(locale, weekStart),
@@ -244,7 +246,13 @@ export function resolveCalendarOptions(
       issues,
     ),
     mode,
-    precision: resolvePrecision(calendar?.precision, mode, issues),
+    precision,
+    defaultValue: resolveDefaultValue(
+      calendar?.defaultValue,
+      mode,
+      precision,
+      issues,
+    ),
     months: pick(
       calendar?.months,
       isPositiveInteger,

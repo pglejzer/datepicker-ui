@@ -31,6 +31,7 @@ const ACTIVE_CLASS = "dp-ui__input--active";
 
 export interface TriggerManagerDeps {
   open(source: OpenSource, end: RangeEnd): void;
+  dismiss(): void;
 }
 
 export class TriggerManager {
@@ -43,6 +44,10 @@ export class TriggerManager {
     _emitter: EventEmitter<DatepickerEventMap>,
     private readonly deps: TriggerManagerDeps,
   ) {}
+
+  get toggleElement(): HTMLElement | null {
+    return this.toggle;
+  }
 
   bind(signal: AbortSignal): void {
     this.releaseToggle();
@@ -151,6 +156,14 @@ export class TriggerManager {
     this.deps.open(source, end);
   }
 
+  private activateToggle(): void {
+    if (this.expanded) {
+      this.deps.dismiss();
+    } else {
+      this.request("toggle", "start");
+    }
+  }
+
   private bindToggle(signal: AbortSignal): void {
     const toggle = resolveElement(
       this.core.options.toggleButton,
@@ -172,7 +185,7 @@ export class TriggerManager {
         (event) => {
           if (event.key !== "Enter" && event.key !== " ") return;
           event.preventDefault();
-          this.request("toggle", "start");
+          this.activateToggle();
         },
         { signal },
       );
@@ -180,7 +193,7 @@ export class TriggerManager {
     toggle.addEventListener(
       "click",
       () => {
-        this.request("toggle", "start");
+        this.activateToggle();
       },
       { signal },
     );

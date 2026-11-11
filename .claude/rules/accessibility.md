@@ -9,7 +9,7 @@ paths:
 Applies when editing managers and the view / renderer code. Standard: **WCAG 2.2 AA + WAI-ARIA
 APG**. Pairs with `.claude/rules/architecture.md`.
 
-- **Current state (stage 1):** the day grid follows the APG date-picker grid - `role="grid"` with
+- **Baseline:** the day grid follows the APG date-picker grid - `role="grid"` with
   `role="columnheader"` weekdays and `role="gridcell"` days, a roving `tabindex`, `aria-selected`,
   `aria-current="date"`, `aria-disabled` on disabled days, and keyboard movement from
   `managers/calendar/GridKeyboard.ts`. A polite `aria-live` region (`dp-ui__live-region`,
@@ -21,7 +21,7 @@ APG**. Pairs with `.claude/rules/architecture.md`.
   and `aria-controls`; footer buttons expose `aria-keyshortcuts`; the input gets `aria-invalid`
   and the toggle `aria-expanded`. `utils/accessibility.trackPointerModality` separates pointer
   from keyboard focus styling. Build on this; a full pass is the `/a11y` skill.
-- **Stage 5:**
+- **Presets, fields, grids and several months:**
   - **Presets.** A `role="group"` labelled by `labels.presets`, made of buttons with
     `aria-pressed`.
   - **Two fields.** With `ui.endInput`, both page inputs get `aria-invalid` and
@@ -31,6 +31,18 @@ APG**. Pairs with `.claude/rules/architecture.md`.
   - **Month grid.** A listbox like the year grid: short names visible, the long name and the
     year as the option name.
   - **Several months.** The live region announces the month range (`formatMonthRange`).
+- **Ranges, inline pickers and kit hosts:**
+  - **Range names.** In-range days add `labels.inRange` to their name. A start picked without an
+    end is named with `labels.rangeStart` (`rangeLabelRole`). Classes and `aria-selected` still
+    follow `rangeRole`.
+  - **Announcements.** `ui.inline.announceSelection: false` stops selection announcements on
+    inline pickers. Month announcements stay, and fire only for user sources.
+  - **Caption row.** It has the same arrow labels and `aria-keyshortcuts` as the modal page row,
+    and there are no menus.
+  - **Kit hosts.** They take `labelledBy` (`aria-labelledby`, no `aria-label`).
+    `setLabel(label, labelledBy?)` renames a shown surface by the same rule.
+    `DisplayManager.update()` uses it, so `setOptions()` renames the picker's own surface.
+  - **Toggle.** The toggle on an open docked picker cancels it with reason `"toggle"`.
 - **Pattern to keep:** Arrow keys move by day / week (Left / Right flip in RTL), Home / End to month
   start / end, PageUp / PageDown by month (Shift by year), Enter / Space selects, Escape closes; focus returns to the
   input on close (`behavior.returnFocus`). `aria-pressed` only on real toggles.

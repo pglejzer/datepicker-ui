@@ -9,6 +9,7 @@ import type {
 } from "@/types/internal";
 import type { MotionMode } from "@/utils/accessibility";
 import { createElement } from "@/utils/dom";
+import { showsFooter } from "@/utils/surface";
 import { applyViewChrome, containerOf } from "./containerChrome";
 import { createHeader, type Header } from "./header";
 import { createInputPanelParts } from "./inputPanel";
@@ -48,6 +49,7 @@ export const buildViewParts = (options: ViewPartsOptions): ViewParts => {
   const pages = createMonthPages({
     core,
     layout,
+    surface: mode,
     rtl: options.rtl,
     gridContext: () => createDaysGridContext(core, rules, layout),
     onCommit: (direction, source) => {
@@ -84,7 +86,7 @@ export const buildViewParts = (options: ViewPartsOptions): ViewParts => {
   });
   const footer = createActions({
     labels: resolved.labels,
-    visible: resolved.footerExplicit ?? mode !== "inline",
+    visible: showsFooter(resolved.footerExplicit, mode),
     todayButton: resolved.todayButton,
     clearButton: resolved.clearButton !== false,
   });
@@ -93,6 +95,11 @@ export const buildViewParts = (options: ViewPartsOptions): ViewParts => {
     "dp-ui__live-region dp-ui__visually-hidden",
     { "aria-live": "polite", "aria-atomic": "true" },
   );
-  root.replaceChildren(header.element, content, footer, liveRegion);
+  root.replaceChildren(
+    ...(header.element === null ? [] : [header.element]),
+    content,
+    footer,
+    liveRegion,
+  );
   return { header, pages, panels, liveRegion };
 };

@@ -202,13 +202,28 @@ export function formatShortRange(
   );
 }
 
-export function formatFullDate(date: PlainDate, locale: string): string {
-  return getFormatter(locale, {
+export interface FullDateOptions {
+  /**
+   * `false` leaves the year out, e.g. "Wednesday, October 21".
+   * @default true
+   */
+  readonly year?: boolean;
+}
+
+export function formatFullDate(
+  date: PlainDate,
+  locale: string,
+  options: FullDateOptions = {},
+): string {
+  const parts: Intl.DateTimeFormatOptions = {
     weekday: "long",
-    year: "numeric",
     month: "long",
     day: "numeric",
-  }).format(utcNoon(date.year, date.month, date.day));
+  };
+  return getFormatter(
+    locale,
+    options.year === false ? parts : { ...parts, year: "numeric" },
+  ).format(utcNoon(date.year, date.month, date.day));
 }
 
 export function formatMonthYear(view: YearMonth, locale: string): string {

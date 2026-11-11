@@ -7,7 +7,7 @@ import { buildMonth } from "@/managers/calendar/MonthModel";
 import { createSelectionGridContext } from "@/managers/calendar/view/selectionContext";
 import type { YearMonth } from "@/types/date";
 import type { DateRules } from "@/types/internal";
-import { rangeRole } from "@/utils/selection/model";
+import { rangeLabelRole, rangeRole } from "@/utils/selection/model";
 
 export const createRangeGridContext = (
   core: CoreState,
@@ -20,6 +20,7 @@ export const createRangeGridContext = (
   headingVisible: true,
   weekdaysVisible: row,
   rangeRole: (date) => rangeRole(core.draft, date),
+  labelRole: (date) => rangeLabelRole(core.draft, date),
 });
 
 export const renderRangeMonth = (

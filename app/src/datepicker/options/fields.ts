@@ -29,6 +29,8 @@ export const INITIAL_VIEWS = oneOf(["calendar", "input"]);
 export const PRECISIONS = oneOf(["day", "month", "year"]);
 export const PAGE_BYS = oneOf(["month", "view"]);
 export const START_VIEWS = oneOf(["day", "month", "year"]);
+export const LAYOUTS = oneOf(["auto", "docked", "modal", "fullscreen"]);
+export const INLINE_NAVIGATIONS = oneOf(["menus", "caption"]);
 export const THEMES = oneOf([
   "basic",
   "m3-green",

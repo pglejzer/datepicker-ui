@@ -1,6 +1,7 @@
 import { GESTURE, TIMINGS } from "@/constants/timings";
 import type { CoreState } from "@/datepicker/CoreState";
 import { updateMonthGrid } from "@/managers/calendar/GridRenderer";
+import { isUserSource } from "@/managers/calendar/view/userSource";
 import type { PlainDate, YearMonth } from "@/types/date";
 import type { DateRules, NavigateSource } from "@/types/internal";
 import { motionMode } from "@/utils/accessibility";
@@ -20,6 +21,8 @@ export interface MonthListOptions {
   readonly rules: DateRules;
   readonly render: (view: YearMonth) => HTMLTableElement;
   readonly bounds: () => MonthBounds;
+  readonly onRendered: (first: YearMonth, last: YearMonth) => void;
+  readonly onShown: () => void;
 }
 
 export interface MonthList {
@@ -55,6 +58,11 @@ export const createMonthList = (options: MonthListOptions): MonthList => {
       options.render(addMonths(from, index)),
     );
 
+  const report = (): void => {
+    if (first === null) return;
+    options.onRendered(first, addMonths(first, tables.length - 1));
+  };
+
   const append = (count: number): void => {
     if (first === null) return;
     const next = addMonths(first, tables.length);
@@ -64,6 +72,7 @@ export const createMonthList = (options: MonthListOptions): MonthList => {
     const added = renderMonths(next, size);
     tables.push(...added);
     element.append(...added);
+    report();
   };
 
   const prepend = (count: number): void => {
@@ -79,6 +88,7 @@ export const createMonthList = (options: MonthListOptions): MonthList => {
     tables.unshift(...added);
     element.prepend(...added);
     element.scrollTop = top + element.scrollHeight - height;
+    report();
   };
 
   const ensureMonth = (view: YearMonth): void => {
@@ -189,6 +199,7 @@ export const createMonthList = (options: MonthListOptions): MonthList => {
     first = start;
     tables.push(...renderMonths(start, count));
     element.append(...tables);
+    report();
   }
 
   element.addEventListener(
@@ -207,6 +218,20 @@ export const createMonthList = (options: MonthListOptions): MonthList => {
   });
   bindDragScroll(element, controller.signal, "y", { onDragEnd: snapToMonth });
 
+  let sizeObserver: ResizeObserver | null = null;
+  if (typeof ResizeObserver !== "undefined") {
+    let shownHeight = 0;
+    sizeObserver = new ResizeObserver((entries) => {
+      const entry = entries.at(-1);
+      if (entry === undefined || controller.signal.aborted) return;
+      const height = entry.contentRect.height;
+      const wasHidden = shownHeight === 0;
+      shownHeight = height;
+      if (wasHidden && height > 0) options.onShown();
+    });
+    sizeObserver.observe(element);
+  }
+
   return {
     element,
     scrollToMonth,
@@ -216,7 +241,7 @@ export const createMonthList = (options: MonthListOptions): MonthList => {
     ensureMonth,
     reveal: scrollToMonth,
     present: (view, _delta, source) => {
-      if (source === "api") {
+      if (!isUserSource(source)) {
         scrollToMonth(view);
       } else {
         ensureMonth(view);
@@ -224,6 +249,7 @@ export const createMonthList = (options: MonthListOptions): MonthList => {
     },
     destroy: () => {
       controller.abort();
+      sizeObserver?.disconnect();
       cancelAnimationFrame(frame);
       frame = 0;
       window.clearTimeout(snapTimer);

@@ -28,6 +28,7 @@ const mount = (
   mode: SurfaceMode,
   options: DatepickerOptions = {},
   parent: HTMLElement = document.body,
+  updateAfterMount = true,
 ): Harness => {
   const host = document.createElement("div");
   const input = document.createElement("input");
@@ -38,6 +39,7 @@ const mount = (
     calendar: { locale: "en-US", ...options.calendar },
   });
   core.resetSession();
+  if (mode === "modal") core.setCalendarLayout("modal");
   const actions = {
     select: vi.fn(),
     focusDate: vi.fn(),
@@ -53,6 +55,8 @@ const mount = (
     today: vi.fn(),
     clear: vi.fn(),
     typeDraft: vi.fn(),
+    submitDraft: vi.fn(),
+    renderedMonths: vi.fn(),
   };
   const shell = createCalendarView({
     core,
@@ -63,7 +67,7 @@ const mount = (
   });
   shells.push(shell);
   parent.appendChild(shell.element);
-  shell.update();
+  if (updateAfterMount) shell.update();
   return { core, actions, shell };
 };
 
@@ -172,6 +176,47 @@ describe("createCalendarView", () => {
       expect(query(shell, ".dp-ui__live-region").textContent).toBe(
         "November 2026",
       );
+    });
+  });
+
+  describe("rebuild marker", () => {
+    it("sets nothing on the first mount", () => {
+      const { shell } = mount("docked", {}, document.body, false);
+      expect(query(shell, ".dp-ui__pager")).not.toHaveAttribute("data-rebuilt");
+    });
+
+    it("marks the new pager after update()", () => {
+      const { shell } = mount("docked", {}, document.body, false);
+      shell.update();
+      expect(query(shell, ".dp-ui__pager")).toHaveAttribute("data-rebuilt");
+    });
+
+    it("marks a panel mounted during the rebuild", () => {
+      const { shell, core } = mount("docked", {}, document.body, false);
+      core.setPanel("month-menu");
+      shell.update();
+      expect(query(shell, ".dp-ui__menu--month")).toHaveAttribute(
+        "data-rebuilt",
+      );
+    });
+
+    it("drops the marker once the days are revealed again", async () => {
+      const { shell, core } = mount("docked", {}, document.body, false);
+      shell.update();
+      core.setPanel("year-menu");
+      await vi.advanceTimersByTimeAsync(1000);
+      core.setPanel("days");
+      await vi.advanceTimersByTimeAsync(1000);
+      expect(query(shell, ".dp-ui__pager")).not.toHaveAttribute("data-rebuilt");
+    });
+  });
+
+  describe("modal class", () => {
+    it("is set on the view element of a modal surface only", () => {
+      const modal = mount("modal");
+      const docked = mount("docked");
+      expect(modal.shell.element).toHaveClass("dp-ui__calendar--modal");
+      expect(docked.shell.element).not.toHaveClass("dp-ui__calendar--modal");
     });
   });
 
@@ -339,6 +384,70 @@ describe("createCalendarView", () => {
     });
   });
 
+  describe("selection announcements", () => {
+    const pick = (core: CoreState): void => {
+      core.setDraft({
+        mode: "single",
+        date: { year: 2026, month: 10, day: 17 },
+      });
+    };
+
+    it("announces a pick by default", () => {
+      const { shell, core } = mount("inline");
+
+      pick(core);
+
+      expect(query(shell, ".dp-ui__live-region").textContent).toBe(
+        "Sat, Oct 17",
+      );
+    });
+
+    it("announces a pick on a docked surface", () => {
+      const { shell, core } = mount("docked");
+
+      pick(core);
+
+      expect(query(shell, ".dp-ui__live-region").textContent).toBe(
+        "Sat, Oct 17",
+      );
+    });
+
+    it("leaves the live region empty after a pick with announceSelection: false", () => {
+      const { shell, core } = mount("inline", {
+        ui: { inline: { announceSelection: false } },
+      });
+
+      pick(core);
+
+      expect(query(shell, ".dp-ui__live-region").textContent).toBe("");
+    });
+
+    it("still announces the month on a next-month change", () => {
+      const { shell, core } = mount("inline", {
+        ui: { inline: { announceSelection: false } },
+      });
+
+      pick(core);
+      core.setView({ year: 2026, month: 11 }, 1, "button");
+
+      expect(query(shell, ".dp-ui__live-region").textContent).toBe(
+        "November 2026",
+      );
+    });
+
+    it("ignores announceSelection: false on a docked surface", () => {
+      const { shell, core } = mount("docked", {
+        ui: { inline: { announceSelection: false } },
+      });
+
+      pick(core);
+
+      expect(query(shell, ".dp-ui__live-region").textContent).toBe(
+        "Sat, Oct 17",
+      );
+    });
+  });
+
   describe("footer", () => {
     it("is hidden for inline unless ui.footer is true", () => {
       const inline = mount("inline");
@@ -352,6 +461,102 @@ describe("createCalendarView", () => {
       const { shell } = mount("docked");
 
       expect(query(shell, ".dp-ui__actions").hidden).toBe(false);
+    });
+  });
+
+  describe("fit", () => {
+    const inContainer = (): HTMLElement => {
+      const container = document.createElement("div");
+      container.className = "dp-ui__container";
+      document.body.appendChild(container);
+      return container;
+    };
+
+    it("applies the container chrome once the view sits in its container", () => {
+      const container = inContainer();
+      const { shell, core } = mount("docked", {}, container, false);
+      core.setLayout({ months: 2, presets: "none" });
+      expect(container).not.toHaveClass("dp-ui__container--multi-month");
+
+      shell.fit();
+
+      expect(container).toHaveClass("dp-ui__container--multi-month");
+      expect(container.style.getPropertyValue("--dp-ui-visible-months")).toBe(
+        "2",
+      );
+    });
+
+    it("leaves document.activeElement unchanged", () => {
+      const container = inContainer();
+      const outside = document.createElement("button");
+      document.body.appendChild(outside);
+      const { shell } = mount("docked", {}, container, false);
+      outside.focus();
+      expect(document.activeElement).toBe(outside);
+
+      shell.fit();
+
+      expect(document.activeElement).toBe(outside);
+    });
+
+    it("does nothing after destroy", () => {
+      const container = inContainer();
+      const { shell, core } = mount("docked", {}, container, false);
+      shell.destroy();
+      core.setLayout({ months: 2, presets: "none" });
+
+      expect(() => {
+        shell.fit();
+      }).not.toThrow();
+      expect(container).not.toHaveClass("dp-ui__container--multi-month");
+    });
+
+    it("focusInitial applies the chrome first and then focuses a cell", () => {
+      const container = inContainer();
+      const { shell, core } = mount("docked", {}, container, false);
+      core.setLayout({ months: 2, presets: "none" });
+
+      shell.focusInitial();
+
+      expect(container).toHaveClass("dp-ui__container--multi-month");
+      expect(document.activeElement).toHaveClass("dp-ui__date");
+    });
+
+    it("sets the measured pager height with the height transition off", () => {
+      const container = inContainer();
+      const { shell } = mount("docked", {}, container, false);
+      const pager = query(shell, ".dp-ui__pager");
+      const before = pager.style.getPropertyValue("--dp-ui-pager-height");
+      const sized = (height: number) => (): DOMRect =>
+        new DOMRect(0, 0, 336, height);
+      const reads: string[] = [];
+      const spies = [
+        vi
+          .spyOn(HTMLTableSectionElement.prototype, "getBoundingClientRect")
+          .mockImplementation(sized(40)),
+        vi
+          .spyOn(HTMLTableRowElement.prototype, "getBoundingClientRect")
+          .mockImplementation(sized(64)),
+        vi.spyOn(pager, "getBoundingClientRect").mockImplementation(() => {
+          reads.push(
+            `${pager.style.transition}|${pager.style.getPropertyValue("--dp-ui-pager-height")}`,
+          );
+          return new DOMRect();
+        }),
+      ];
+
+      try {
+        shell.fit();
+      } finally {
+        spies.forEach((spy) => {
+          spy.mockRestore();
+        });
+      }
+
+      const after = pager.style.getPropertyValue("--dp-ui-pager-height");
+      expect(after).not.toBe(before);
+      expect(reads).toContain(`none|${after}`);
+      expect(pager.style.transition).toBe("");
     });
   });
 });

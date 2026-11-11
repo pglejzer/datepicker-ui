@@ -1,6 +1,9 @@
 /* Crane Straight theme for DatepickerUI, ported from timepicker-ui */
-:is(.dp-ui, .dp-ui__dialog, .dp-ui__container)[data-theme="crane-straight"] {
+:is(.dp-ui__dialog, .dp-ui__container)[data-theme="crane-straight"] {
   color-scheme: dark;
+}
+
+:is(.dp-ui, .dp-ui__dialog, .dp-ui__container)[data-theme="crane-straight"] {
   --dp-ui-sys-color-surface-container-high: #5d1049;
   --dp-ui-sys-color-surface-variant: #71135c;
   --dp-ui-sys-color-on-surface: #ffffff;

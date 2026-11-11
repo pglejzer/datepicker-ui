@@ -1,6 +1,7 @@
 import type { CoreState } from "@/datepicker/CoreState";
 import type { Panel, PickerActions } from "@/types/internal";
 import { isDateSelected } from "@/utils/selection/model";
+import { showsFooter } from "@/utils/surface";
 import { nextFocusDate } from "../GridKeyboard";
 import type { DateCell, Layout, PickerPanel } from "./types";
 
@@ -9,6 +10,7 @@ export interface KeyboardDeps {
   readonly actions: PickerActions;
   readonly layout: Layout;
   readonly home: Panel;
+  readonly caption: () => boolean;
   readonly cellAt: (target: EventTarget | null) => DateCell | null;
   readonly isRtl: () => boolean;
 }
@@ -26,6 +28,7 @@ const shortcutPanel = (key: string, layout: Layout): PickerPanel | null => {
 
 const canOpenShortcut = (deps: KeyboardDeps): boolean => {
   const { panel } = deps.core;
+  if (deps.caption()) return false;
   if (deps.layout === "docked") return deps.home === "days" && panel === "days";
   if (deps.layout === "modal") {
     return panel === deps.home && deps.home !== "year-grid";
@@ -60,6 +63,7 @@ const commitDate = (
     event.key === "Enter" &&
     deps.layout === "modal" &&
     deps.core.options.mode === "single" &&
+    showsFooter(deps.core.options.footerExplicit, deps.core.mode) &&
     isDateSelected(deps.core.draft, cell.date);
   if (confirms) {
     deps.actions.confirm();

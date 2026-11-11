@@ -13,7 +13,7 @@ and keep the README current.
 ## Before writing code
 - `.claude/rules/architecture.md` (always)
 - `.claude/rules/build-release.md` (incl. the known `package.json` drift)
-- `CLAUDE.md` -> "Build pipeline", "Commands" and "Current state - known gaps"
+- `CLAUDE.md` -> "Commands" and "Current state — known gaps"
 - The configs themselves: `app/tsdown.config.ts`, `app/vite.config.ts`,
   `app/vite-plugin-svg-text.ts`, `app/eslint.config.js`, `app/tsconfig*.json`,
   `app/package.json` (`scripts`, `lint-staged`) and the root `package.json` (`exports`, `files`,

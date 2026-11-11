@@ -86,6 +86,21 @@ export function rangeRole(s: Selection, date: PlainDate): RangeRole | null {
   return inside ? "in-range" : null;
 }
 
+export function rangeLabelRole(
+  s: Selection,
+  date: PlainDate,
+): RangeRole | null {
+  if (
+    s.mode === "range" &&
+    s.start !== null &&
+    s.end === null &&
+    isSameDay(s.start, date)
+  ) {
+    return "start";
+  }
+  return rangeRole(s, date);
+}
+
 export function anchorDate(s: Selection): PlainDate | null {
   return selectedDates(s).at(0) ?? null;
 }

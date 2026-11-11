@@ -8,7 +8,9 @@ import { homePanel } from "../utils/surface";
 import type { ViewLayout } from "../utils/surface";
 import { anchorDate, emptySelection } from "../utils/selection/model";
 import type {
+  CalendarLayout,
   InternalEventMap,
+  MonthSpan,
   NavigateSource,
   Panel,
   SurfaceMode,
@@ -40,7 +42,9 @@ export class CoreState {
   private currentFocus: PlainDate;
   private currentPanel: Panel;
   private currentMode: SurfaceMode | null = null;
+  private currentCalendarLayout: CalendarLayout = "docked";
   private currentLayout: ViewLayout = { months: 1, presets: "none" };
+  private currentListSpan: MonthSpan | null = null;
   private currentActiveEnd: RangeEnd = "start";
   private currentEndInput: HTMLInputElement | null = null;
   private activeEndControlled = false;
@@ -138,12 +142,28 @@ export class CoreState {
     this.currentMode = mode;
   }
 
+  get calendarLayout(): CalendarLayout {
+    return this.currentCalendarLayout;
+  }
+
+  setCalendarLayout(layout: CalendarLayout): void {
+    this.currentCalendarLayout = layout;
+  }
+
   get layout(): ViewLayout {
     return this.currentLayout;
   }
 
   setLayout(layout: ViewLayout): void {
     this.currentLayout = layout;
+  }
+
+  get listSpan(): MonthSpan | null {
+    return this.currentListSpan;
+  }
+
+  setListSpan(span: MonthSpan | null): void {
+    this.currentListSpan = span;
   }
 
   get activeEnd(): RangeEnd {
@@ -177,6 +197,7 @@ export class CoreState {
   resetSession(): void {
     const focus = anchorDate(this.currentValue) ?? todayDate();
     const view = monthOf(focus);
+    this.currentListSpan = null;
     this.setPanel(homePanel(this.resolved.precision));
     this.setDraft(this.currentValue);
     this.setView(view, monthsBetween(this.currentView, view), "api");

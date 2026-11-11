@@ -18,10 +18,14 @@ export interface PanelSwitcherOptions {
   ) => void;
 }
 
+export interface PanelMountOptions {
+  readonly rebuilt?: boolean;
+}
+
 export interface PanelSwitcher {
   current(): Panel;
   settled(): boolean;
-  mount(panel: Panel): void;
+  mount(panel: Panel, options?: PanelMountOptions): void;
   switchTo(panel: Panel): void;
   rebuild(): void;
   entry(): HTMLElement | null;
@@ -63,6 +67,7 @@ export const createPanelSwitcher = (
   const reveal = (panel: Panel): void => {
     if (panel === "days") {
       days.hidden = false;
+      days.removeAttribute(REBUILT_ATTRIBUTE);
       return;
     }
     parts = options.createParts(panel);
@@ -155,12 +160,17 @@ export const createPanelSwitcher = (
     fadeOut(leaving, TIMINGS.PANEL_FADE_OUT, run);
   };
 
-  const mount = (panel: Panel): void => {
+  const mount = (panel: Panel, mountOptions?: PanelMountOptions): void => {
     cancel();
     if (panel === displayed) return;
     hide(displayed);
     displayed = panel;
     reveal(panel);
+    if (mountOptions?.rebuilt === true) {
+      parts.forEach((part) => {
+        part.setAttribute(REBUILT_ATTRIBUTE, "");
+      });
+    }
   };
 
   const optionIndex = (element: Element): number => {
